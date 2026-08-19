@@ -1,0 +1,41 @@
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts';
+
+const data = [
+  { name: 'Jan', total: 580 },
+  { name: 'Feb', total: 420 },
+  { name: 'Mar', total: 610 },
+  { name: 'Apr', total: 530 },
+  { name: 'May', total: 680 },
+  { name: 'Jun', total: 640 },
+];
+
+function SpendingLineChart() {
+  return (
+    <div className="panel chart-panel">
+      <div className="panel__header">
+        <h3>Monthly Spending</h3>
+      </div>
+      <div className="chart-box">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+            <XAxis dataKey="name" stroke="#94a3b8" />
+            <YAxis stroke="#94a3b8" />
+            <Tooltip />
+            <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+export default SpendingLineChart;
