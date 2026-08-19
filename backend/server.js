@@ -14,6 +14,11 @@ import {
   delExpense,
   searchExpense,
 } from './controllers/expenseController.js';
+import {
+  getSummary,
+  getByCategory,
+  getMonthlyTrend,
+} from './controllers/analyticsController.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -41,6 +46,11 @@ app.get('/expenses/search', searchExpense);
 app.get('/expenses/:id', getExpenseById);
 app.put('/expenses/:id', updateExpense);
 app.delete('/expenses/:id', delExpense);
+
+// Analytics Routes
+app.get('/analytics/summary', getSummary);
+app.get('/analytics/by-category', getByCategory);
+app.get('/analytics/monthly-trend', getMonthlyTrend);
 
 // Error handling fallback
 app.use((err, req, res, next) => {
