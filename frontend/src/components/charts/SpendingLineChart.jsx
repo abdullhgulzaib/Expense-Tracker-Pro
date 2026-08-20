@@ -8,7 +8,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 
-const data = [
+const fallbackData = [
   { name: 'Jan', total: 580 },
   { name: 'Feb', total: 420 },
   { name: 'Mar', total: 610 },
@@ -17,7 +17,7 @@ const data = [
   { name: 'Jun', total: 640 },
 ];
 
-function SpendingLineChart() {
+function SpendingLineChart({ data = fallbackData }) {
   return (
     <div className="panel chart-panel">
       <div className="panel__header">

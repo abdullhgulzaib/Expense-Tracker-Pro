@@ -2,23 +2,31 @@ import { useEffect } from 'react';
 import api from '../services/api';
 import { useExpenses as useExpenseContext } from '../context/ExpenseContext';
 
-function useExpenses() {
+function useExpenseData() {
   const { dispatch } = useExpenseContext();
 
   useEffect(() => {
-    const fetchExpenses = async () => {
+    const fetchData = async () => {
       dispatch({ type: 'SET_LOADING', payload: true });
 
       try {
-        const { data } = await api.get('/expenses');
-        dispatch({ type: 'SET_EXPENSES', payload: data });
+        const [expensesRes, summaryRes] = await Promise.all([
+          api.get('/expenses'),
+          api.get('/analytics/summary'),
+        ]);
+
+        dispatch({ type: 'SET_EXPENSES', payload: expensesRes.data });
+        dispatch({ type: 'SET_SUMMARY', payload: summaryRes.data });
       } catch (error) {
-        dispatch({ type: 'SET_ERROR', payload: error.message });
+        dispatch({
+          type: 'SET_ERROR',
+          payload: error?.response?.data?.error || error.message,
+        });
       }
     };
 
-    fetchExpenses();
+    fetchData();
   }, [dispatch]);
 }
 
-export default useExpenses;
+export default useExpenseData;

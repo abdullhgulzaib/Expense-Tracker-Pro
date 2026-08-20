@@ -4,6 +4,12 @@ const ExpenseContext = createContext();
 
 const initialState = {
   expenses: [],
+  summary: {
+    totalExpenses: 0,
+    highestExpense: 0,
+    averageExpense: 0,
+    transactionCount: 0,
+  },
   loading: false,
   error: null,
 };
@@ -14,6 +20,8 @@ function reducer(state, action) {
       return { ...state, loading: action.payload };
     case 'SET_EXPENSES':
       return { ...state, expenses: action.payload, loading: false, error: null };
+    case 'SET_SUMMARY':
+      return { ...state, summary: action.payload, loading: false, error: null };
     case 'SET_ERROR':
       return { ...state, error: action.payload, loading: false };
     default:

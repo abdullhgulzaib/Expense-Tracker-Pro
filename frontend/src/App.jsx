@@ -7,27 +7,36 @@ import Analytics from './pages/Analytics';
 import Categories from './pages/Categories';
 import Settings from './pages/Settings';
 import { ExpenseProvider } from './context/ExpenseContext';
+import useExpenseData from './hooks/useExpenses';
+
+function AppShell() {
+  useExpenseData();
+
+  return (
+    <Router>
+      <div className="app-shell">
+        <Sidebar />
+
+        <main className="main-panel">
+          <Topbar />
+
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </main>
+      </div>
+    </Router>
+  );
+}
 
 function App() {
   return (
     <ExpenseProvider>
-      <Router>
-        <div className="app-shell">
-          <Sidebar />
-
-          <main className="main-panel">
-            <Topbar />
-
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/categories" element={<Categories />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </main>
-        </div>
-      </Router>
+      <AppShell />
     </ExpenseProvider>
   );
 }
