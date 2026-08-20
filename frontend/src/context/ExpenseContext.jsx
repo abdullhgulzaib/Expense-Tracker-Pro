@@ -22,6 +22,20 @@ function reducer(state, action) {
       return { ...state, expenses: action.payload, loading: false, error: null };
     case 'SET_SUMMARY':
       return { ...state, summary: action.payload, loading: false, error: null };
+    case 'ADD_EXPENSE':
+      return { ...state, expenses: [action.payload, ...state.expenses] };
+    case 'UPDATE_EXPENSE':
+      return {
+        ...state,
+        expenses: state.expenses.map((expense) =>
+          expense._id === action.payload._id ? action.payload : expense
+        ),
+      };
+    case 'DELETE_EXPENSE':
+      return {
+        ...state,
+        expenses: state.expenses.filter((expense) => expense._id !== action.payload),
+      };
     case 'SET_ERROR':
       return { ...state, error: action.payload, loading: false };
     default:

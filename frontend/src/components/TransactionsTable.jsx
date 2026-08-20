@@ -7,14 +7,14 @@ function formatDisplayDate(dateString) {
   });
 }
 
-function TransactionsTable({ rows = [] }) {
-  const visibleRows = rows.slice(0, 5);
+function TransactionsTable({ rows = [], onEdit, onDelete, showActions = false, title = 'Recent Transactions' }) {
+  const visibleRows = rows.slice(0, showActions ? rows.length : 5);
 
   return (
     <div className="panel table-panel">
       <div className="panel__header">
-        <h3>Recent Transactions</h3>
-        <button className="btn btn--primary">Add Expense</button>
+        <h3>{title}</h3>
+        {showActions ? null : <button className="btn btn--primary">Add Expense</button>}
       </div>
 
       <div className="table-wrapper">
@@ -26,12 +26,13 @@ function TransactionsTable({ rows = [] }) {
               <th>Date</th>
               <th>Amount</th>
               <th>Status</th>
+              {showActions ? <th>Actions</th> : null}
             </tr>
           </thead>
           <tbody>
             {visibleRows.length === 0 ? (
               <tr>
-                <td colSpan="5" className="empty-state">No transactions yet. Add your first expense.</td>
+                <td colSpan={showActions ? 6 : 5} className="empty-state">No transactions yet. Add your first expense.</td>
               </tr>
             ) : (
               visibleRows.map((row) => (
@@ -45,6 +46,14 @@ function TransactionsTable({ rows = [] }) {
                       {row.status || 'Completed'}
                     </span>
                   </td>
+                  {showActions ? (
+                    <td>
+                      <div className="table-actions">
+                        <button type="button" className="table-btn table-btn--edit" onClick={() => onEdit?.(row)}>Edit</button>
+                        <button type="button" className="table-btn table-btn--delete" onClick={() => onDelete?.(row._id)}>Delete</button>
+                      </div>
+                    </td>
+                  ) : null}
                 </tr>
               ))
             )}

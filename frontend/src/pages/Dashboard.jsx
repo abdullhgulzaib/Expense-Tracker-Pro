@@ -1,13 +1,20 @@
+import { useState } from 'react';
 import { Wallet, ArrowDownCircle, PiggyBank, TrendingUp } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import SpendingLineChart from '../components/charts/SpendingLineChart';
 import CategoryPieChart from '../components/charts/CategoryPieChart';
 import TransactionsTable from '../components/TransactionsTable';
+import AddExpenseModal from '../components/AddExpenseModal';
+import Toast from '../components/Toast';
 import { useExpenses as useExpenseContext } from '../context/ExpenseContext';
+import api from '../services/api';
 
 function Dashboard() {
-  const { state } = useExpenseContext();
+  const { state, dispatch } = useExpenseContext();
   const { expenses, summary, loading, error } = state;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toast, setToast] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const totalExpenses = Number(summary?.totalExpenses || 0);
   const highestExpense = Number(summary?.highestExpense || 0);
@@ -38,6 +45,27 @@ function Dashboard() {
 
   const recentTransactions = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
+  const handleSubmit = async (formData) => {
+    setSubmitting(true);
+
+    try {
+      const payload = {
+        ...formData,
+        amount: Number(formData.amount),
+      };
+
+      const { data } = await api.post('/expenses', payload);
+      dispatch({ type: 'ADD_EXPENSE', payload: data });
+      setToast('Expense added successfully');
+      setIsModalOpen(false);
+    } catch (error) {
+      setToast(error?.response?.data?.error || 'Something went wrong');
+    } finally {
+      setSubmitting(false);
+      setTimeout(() => setToast(''), 2200);
+    }
+  };
+
   if (loading) {
     return <div className="page"><div className="panel empty-panel"><p>Loading dashboard...</p></div></div>;
   }
@@ -53,7 +81,7 @@ function Dashboard() {
           <p className="eyebrow">Good evening</p>
           <h1>Dashboard</h1>
         </div>
-        <button className="btn btn--primary">+ Add Expense</button>
+        <button className="btn btn--primary" onClick={() => setIsModalOpen(true)}>+ Add Expense</button>
       </div>
 
       <div className="stats-grid">
@@ -69,6 +97,15 @@ function Dashboard() {
       </div>
 
       <TransactionsTable rows={recentTransactions} />
+
+      <AddExpenseModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleSubmit}
+        submitting={submitting}
+      />
+
+      <Toast message={toast} visible={Boolean(toast)} />
     </div>
   );
 }
