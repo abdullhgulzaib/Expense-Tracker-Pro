@@ -7,6 +7,7 @@ import Analytics from './pages/Analytics';
 import Categories from './pages/Categories';
 import Settings from './pages/Settings';
 import { ExpenseProvider } from './context/ExpenseContext';
+import { SettingsProvider } from './context/SettingsContext';
 import useExpenseData from './hooks/useExpenses';
 
 function AppShell() {
@@ -35,9 +36,11 @@ function AppShell() {
 
 function App() {
   return (
-    <ExpenseProvider>
-      <AppShell />
-    </ExpenseProvider>
+    <SettingsProvider>
+      <ExpenseProvider>
+        <AppShell />
+      </ExpenseProvider>
+    </SettingsProvider>
   );
 }
 

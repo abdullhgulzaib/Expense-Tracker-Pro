@@ -1,8 +1,10 @@
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { useSettings } from '../../context/SettingsContext';
 
 const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 function CategoryPieChart({ data = [] }) {
+  const { formatCurrency } = useSettings();
   const chartData = data.length > 0 ? data : [
     { name: 'Food', value: 420 },
     { name: 'Travel', value: 280 },
@@ -24,7 +26,7 @@ function CategoryPieChart({ data = [] }) {
                 <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip formatter={(value) => formatCurrency(value)} />
           </PieChart>
         </ResponsiveContainer>
       </div>

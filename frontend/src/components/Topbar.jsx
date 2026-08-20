@@ -1,6 +1,10 @@
 import { Bell, Search } from 'lucide-react';
+import { useSettings } from '../context/SettingsContext';
 
 function Topbar() {
+  const { settings } = useSettings();
+  const displayName = settings.fullName?.trim() || 'Abdullah';
+
   return (
     <header className="topbar">
       <div className="topbar__search">
@@ -13,8 +17,8 @@ function Topbar() {
           <Bell size={18} />
         </button>
         <div className="user-pill">
-          <span className="user-pill__avatar">A</span>
-          <span>Abdullah</span>
+          <span className="user-pill__avatar">{displayName.charAt(0).toUpperCase()}</span>
+          <span>{displayName}</span>
         </div>
       </div>
     </header>

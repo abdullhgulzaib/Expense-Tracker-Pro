@@ -7,6 +7,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts';
+import { useSettings } from '../../context/SettingsContext';
 
 const fallbackData = [
   { name: 'Jan', total: 580 },
@@ -18,6 +19,8 @@ const fallbackData = [
 ];
 
 function SpendingLineChart({ data = fallbackData }) {
+  const { formatCurrency } = useSettings();
+
   return (
     <div className="panel chart-panel">
       <div className="panel__header">
@@ -29,7 +32,7 @@ function SpendingLineChart({ data = fallbackData }) {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
             <XAxis dataKey="name" stroke="#94a3b8" />
             <YAxis stroke="#94a3b8" />
-            <Tooltip />
+            <Tooltip formatter={(value) => formatCurrency(value)} />
             <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} />
           </LineChart>
         </ResponsiveContainer>

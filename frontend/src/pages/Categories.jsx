@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import { useExpenses } from '../context/ExpenseContext';
+import { useSettings } from '../context/SettingsContext';
 
 function Categories() {
   const { state } = useExpenses();
+  const { formatCurrency } = useSettings();
 
   const categoryBreakdown = useMemo(() => {
     const totals = state.expenses.reduce((acc, expense) => {
@@ -50,7 +52,7 @@ function Categories() {
           </div>
           <div className="stat-card__body">
             <h3>{categoryBreakdown[0]?.category || 'No data'}</h3>
-            <p>${(categoryBreakdown[0]?.total || 0).toFixed(2)}</p>
+            <p>{formatCurrency(categoryBreakdown[0]?.total || 0)}</p>
           </div>
         </div>
 
@@ -69,7 +71,7 @@ function Categories() {
             <span className="stat-card__label">Total spent</span>
           </div>
           <div className="stat-card__body">
-            <h3>${totalSpent.toFixed(2)}</h3>
+            <h3>{formatCurrency(totalSpent)}</h3>
             <p>across all categories</p>
           </div>
         </div>
@@ -92,7 +94,7 @@ function Categories() {
                   <div>
                     <span className="tag tag--category">{item.category}</span>
                   </div>
-                  <strong>${item.total.toFixed(2)}</strong>
+                  <strong>{formatCurrency(item.total)}</strong>
                 </div>
 
                 <div className="category-item__progress">

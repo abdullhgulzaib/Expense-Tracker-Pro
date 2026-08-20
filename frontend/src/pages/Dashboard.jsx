@@ -7,10 +7,12 @@ import TransactionsTable from '../components/TransactionsTable';
 import AddExpenseModal from '../components/AddExpenseModal';
 import Toast from '../components/Toast';
 import { useExpenses as useExpenseContext } from '../context/ExpenseContext';
+import { useSettings } from '../context/SettingsContext';
 import api from '../services/api';
 
 function Dashboard() {
   const { state, dispatch } = useExpenseContext();
+  const { formatCurrency } = useSettings();
   const { expenses, summary, loading, error } = state;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState('');
@@ -85,10 +87,10 @@ function Dashboard() {
       </div>
 
       <div className="stats-grid">
-        <StatCard icon={Wallet} title="Balance" value={`$${(totalExpenses || 0).toFixed(2)}`} change="Live" trend="up" />
+        <StatCard icon={Wallet} title="Balance" value={formatCurrency(totalExpenses)} change="Live" trend="up" />
         <StatCard icon={TrendingUp} title="Income" value={`${transactionCount}`} change="Transactions" trend="up" />
-        <StatCard icon={ArrowDownCircle} title="Expenses" value={`$${totalExpenses.toFixed(2)}`} change="Total" trend="down" />
-        <StatCard icon={PiggyBank} title="Average" value={`$${averageExpense.toFixed(2)}`} change="Avg" trend="up" />
+        <StatCard icon={ArrowDownCircle} title="Expenses" value={formatCurrency(totalExpenses)} change="Total" trend="down" />
+        <StatCard icon={PiggyBank} title="Average" value={formatCurrency(averageExpense)} change="Avg" trend="up" />
       </div>
 
       <div className="content-grid content-grid--two-cols">
@@ -96,7 +98,7 @@ function Dashboard() {
         <CategoryPieChart data={categoryChartData} />
       </div>
 
-      <TransactionsTable rows={recentTransactions} />
+      <TransactionsTable rows={recentTransactions} onAdd={() => setIsModalOpen(true)} />
 
       <AddExpenseModal
         isOpen={isModalOpen}

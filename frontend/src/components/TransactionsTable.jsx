@@ -1,3 +1,5 @@
+import { useSettings } from '../context/SettingsContext';
+
 function formatDisplayDate(dateString) {
   const date = new Date(dateString);
   return Number.isNaN(date.getTime()) ? dateString : date.toLocaleDateString('en-US', {
@@ -7,14 +9,15 @@ function formatDisplayDate(dateString) {
   });
 }
 
-function TransactionsTable({ rows = [], onEdit, onDelete, showActions = false, title = 'Recent Transactions' }) {
+function TransactionsTable({ rows = [], onEdit, onDelete, onAdd, showActions = false, title = 'Recent Transactions' }) {
+  const { formatCurrency } = useSettings();
   const visibleRows = rows.slice(0, showActions ? rows.length : 5);
 
   return (
     <div className="panel table-panel">
       <div className="panel__header">
         <h3>{title}</h3>
-        {showActions ? null : <button className="btn btn--primary">Add Expense</button>}
+        {showActions ? null : <button type="button" className="btn btn--primary" onClick={onAdd}>Add Expense</button>}
       </div>
 
       <div className="table-wrapper">
@@ -40,7 +43,7 @@ function TransactionsTable({ rows = [], onEdit, onDelete, showActions = false, t
                   <td>{row.title}</td>
                   <td><span className="tag tag--category">{row.category}</span></td>
                   <td>{formatDisplayDate(row.date)}</td>
-                  <td className="amount amount--expense">-${Number(row.amount || 0).toFixed(2)}</td>
+                  <td className="amount amount--expense">{formatCurrency(row.amount)}</td>
                   <td>
                     <span className={`status-pill ${row.status === 'Pending' ? 'pending' : 'completed'}`}>
                       {row.status || 'Completed'}
