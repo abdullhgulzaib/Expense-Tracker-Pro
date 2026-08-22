@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AddExpenseModal from '../components/AddExpenseModal';
 import TransactionsTable from '../components/TransactionsTable';
 import Toast from '../components/Toast';
@@ -31,11 +32,20 @@ function Transactions() {
   const [editingExpense, setEditingExpense] = useState(null);
   const [toast, setToast] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [searchParams] = useSearchParams();
+
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('date-desc');
 
+  useEffect(() => {
+    const paramSearch = searchParams.get('search');
+    if (paramSearch !== null) {
+      setSearchTerm(paramSearch);
+    }
+  }, [searchParams]);
+  
   const filteredExpenses = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 

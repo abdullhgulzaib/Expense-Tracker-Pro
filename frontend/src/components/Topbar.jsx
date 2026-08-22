@@ -1,15 +1,32 @@
 import { Bell, Search } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
 
 function Topbar() {
   const { settings } = useSettings();
+  const navigate = useNavigate();
+  const [searchValue, setSearchValue] = useState('');
   const displayName = settings.fullName?.trim() || 'Abdullah';
+
+  const handleSearchKeyDown = (event) => {
+    if (event.key === 'Enter' && searchValue.trim()) {
+      navigate(`/transactions?search=${encodeURIComponent(searchValue.trim())}`);
+    }
+  };
 
   return (
     <header className="topbar">
       <div className="topbar__search">
         <Search size={16} />
-        <input type="text" placeholder="Search transactions" aria-label="Search transactions" />
+        <input
+          type="text"
+          value={searchValue}
+          onChange={(event) => setSearchValue(event.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          placeholder="Search transactions"
+          aria-label="Search transactions"
+        />
       </div>
 
       <div className="topbar__actions">
