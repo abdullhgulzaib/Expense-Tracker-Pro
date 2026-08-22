@@ -118,7 +118,7 @@ h6 {
   margin-bottom: 28px;
   padding: 8px 10px;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .brand__mark {
@@ -666,6 +666,10 @@ th {
   color: #bfdbfe;
 }
 
+[data-theme='light'] .tag--category {
+  background: rgba(59, 130, 246, 0.14);
+  color: #1d4ed8;
+}
 .status-pill.completed {
   background: rgba(34, 197, 94, 0.12);
   color: var(--color-success);
@@ -714,6 +718,16 @@ th {
   background: rgba(239, 68, 68, 0.12);
   color: #fecaca;
   border-color: rgba(239, 68, 68, 0.28);
+}
+
+[data-theme='light'] .table-btn--edit {
+  color: #1d4ed8;
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+[data-theme='light'] .table-btn--delete {
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.35);
 }
 
 .table-btn--edit:hover {
