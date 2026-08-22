@@ -28,12 +28,12 @@ const emptyForm = {
 
 function Transactions() {
   const { state, dispatch } = useExpenses();
+  const [searchParams] = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [toast, setToast] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
-  const [searchParams] = useSearchParams();
 
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');

@@ -22,21 +22,45 @@ import {
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+let databaseConnection;
+
+const connectToDatabase = () => {
+  if (mongoose.connection.readyState === 1) {
+    return Promise.resolve();
+  }
+
+  if (!databaseConnection) {
+    databaseConnection = mongoose.connect(process.env.MONGO_URI, {
+      maxPoolSize: 5,
+      serverSelectionTimeoutMS: 10000,
+    }).catch((error) => {
+      databaseConnection = null;
+      throw error;
+    });
+  }
+
+  return databaseConnection;
+};
 
 // Middleware
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
 
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log('Mongoose connected to MongoDB'))
-  .catch((error) => console.error('MongoDB connection error:', error));
-
 // Health check route
 app.get('/health', (req, res) => {
   res.json({ status: 'Backend is running' });
+});
+
+// Wait for MongoDB before handling database-backed requests.
+app.use(['/expenses', '/analytics'], async (req, res, next) => {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    next(error);
+  }
 });
 
 // Expense CRUD Routes
