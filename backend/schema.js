@@ -40,6 +40,7 @@ const ExpenseSchema = new mongoose.Schema(
     date: {
       type: Date,
       required: true,
+      index: true,
     },
     paymentMethod: {
       type: String,

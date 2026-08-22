@@ -30,10 +30,11 @@ const connectToDatabase = () => {
   }
 
   if (!databaseConnection) {
-    databaseConnection = mongoose.connect(process.env.MONGO_URI, {
-      maxPoolSize: 5,
-      serverSelectionTimeoutMS: 10000,
-    }).catch((error) => {
+ databaseConnection = mongoose.connect(process.env.MONGO_URI, {
+  maxPoolSize: 5,
+  serverSelectionTimeoutMS: 10000,
+  family: 4,
+}).catch((error) => {
       databaseConnection = null;
       throw error;
     });

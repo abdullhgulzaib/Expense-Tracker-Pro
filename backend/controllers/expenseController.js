@@ -13,7 +13,7 @@ const createExpense = async (req, res) => {
 // Get all expenses (sorted by date, newest first)
 const getExpenses = async (req, res) => {
   try {
-    const expenses = await Expense.find().sort({ date: -1 });
+    const expenses = await Expense.find().sort({ date: -1 }).lean();
     res.json(expenses);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -23,7 +23,7 @@ const getExpenses = async (req, res) => {
 // Get a single expense by ID
 const getExpenseById = async (req, res) => {
   try {
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findById(req.params.id).lean();
     if (!expense) {
       return res.status(404).json({ error: 'Expense not found' });
     }
@@ -38,7 +38,7 @@ const updateExpense = async (req, res) => {
   try {
     const expense = await Expense.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-    });
+    }).lean();
     if (!expense) {
       return res.status(404).json({ error: 'Expense not found' });
     }
@@ -51,7 +51,7 @@ const updateExpense = async (req, res) => {
 // Delete an expense by ID
 const delExpense = async (req, res) => {
   try {
-    const expense = await Expense.findByIdAndDelete(req.params.id);
+    const expense = await Expense.findByIdAndDelete(req.params.id).lean();
     if (!expense) {
       return res.status(404).json({ error: 'Expense not found' });
     }
@@ -73,7 +73,7 @@ const searchExpense = async (req, res) => {
         { title: { $regex: search, $options: 'i' } },
         { category: { $regex: search, $options: 'i' } },
       ],
-    });
+    }).lean();
     res.json(expenses);
   } catch (error) {
     res.status(500).json({ error: error.message });
