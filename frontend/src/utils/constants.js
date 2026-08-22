@@ -1,0 +1,33 @@
+export const EXPENSE_CATEGORIES = [
+  'Food',
+  'Shopping',
+  'Travel',
+  'Bills',
+  'Health',
+  'Education',
+  'Entertainment',
+  'Online Services',
+  'Groceries',
+  'Transportation',
+  'Utilities',
+  'Insurance',
+  'Gifts',
+  'Personal Care',
+  'Subscriptions',
+  'Charity',
+  'Taxes',
+  'Investments',
+  'Other',
+];
+
+export const PAYMENT_METHODS = [
+  'Card',
+  'Cash',
+  'Bank Transfer',
+  'Auto-debit',
+  'Cheque',
+  'Mobile Payment',
+  'Online Payment',
+  'Digital Wallet',
+  'Other',
+];

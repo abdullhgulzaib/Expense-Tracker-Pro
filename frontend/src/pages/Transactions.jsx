@@ -5,9 +5,10 @@ import ExpenseDetailsModal from '../components/ExpenseDetailsModal';
 import TransactionsTable from '../components/TransactionsTable';
 import Toast from '../components/Toast';
 import { useExpenses } from '../context/ExpenseContext';
+import { EXPENSE_CATEGORIES } from '../utils/constants';
 import api from '../services/api';
 
-const categoryOptions = ['All', 'Food', 'Shopping', 'Travel', 'Bills', 'Health', 'Education'];
+const categoryOptions = ['All', ...EXPENSE_CATEGORIES];
 const statusOptions = ['All', 'Completed', 'Pending'];
 const sortOptions = [
   { value: 'date-desc', label: 'Newest first' },
@@ -33,7 +34,8 @@ function Transactions() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [viewingExpense, setViewingExpense] = useState(null);
-  const [toast, setToast] = useState('');
+    const [toast, setToast] = useState('');
+  const [toastType, setToastType] = useState('success');
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
 
@@ -106,12 +108,14 @@ function Transactions() {
       } else {
         const { data } = await api.post('/expenses', payload);
         dispatch({ type: 'ADD_EXPENSE', payload: data });
+        setToastType('success');
         setToast('Expense added successfully');
       }
 
       setIsModalOpen(false);
       setEditingExpense(null);
-    } catch (error) {
+     } catch (error) {
+      setToastType('error');
       setToast(error?.response?.data?.error || 'Something went wrong');
     } finally {
       setSubmitting(false);
@@ -220,7 +224,7 @@ function Transactions() {
         }}
       />
 
-      <Toast message={toast} visible={Boolean(toast)} />
+      <Toast message={toast} visible={Boolean(toast)} type={toastType} />
     </div>
   );
 }

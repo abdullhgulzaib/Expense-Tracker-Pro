@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import Dashboard from './pages/Dashboard';
@@ -12,14 +13,18 @@ import useExpenseData from './hooks/useExpenses';
 
 function AppShell() {
   useExpenseData();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <Router>
       <div className="app-shell">
-        <Sidebar />
+        <Sidebar isOpen={isSidebarOpen} onNavigate={() => setIsSidebarOpen(false)} />
+        {isSidebarOpen ? (
+          <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
+        ) : null}
 
         <main className="main-panel">
-          <Topbar />
+          <Topbar onMenuClick={() => setIsSidebarOpen((open) => !open)} />
 
           <Routes>
             <Route path="/" element={<Dashboard />} />

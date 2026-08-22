@@ -16,7 +16,8 @@ function Dashboard() {
 
   const { expenses, summary, loading, error } = state;
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [toast, setToast] = useState('');
+    const [toast, setToast] = useState('');
+  const [toastType, setToastType] = useState('success');
   const [submitting, setSubmitting] = useState(false);
 
  const { totalExpenses, highestExpense, averageExpense, transactionCount } = useMemo(() => {
@@ -67,9 +68,11 @@ function Dashboard() {
 
       const { data } = await api.post('/expenses', payload);
       dispatch({ type: 'ADD_EXPENSE', payload: data });
+      setToastType('success');
       setToast('Expense added successfully');
       setIsModalOpen(false);
-    } catch (error) {
+       } catch (error) {
+      setToastType('error');
       setToast(error?.response?.data?.error || 'Something went wrong');
     } finally {
       setSubmitting(false);
@@ -116,7 +119,7 @@ function Dashboard() {
         submitting={submitting}
       />
 
-      <Toast message={toast} visible={Boolean(toast)} />
+     <Toast message={toast} visible={Boolean(toast)} type={toastType} />
     </div>
   );
 }

@@ -9,9 +9,9 @@ const navItems = [
   { label: 'Settings', icon: Settings, to: '/settings' },
 ];
 
-function Sidebar() {
+function Sidebar({ isOpen = false, onNavigate }) {
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
       <div className="sidebar__brand">
         <div className="brand__mark">ET</div>
         <span>Expense Tracker</span>
@@ -23,6 +23,7 @@ function Sidebar() {
             key={label}
             to={to}
             end={to === '/'}
+            onClick={() => onNavigate?.()}
             className={({ isActive }) =>
               `sidebar__link ${isActive ? 'active' : ''}`
             }

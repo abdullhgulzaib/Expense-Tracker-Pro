@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const ExpenseSchema = new mongoose.Schema(
   {
@@ -15,7 +15,27 @@ const ExpenseSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['Food', 'Shopping', 'Travel', 'Bills', 'Health', 'Education', 'Entertainment', 'Online Services', 'Groceries', 'Transportation', 'Utilities', 'Insurance', 'Gifts', 'Personal Care', 'Subscriptions', 'Charity', 'Taxes', 'Investments', 'Other'],
+      enum: [
+        "Food",
+        "Shopping",
+        "Travel",
+        "Bills",
+        "Health",
+        "Education",
+        "Entertainment",
+        "Online Services",
+        "Groceries",
+        "Transportation",
+        "Utilities",
+        "Insurance",
+        "Gifts",
+        "Personal Care",
+        "Subscriptions",
+        "Charity",
+        "Taxes",
+        "Investments",
+        "Other",
+      ],
     },
     date: {
       type: Date,
@@ -23,26 +43,36 @@ const ExpenseSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ['Card', 'Cash', 'Bank Transfer', 'Auto-debit', 'Cheque', 'Mobile Payment','online Payment','Digital Wallet','Other'],
-      default: 'Card',
+      enum: [
+        "Card",
+        "Cash",
+        "Bank Transfer",
+        "Auto-debit",
+        "Cheque",
+        "Mobile Payment",
+        "Online Payment",
+        "Digital Wallet",
+        "Other",
+      ],
+      default: "Card",
     },
     notes: {
       type: String,
       trim: true,
-      default: '',
+      default: "",
     },
     status: {
       type: String,
-      enum: ['Completed', 'Pending'],
-      default: 'Completed',
+      enum: ["Completed", "Pending"],
+      default: "Completed",
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: false, // flips to true in Phase 2 auth
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export { ExpenseSchema };
