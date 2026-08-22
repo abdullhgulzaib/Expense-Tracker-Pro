@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Wallet, ArrowDownCircle, PiggyBank, TrendingUp } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import SpendingLineChart from '../components/charts/SpendingLineChart';
@@ -13,15 +13,24 @@ import api from '../services/api';
 function Dashboard() {
   const { state, dispatch } = useExpenseContext();
   const { formatCurrency } = useSettings();
+
   const { expenses, summary, loading, error } = state;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const totalExpenses = Number(summary?.totalExpenses || 0);
-  const highestExpense = Number(summary?.highestExpense || 0);
-  const averageExpense = Number(summary?.averageExpense || 0);
-  const transactionCount = Number(summary?.transactionCount || 0);
+ const { totalExpenses, highestExpense, averageExpense, transactionCount } = useMemo(() => {
+    const amounts = expenses.map((item) => Number(item.amount || 0));
+    const count = amounts.length;
+    const total = amounts.reduce((sum, amount) => sum + amount, 0);
+
+    return {
+      totalExpenses: total,
+      highestExpense: count ? Math.max(...amounts) : 0,
+      averageExpense: count ? total / count : 0,
+      transactionCount: count,
+    };
+  }, [expenses]);
 
   const monthlyChartData = expenses.reduce((acc, item) => {
     const date = new Date(item.date);
@@ -86,11 +95,11 @@ function Dashboard() {
         <button className="btn btn--primary" onClick={() => setIsModalOpen(true)}>+ Add Expense</button>
       </div>
 
-      <div className="stats-grid">
-        <StatCard icon={Wallet} title="Balance" value={formatCurrency(totalExpenses)} change="Live" trend="up" />
-        <StatCard icon={TrendingUp} title="Income" value={`${transactionCount}`} change="Transactions" trend="up" />
-        <StatCard icon={ArrowDownCircle} title="Expenses" value={formatCurrency(totalExpenses)} change="Total" trend="down" />
-        <StatCard icon={PiggyBank} title="Average" value={formatCurrency(averageExpense)} change="Avg" trend="up" />
+        <div className="stats-grid">
+        <StatCard icon={ArrowDownCircle} title="Total Expenses" value={formatCurrency(totalExpenses)} change="This month" trend="down" />
+        <StatCard icon={TrendingUp} title="Highest Expense" value={formatCurrency(highestExpense)} change="Peak" trend="up" />
+        <StatCard icon={PiggyBank} title="Average Expense" value={formatCurrency(averageExpense)} change="Per transaction" trend="up" />
+        <StatCard icon={Wallet} title="Transactions" value={`${transactionCount}`} change="All time" trend="up" />
       </div>
 
       <div className="content-grid content-grid--two-cols">
