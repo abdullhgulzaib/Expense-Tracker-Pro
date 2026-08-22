@@ -746,7 +746,7 @@ th {
   width: min(680px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
-  background: #111827;
+   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: 24px;
   padding: 24px;
@@ -763,9 +763,9 @@ th {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.02);
+  background: var(--color-border);
   border: 1px solid var(--color-border);
-  color: white;
+  color: var(--text-primary);
   font-size: 1.4rem;
 }
 
@@ -793,11 +793,43 @@ th {
 .form-grid select,
 .form-grid textarea {
   width: 100%;
-  background: rgba(255,255,255,0.02);
+  background: var(--color-border);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  color: white;
+  color: var(--text-primary);
   padding: 12px 14px;
+}
+
+.expense-details {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.expense-details__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.expense-details__row span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.expense-details__row--notes {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.expense-details__row--notes p {
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .full-width {
@@ -816,11 +848,11 @@ th {
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(17, 24, 39, 0.96);
+   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 12px 16px;
-  color: white;
+  color: var(--text-primary);
   z-index: 50;
 }
 
@@ -940,6 +972,15 @@ th {
   .chart-box {
     height: 240px;
   }
+  .chart-box--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 24px;
+}
 
   .modal {
     max-height: calc(100vh - 24px);

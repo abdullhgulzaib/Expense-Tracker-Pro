@@ -5,13 +5,21 @@ const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 function CategoryPieChart({ data = [] }) {
   const { formatCurrency } = useSettings();
-  const chartData = data.length > 0 ? data : [
-    { name: 'Food', value: 420 },
-    { name: 'Travel', value: 280 },
-    { name: 'Bills', value: 310 },
-    { name: 'Shopping', value: 180 },
-    { name: 'Health', value: 140 },
-  ];
+
+  if (data.length === 0) {
+    return (
+      <div className="panel chart-panel">
+        <div className="panel__header">
+          <h3>Category Distribution</h3>
+        </div>
+        <div className="chart-box chart-box--empty">
+          <p>No expenses yet — add your first one to see this chart.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const chartData = data;
 
   return (
     <div className="panel chart-panel">

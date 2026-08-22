@@ -1,15 +1,25 @@
-import { useSettings } from '../context/SettingsContext';
+import { useSettings } from "../context/SettingsContext";
 
 function formatDisplayDate(dateString) {
   const date = new Date(dateString);
-  return Number.isNaN(date.getTime()) ? dateString : date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  return Number.isNaN(date.getTime())
+    ? dateString
+    : date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
 }
 
-function TransactionsTable({ rows = [], onEdit, onDelete, onAdd, showActions = false, title = 'Recent Transactions' }) {
+function TransactionsTable({
+  rows = [],
+  onEdit,
+  onDelete,
+  onAdd,
+  onRowClick,
+  showActions = false,
+  title = "Recent Transactions",
+}) {
   const { formatCurrency } = useSettings();
   const visibleRows = rows.slice(0, showActions ? rows.length : 5);
 
@@ -17,7 +27,11 @@ function TransactionsTable({ rows = [], onEdit, onDelete, onAdd, showActions = f
     <div className="panel table-panel">
       <div className="panel__header">
         <h3>{title}</h3>
-        {showActions ? null : <button type="button" className="btn btn--primary" onClick={onAdd}>Add Expense</button>}
+        {showActions ? null : (
+          <button type="button" className="btn btn--primary" onClick={onAdd}>
+            Add Expense
+          </button>
+        )}
       </div>
 
       <div className="table-wrapper">
@@ -35,25 +49,55 @@ function TransactionsTable({ rows = [], onEdit, onDelete, onAdd, showActions = f
           <tbody>
             {visibleRows.length === 0 ? (
               <tr>
-                <td colSpan={showActions ? 6 : 5} className="empty-state">No transactions yet. Add your first expense.</td>
+                <td colSpan={showActions ? 6 : 5} className="empty-state">
+                  No transactions yet. Add your first expense.
+                </td>
               </tr>
             ) : (
               visibleRows.map((row) => (
-                <tr key={row._id || `${row.title}-${row.date}`}>
+                <tr
+                  key={row._id || `${row.title}-${row.date}`}
+                  onClick={() => onRowClick?.(row)}
+                  style={{ cursor: onRowClick ? "pointer" : "default" }}
+                >
                   <td>{row.title}</td>
-                  <td><span className="tag tag--category">{row.category}</span></td>
-                  <td>{formatDisplayDate(row.date)}</td>
-                  <td className="amount amount--expense">{formatCurrency(row.amount)}</td>
                   <td>
-                    <span className={`status-pill ${row.status === 'Pending' ? 'pending' : 'completed'}`}>
-                      {row.status || 'Completed'}
+                    <span className="tag tag--category">{row.category}</span>
+                  </td>
+                  <td>{formatDisplayDate(row.date)}</td>
+                  <td className="amount amount--expense">
+                    {formatCurrency(row.amount)}
+                  </td>
+                  <td>
+                    <span
+                      className={`status-pill ${row.status === "Pending" ? "pending" : "completed"}`}
+                    >
+                      {row.status || "Completed"}
                     </span>
                   </td>
                   {showActions ? (
                     <td>
                       <div className="table-actions">
-                        <button type="button" className="table-btn table-btn--edit" onClick={() => onEdit?.(row)}>Edit</button>
-                        <button type="button" className="table-btn table-btn--delete" onClick={() => onDelete?.(row._id)}>Delete</button>
+                        <button
+                          type="button"
+                          className="table-btn table-btn--edit"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onEdit?.(row);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="table-btn table-btn--delete"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onDelete?.(row._id);
+                          }}
+                        >
+                          Delete
+                        </button>
                       </div>
                     </td>
                   ) : null}

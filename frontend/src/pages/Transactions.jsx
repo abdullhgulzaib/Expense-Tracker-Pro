@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AddExpenseModal from '../components/AddExpenseModal';
+import ExpenseDetailsModal from '../components/ExpenseDetailsModal';
 import TransactionsTable from '../components/TransactionsTable';
 import Toast from '../components/Toast';
 import { useExpenses } from '../context/ExpenseContext';
@@ -31,6 +32,7 @@ function Transactions() {
   const [searchParams] = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [viewingExpense, setViewingExpense] = useState(null);
   const [toast, setToast] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
@@ -188,10 +190,11 @@ function Transactions() {
             Showing {filteredExpenses.length} of {state.expenses.length} transactions
           </div>
 
-          <TransactionsTable
+                <TransactionsTable
             rows={filteredExpenses}
             onEdit={handleOpenEditModal}
             onDelete={handleDelete}
+            onRowClick={setViewingExpense}
             showActions
             title="All Transactions"
           />
@@ -205,6 +208,16 @@ function Transactions() {
         initialData={editingExpense}
         mode={editingExpense ? 'edit' : 'add'}
         submitting={submitting}
+      />
+
+      <ExpenseDetailsModal
+        isOpen={Boolean(viewingExpense)}
+        expense={viewingExpense}
+        onClose={() => setViewingExpense(null)}
+        onEdit={(expense) => {
+          setViewingExpense(null);
+          handleOpenEditModal(expense);
+        }}
       />
 
       <Toast message={toast} visible={Boolean(toast)} />

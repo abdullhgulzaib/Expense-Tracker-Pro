@@ -1,17 +1,34 @@
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from 'recharts';
-import { useSettings } from '../../context/SettingsContext';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Cell,
+} from "recharts";
+import { useSettings } from "../../context/SettingsContext";
 
-const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 function CategoryBarChart({ data = [] }) {
   const { formatCurrency } = useSettings();
-  const chartData = data.length > 0 ? data : [
-    { name: 'Food', total: 420 },
-    { name: 'Bills', total: 310 },
-    { name: 'Travel', total: 280 },
-    { name: 'Shopping', total: 180 },
-    { name: 'Health', total: 140 },
-  ];
+
+  if (data.length === 0) {
+    return (
+      <div className="panel chart-panel">
+        <div className="panel__header">
+          <h3>Category Comparison</h3>
+        </div>
+        <div className="chart-box chart-box--empty">
+          <p>No expenses yet — add your first one to see this chart.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const chartData = data;
 
   return (
     <div className="panel chart-panel">
@@ -21,9 +38,9 @@ function CategoryBarChart({ data = [] }) {
       <div className="chart-box">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-            <XAxis dataKey="name" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+            <XAxis dataKey="name" stroke="var(--text-muted)" />
+            <YAxis stroke="var(--text-muted)" />
             <Tooltip formatter={(value) => formatCurrency(value)} />
             <Bar dataKey="total" radius={[8, 8, 0, 0]}>
               {chartData.map((entry, index) => (
