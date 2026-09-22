@@ -6,6 +6,12 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import morgan from 'morgan';
+
+import {
+  registerUser,
+  loginUser,
+  getMe,
+} from './controllers/authController.js';
 import {
   createExpense,
   getExpenses,
@@ -19,6 +25,7 @@ import {
   getByCategory,
   getMonthlyTrend,
 } from './controllers/analyticsController.js';
+import { protect } from './middleware/authMiddleware.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,11 +37,11 @@ const connectToDatabase = () => {
   }
 
   if (!databaseConnection) {
- databaseConnection = mongoose.connect(process.env.MONGO_URI, {
-  maxPoolSize: 5,
-  serverSelectionTimeoutMS: 10000,
-  family: 4,
-}).catch((error) => {
+    databaseConnection = mongoose.connect(process.env.MONGO_URI, {
+      maxPoolSize: 5,
+      serverSelectionTimeoutMS: 10000,
+      family: 4,
+    }).catch((error) => {
       databaseConnection = null;
       throw error;
     });
@@ -54,7 +61,7 @@ app.get('/health', (req, res) => {
 });
 
 // Wait for MongoDB before handling database-backed requests.
-app.use(['/expenses', '/analytics'], async (req, res, next) => {
+app.use(['/auth', '/api/auth', '/expenses', '/api/expenses', '/analytics', '/api/analytics'], async (req, res, next) => {
   try {
     await connectToDatabase();
     next();
@@ -64,18 +71,23 @@ app.use(['/expenses', '/analytics'], async (req, res, next) => {
   }
 });
 
-// Expense CRUD Routes
-app.post('/expenses', createExpense);
-app.get('/expenses', getExpenses);
-app.get('/expenses/search', searchExpense);
-app.get('/expenses/:id', getExpenseById);
-app.put('/expenses/:id', updateExpense);
-app.delete('/expenses/:id', delExpense);
+// Authentication Routes (supports both /auth and /api/auth prefixes)
+app.post(['/auth/register', '/api/auth/register'], registerUser);
+app.post(['/auth/login', '/api/auth/login'], loginUser);
+app.get(['/auth/me', '/api/auth/me'], protect, getMe);
 
-// Analytics Routes
-app.get('/analytics/summary', getSummary);
-app.get('/analytics/by-category', getByCategory);
-app.get('/analytics/monthly-trend', getMonthlyTrend);
+// Expense CRUD Routes (Protected)
+app.post(['/expenses', '/api/expenses'], protect, createExpense);
+app.get(['/expenses', '/api/expenses'], protect, getExpenses);
+app.get(['/expenses/search', '/api/expenses/search'], protect, searchExpense);
+app.get(['/expenses/:id', '/api/expenses/:id'], protect, getExpenseById);
+app.put(['/expenses/:id', '/api/expenses/:id'], protect, updateExpense);
+app.delete(['/expenses/:id', '/api/expenses/:id'], protect, delExpense);
+
+// Analytics Routes (Protected)
+app.get(['/analytics/summary', '/api/analytics/summary'], protect, getSummary);
+app.get(['/analytics/by-category', '/api/analytics/by-category'], protect, getByCategory);
+app.get(['/analytics/monthly-trend', '/api/analytics/monthly-trend'], protect, getMonthlyTrend);
 
 // Error handling fallback
 app.use((err, req, res, next) => {

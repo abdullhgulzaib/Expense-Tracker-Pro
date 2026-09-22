@@ -1,9 +1,17 @@
+import mongoose from 'mongoose';
 import { Expense } from '../models.js';
 
-// Get summary statistics (total, highest, average, count)
+// Get summary statistics (total, highest, average, count) for logged-in user
 const getSummary = async (req, res) => {
   try {
+    const userObjectId = new mongoose.Types.ObjectId(req.user._id);
+
     const summary = await Expense.aggregate([
+      {
+        $match: {
+          userId: userObjectId,
+        },
+      },
       {
         $group: {
           _id: null,
@@ -38,10 +46,17 @@ const getSummary = async (req, res) => {
   }
 };
 
-// Get expenses grouped by category (for pie/bar charts)
+// Get expenses grouped by category for logged-in user (for pie/bar charts)
 const getByCategory = async (req, res) => {
   try {
+    const userObjectId = new mongoose.Types.ObjectId(req.user._id);
+
     const byCategory = await Expense.aggregate([
+      {
+        $match: {
+          userId: userObjectId,
+        },
+      },
       {
         $group: {
           _id: '$category',
@@ -68,15 +83,17 @@ const getByCategory = async (req, res) => {
   }
 };
 
-// Get monthly trend (sum grouped by month, last 6 months)
+// Get monthly trend (sum grouped by month, last 6 months) for logged-in user
 const getMonthlyTrend = async (req, res) => {
   try {
+    const userObjectId = new mongoose.Types.ObjectId(req.user._id);
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     const monthlyTrend = await Expense.aggregate([
       {
         $match: {
+          userId: userObjectId,
           date: { $gte: sixMonthsAgo },
         },
       },

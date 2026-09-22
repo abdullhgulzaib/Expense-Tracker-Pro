@@ -1,5 +1,32 @@
 import mongoose from "mongoose";
 
+const UserSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [
+        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+        "Please provide a valid email address",
+      ],
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [6, "Password must be at least 6 characters"],
+    },
+  },
+  { timestamps: true }
+);
+
 const ExpenseSchema = new mongoose.Schema(
   {
     title: {
@@ -70,10 +97,11 @@ const ExpenseSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false, // flips to true in Phase 2 auth
+      required: false, // Optional for backwards compatibility, required for user-scoped data
+      index: true,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-export { ExpenseSchema };
+export { UserSchema, ExpenseSchema };
