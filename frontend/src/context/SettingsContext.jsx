@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const SettingsContext = createContext();
 
-const defaultSettings = {
-  fullName: 'Abdullah',
-  email: 'abdullah@example.com',
+const getDefaultSettings = (user) => ({
+  fullName: user?.name || '',
+  email: user?.email || '',
   currency: 'USD',
   timezone: 'UTC-05:00',
   theme: 'Dark',
@@ -12,28 +13,39 @@ const defaultSettings = {
   monthlyAlerts: true,
   weeklySummary: true,
   budgetReminders: true,
-};
+});
 
 export function SettingsProvider({ children }) {
-  const [settings, setSettings] = useState(defaultSettings);
+  const { user } = useAuth();
+  const [settings, setSettings] = useState(() => getDefaultSettings(user));
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Synchronize settings with the current authenticated user
   useEffect(() => {
-    const saved = localStorage.getItem('appSettings');
+    const storageKey = user?._id ? `appSettings_${user._id}` : 'appSettings_guest';
+    const saved = localStorage.getItem(storageKey);
+    const baseDefaults = getDefaultSettings(user);
+
     if (saved) {
       try {
-        const parsedSettings = { ...defaultSettings, ...JSON.parse(saved) };
+        const parsedSettings = { ...baseDefaults, ...JSON.parse(saved) };
+        // Always ensure name and email reflect the actual account unless explicitly customized
+        if (!parsedSettings.fullName && user?.name) parsedSettings.fullName = user.name;
+        if (!parsedSettings.email && user?.email) parsedSettings.email = user.email;
+
         setSettings(parsedSettings);
         applySettings(parsedSettings);
       } catch (error) {
         console.error('Failed to parse settings:', error);
-        localStorage.removeItem('appSettings');
+        setSettings(baseDefaults);
+        applySettings(baseDefaults);
       }
     } else {
-      applySettings(defaultSettings);
+      setSettings(baseDefaults);
+      applySettings(baseDefaults);
     }
     setIsLoaded(true);
-  }, []);
+  }, [user]);
 
   const applySettings = (newSettings) => {
     applyTheme(newSettings.theme);
@@ -76,7 +88,8 @@ export function SettingsProvider({ children }) {
 
   const updateSettings = (newSettings) => {
     setSettings(newSettings);
-    localStorage.setItem('appSettings', JSON.stringify(newSettings));
+    const storageKey = user?._id ? `appSettings_${user._id}` : 'appSettings_guest';
+    localStorage.setItem(storageKey, JSON.stringify(newSettings));
     applySettings(newSettings);
   };
 

@@ -1,4 +1,4 @@
-import { Bell, Menu, Search, LogOut, User, Shield } from "lucide-react";
+import { Bell, Menu, Search, LogOut, User, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
@@ -35,6 +35,7 @@ function Topbar({ onMenuClick }) {
   }, []);
 
   const handleLogout = () => {
+    setIsDropdownOpen(false);
     logout();
     navigate("/login");
   };
@@ -67,23 +68,26 @@ function Topbar({ onMenuClick }) {
           <Bell size={18} />
         </button>
 
-        {/* User Pill & Dropdown */}
+        {/* User Profile Pill & Floating Dropdown */}
         <div 
-          className="user-pill" 
+          className={`user-pill ${isDropdownOpen ? 'user-pill--active' : ''}`}
           ref={dropdownRef} 
           onClick={() => setIsDropdownOpen((prev) => !prev)}
-          title="Account options"
+          title="Account menu"
+          role="button"
+          tabIndex={0}
         >
           <span className="user-pill__avatar">
             {displayName.charAt(0).toUpperCase()}
           </span>
-          <span>{displayName}</span>
+          <span className="user-pill__name">{displayName}</span>
+          <ChevronDown size={14} className={`user-pill__chevron ${isDropdownOpen ? 'rotate-180' : ''}`} />
 
           {isDropdownOpen && (
             <div className="user-dropdown" onClick={(e) => e.stopPropagation()}>
               <div className="user-dropdown__header">
                 <div className="user-dropdown__name">{displayName}</div>
-                <div className="user-dropdown__email">{userEmail}</div>
+                <div className="user-dropdown__email" title={userEmail}>{userEmail}</div>
               </div>
 
               <button
@@ -95,12 +99,12 @@ function Topbar({ onMenuClick }) {
                 }}
               >
                 <User size={15} />
-                <span>Preferences</span>
+                <span>Account Preferences</span>
               </button>
 
               <button
                 type="button"
-                className="user-dropdown__item"
+                className="user-dropdown__item user-dropdown__item--danger"
                 onClick={handleLogout}
               >
                 <LogOut size={15} />
