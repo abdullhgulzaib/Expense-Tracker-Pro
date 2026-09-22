@@ -16,7 +16,7 @@ const getDefaultSettings = (user) => ({
 });
 
 export function SettingsProvider({ children }) {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [settings, setSettings] = useState(() => getDefaultSettings(user));
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -45,7 +45,7 @@ export function SettingsProvider({ children }) {
       applySettings(baseDefaults);
     }
     setIsLoaded(true);
-  }, [user]);
+  }, [user?._id]);
 
   const applySettings = (newSettings) => {
     applyTheme(newSettings.theme);
@@ -91,6 +91,20 @@ export function SettingsProvider({ children }) {
     const storageKey = user?._id ? `appSettings_${user._id}` : 'appSettings_guest';
     localStorage.setItem(storageKey, JSON.stringify(newSettings));
     applySettings(newSettings);
+
+    // Sync profile name and email to AuthContext & backend
+    if (updateUser && (newSettings.fullName || newSettings.email)) {
+      const userUpdates = {};
+      if (newSettings.fullName && newSettings.fullName.trim()) {
+        userUpdates.name = newSettings.fullName.trim();
+      }
+      if (newSettings.email && newSettings.email.trim()) {
+        userUpdates.email = newSettings.email.trim();
+      }
+      if (Object.keys(userUpdates).length > 0) {
+        updateUser(userUpdates);
+      }
+    }
   };
 
   const getCurrencySymbol = () => {

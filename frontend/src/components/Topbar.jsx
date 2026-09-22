@@ -25,8 +25,8 @@ function Topbar({ onMenuClick }) {
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
 
-  const displayName = user?.name?.trim() || settings.fullName?.trim() || "User";
-  const userEmail = user?.email || "user@expensetracker.pro";
+  const displayName = settings.fullName?.trim() || user?.name?.trim() || "User";
+  const userEmail = settings.email?.trim() || user?.email || "user@expensetracker.pro";
 
   const handleSearchKeyDown = (event) => {
     if (event.key === "Enter" && searchValue.trim()) {

@@ -2775,10 +2775,16 @@ select:-webkit-autofill:focus {
   background: rgba(59, 130, 246, 0.1);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .notification-dropdown {
-    width: calc(100vw - 32px);
-    right: -45px;
+    position: fixed;
+    top: 66px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    box-sizing: border-box;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
   }
 }
 

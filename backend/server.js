@@ -11,6 +11,7 @@ import {
   registerUser,
   loginUser,
   getMe,
+  updateProfile,
 } from './controllers/authController.js';
 import {
   createExpense,
@@ -75,6 +76,7 @@ app.use(['/auth', '/api/auth', '/expenses', '/api/expenses', '/analytics', '/api
 app.post(['/auth/register', '/api/auth/register'], registerUser);
 app.post(['/auth/login', '/api/auth/login'], loginUser);
 app.get(['/auth/me', '/api/auth/me'], protect, getMe);
+app.put(['/auth/profile', '/api/auth/profile'], protect, updateProfile);
 
 // Expense CRUD Routes (Protected)
 app.post(['/expenses', '/api/expenses'], protect, createExpense);

@@ -80,6 +80,24 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateUser = async (updatedFields) => {
+    try {
+      if (token) {
+        api.put('/auth/profile', updatedFields).catch((err) => {
+          console.warn('Backend profile update failed:', err?.message);
+        });
+      }
+
+      setUser((prev) => {
+        const next = { ...prev, ...updatedFields };
+        localStorage.setItem('et_user', JSON.stringify(next));
+        return next;
+      });
+    } catch (err) {
+      console.error('Failed to update user profile:', err);
+    }
+  };
+
   const value = {
     user,
     token,
@@ -88,6 +106,7 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

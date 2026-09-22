@@ -110,3 +110,36 @@ export const getMe = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+// @desc    Update user profile name & email
+// @route   PUT /auth/profile or /api/auth/profile
+// @access  Private
+export const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (req.body.name && req.body.name.trim()) {
+      user.name = req.body.name.trim();
+    }
+    if (req.body.email && req.body.email.trim()) {
+      const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+      if (!emailRegex.test(req.body.email.trim())) {
+        return res.status(400).json({ error: 'Please provide a valid email address' });
+      }
+      user.email = req.body.email.toLowerCase().trim();
+    }
+
+    const updatedUser = await user.save();
+    return res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+};
