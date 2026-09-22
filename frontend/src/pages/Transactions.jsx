@@ -7,6 +7,7 @@ import ExportModal from '../components/ExportModal';
 import TransactionsTable from '../components/TransactionsTable';
 import Toast from '../components/Toast';
 import { useExpenses } from '../context/ExpenseContext';
+import { useNotifications } from '../context/NotificationContext';
 import { EXPENSE_CATEGORIES } from '../utils/constants';
 import api from '../services/api';
 
@@ -32,6 +33,7 @@ const emptyForm = {
 
 function Transactions() {
   const { state, dispatch } = useExpenses();
+  const { addNotification } = useNotifications();
   const [searchParams] = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -113,6 +115,11 @@ function Transactions() {
         dispatch({ type: 'ADD_EXPENSE', payload: data });
         setToastType('success');
         setToast('Expense added successfully');
+        addNotification({
+          title: 'Expense Added',
+          message: `${payload.title} ($${Number(payload.amount).toFixed(2)}) recorded.`,
+          type: 'expense',
+        });
       }
 
       setIsModalOpen(false);
@@ -251,6 +258,11 @@ function Transactions() {
           setToastType('success');
           setToast(msg);
           setTimeout(() => setToast(''), 3000);
+          addNotification({
+            title: 'Data Exported',
+            message: msg,
+            type: 'export',
+          });
         }}
       />
 

@@ -12,6 +12,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { ExpenseProvider } from './context/ExpenseContext';
 import { SettingsProvider } from './context/SettingsContext';
+import { NotificationProvider } from './context/NotificationContext';
 import useExpenseData from './hooks/useExpenses';
 
 function AppShell() {
@@ -47,21 +48,23 @@ function App() {
       <AuthProvider>
         <SettingsProvider>
           <ExpenseProvider>
-            <Routes>
-              {/* Public Authentication Routes */}
-              <Route path="/login" element={<Auth initialMode="login" />} />
-              <Route path="/signup" element={<Auth initialMode="signup" />} />
+            <NotificationProvider>
+              <Routes>
+                {/* Public Authentication Routes */}
+                <Route path="/login" element={<Auth initialMode="login" />} />
+                <Route path="/signup" element={<Auth initialMode="signup" />} />
 
-              {/* Protected Main Application Shell */}
-              <Route
-                path="/*"
-                element={
-                  <ProtectedRoute>
-                    <AppShell />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
+                {/* Protected Main Application Shell */}
+                <Route
+                  path="/*"
+                  element={
+                    <ProtectedRoute>
+                      <AppShell />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </NotificationProvider>
           </ExpenseProvider>
         </SettingsProvider>
       </AuthProvider>

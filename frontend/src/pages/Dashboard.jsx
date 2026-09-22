@@ -8,11 +8,13 @@ import AddExpenseModal from '../components/AddExpenseModal';
 import Toast from '../components/Toast';
 import { useExpenses as useExpenseContext } from '../context/ExpenseContext';
 import { useSettings } from '../context/SettingsContext';
+import { useNotifications } from '../context/NotificationContext';
 import api from '../services/api';
 
 function Dashboard() {
   const { state, dispatch } = useExpenseContext();
   const { formatCurrency } = useSettings();
+  const { addNotification } = useNotifications();
 
   const { expenses, summary, loading, error } = state;
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,6 +72,11 @@ function Dashboard() {
       dispatch({ type: 'ADD_EXPENSE', payload: data });
       setToastType('success');
       setToast('Expense added successfully');
+      addNotification({
+        title: 'Expense Added',
+        message: `${payload.title} ($${Number(payload.amount).toFixed(2)}) recorded.`,
+        type: 'expense',
+      });
       setIsModalOpen(false);
        } catch (error) {
       setToastType('error');

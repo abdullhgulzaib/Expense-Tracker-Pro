@@ -104,7 +104,7 @@ function Settings() {
         <section className="panel settings-panel settings-panel--wide">
           <div className="panel__header">
             <h3>Notifications</h3>
-            <p className="panel__subtitle">Preferences are saved, but email delivery isn't connected yet.</p>
+            <p className="panel__subtitle">Control which alerts and summary reminders appear in your notifications bell.</p>
           </div>
 
           <div className="toggle-list">

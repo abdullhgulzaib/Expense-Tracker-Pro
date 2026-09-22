@@ -1,16 +1,29 @@
-import { Bell, Menu, Search, LogOut, User, ChevronDown } from "lucide-react";
+import { Bell, Menu, Search, LogOut, User, ChevronDown, CheckCheck, Trash2, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
 import { useAuth } from "../context/AuthContext";
+import { useNotifications } from "../context/NotificationContext";
 
 function Topbar({ onMenuClick }) {
   const { settings } = useSettings();
   const { user, logout } = useAuth();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    clearAll,
+    removeNotification,
+  } = useNotifications();
+
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
   const dropdownRef = useRef(null);
+  const notificationRef = useRef(null);
 
   const displayName = user?.name?.trim() || settings.fullName?.trim() || "User";
   const userEmail = user?.email || "user@expensetracker.pro";
@@ -23,11 +36,14 @@ function Topbar({ onMenuClick }) {
     }
   };
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setIsDropdownOpen(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(e.target)) {
+        setIsNotificationOpen(false);
       }
     };
     document.addEventListener("mousedown", handleOutsideClick);
@@ -38,6 +54,24 @@ function Topbar({ onMenuClick }) {
     setIsDropdownOpen(false);
     logout();
     navigate("/login");
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'expense':
+        return '💳';
+      case 'export':
+        return '📊';
+      case 'welcome':
+        return '👋';
+      case 'alert':
+      case 'spike':
+        return '⚠️';
+      case 'tip':
+        return '💡';
+      default:
+        return '🔔';
+    }
   };
 
   return (
@@ -64,15 +98,105 @@ function Topbar({ onMenuClick }) {
       </div>
 
       <div className="topbar__actions">
-        <button className="topbar__icon" aria-label="Notifications" title="Notifications">
-          <Bell size={18} />
-        </button>
+        {/* Notification Bell & Dropdown */}
+        <div className="notification-wrapper" ref={notificationRef}>
+          <button
+            type="button"
+            className={`topbar__icon ${isNotificationOpen ? 'topbar__icon--active' : ''}`}
+            aria-label="Notifications"
+            title="Notifications"
+            onClick={() => {
+              setIsNotificationOpen((prev) => !prev);
+              setIsDropdownOpen(false);
+            }}
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && <span className="notification-dot" />}
+          </button>
+
+          {isNotificationOpen && (
+            <div className="notification-dropdown" onClick={(e) => e.stopPropagation()}>
+              <div className="notification-dropdown__header">
+                <div className="notification-dropdown__title-row">
+                  <span className="notification-dropdown__title">Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="notification-badge">{unreadCount} new</span>
+                  )}
+                </div>
+                {notifications.length > 0 && (
+                  <button
+                    type="button"
+                    className="notification-action-btn"
+                    onClick={clearAll}
+                    title="Clear all notifications"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+
+              <div className="notification-dropdown__list">
+                {notifications.length === 0 ? (
+                  <div className="notification-dropdown__empty">
+                    <p>No notifications right now.</p>
+                  </div>
+                ) : (
+                  notifications.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`notification-item ${item.unread ? 'notification-item--unread' : ''}`}
+                      onClick={() => markAsRead(item.id)}
+                    >
+                      <div className="notification-item__icon">
+                        {getNotificationIcon(item.type)}
+                      </div>
+                      <div className="notification-item__content">
+                        <div className="notification-item__header">
+                          <span className="notification-item__title">{item.title}</span>
+                          <span className="notification-item__time">{item.time}</span>
+                        </div>
+                        <p className="notification-item__message">{item.message}</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="notification-item__dismiss"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeNotification(item.id);
+                        }}
+                        title="Dismiss"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {unreadCount > 0 && (
+                <div className="notification-dropdown__footer">
+                  <button
+                    type="button"
+                    className="notification-mark-all-btn"
+                    onClick={markAllAsRead}
+                  >
+                    <CheckCheck size={14} />
+                    <span>Mark all as read</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* User Profile Pill & Floating Dropdown */}
         <div 
           className={`user-pill ${isDropdownOpen ? 'user-pill--active' : ''}`}
           ref={dropdownRef} 
-          onClick={() => setIsDropdownOpen((prev) => !prev)}
+          onClick={() => {
+            setIsDropdownOpen((prev) => !prev);
+            setIsNotificationOpen(false);
+          }}
           title="Account menu"
           role="button"
           tabIndex={0}
