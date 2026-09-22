@@ -8,6 +8,7 @@ import TransactionsTable from '../components/TransactionsTable';
 import Toast from '../components/Toast';
 import { useExpenses } from '../context/ExpenseContext';
 import { useNotifications } from '../context/NotificationContext';
+import { useSettings } from '../context/SettingsContext';
 import { EXPENSE_CATEGORIES } from '../utils/constants';
 import api from '../services/api';
 
@@ -34,6 +35,7 @@ const emptyForm = {
 function Transactions() {
   const { state, dispatch } = useExpenses();
   const { addNotification } = useNotifications();
+  const { formatCurrency } = useSettings();
   const [searchParams] = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -110,6 +112,11 @@ function Transactions() {
         const { data } = await api.put(`/expenses/${editingExpense._id}`, payload);
         dispatch({ type: 'UPDATE_EXPENSE', payload: data });
         setToast('Expense updated successfully');
+        addNotification({
+          title: 'Expense Updated',
+          message: `"${payload.title}" was updated to ${formatCurrency(payload.amount)}.`,
+          type: 'expense-edit',
+        });
       } else {
         const { data } = await api.post('/expenses', payload);
         dispatch({ type: 'ADD_EXPENSE', payload: data });
@@ -117,8 +124,8 @@ function Transactions() {
         setToast('Expense added successfully');
         addNotification({
           title: 'Expense Added',
-          message: `${payload.title} ($${Number(payload.amount).toFixed(2)}) recorded.`,
-          type: 'expense',
+          message: `"${payload.title}" (${formatCurrency(payload.amount)}) recorded.`,
+          type: 'expense-add',
         });
       }
 
@@ -136,10 +143,19 @@ function Transactions() {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this expense?')) return;
 
+    const itemToDelete = state.expenses.find((item) => item._id === id);
+
     try {
       await api.delete(`/expenses/${id}`);
       dispatch({ type: 'DELETE_EXPENSE', payload: id });
       setToast('Expense deleted');
+      addNotification({
+        title: 'Expense Deleted',
+        message: itemToDelete
+          ? `"${itemToDelete.title}" (${formatCurrency(itemToDelete.amount)}) was removed.`
+          : 'An expense was removed.',
+        type: 'expense-delete',
+      });
     } catch (error) {
       setToast(error?.response?.data?.error || 'Delete failed');
     } finally {

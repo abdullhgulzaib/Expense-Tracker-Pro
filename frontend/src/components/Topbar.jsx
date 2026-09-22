@@ -59,7 +59,12 @@ function Topbar({ onMenuClick }) {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'expense':
+      case 'expense-add':
         return '💳';
+      case 'expense-edit':
+        return '✏️';
+      case 'expense-delete':
+        return '🗑️';
       case 'export':
         return '📊';
       case 'welcome':

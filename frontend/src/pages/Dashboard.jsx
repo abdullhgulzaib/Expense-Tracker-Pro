@@ -74,8 +74,8 @@ function Dashboard() {
       setToast('Expense added successfully');
       addNotification({
         title: 'Expense Added',
-        message: `${payload.title} ($${Number(payload.amount).toFixed(2)}) recorded.`,
-        type: 'expense',
+        message: `"${payload.title}" (${formatCurrency(payload.amount)}) recorded.`,
+        type: 'expense-add',
       });
       setIsModalOpen(false);
        } catch (error) {
