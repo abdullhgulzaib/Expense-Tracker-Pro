@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Download } from 'lucide-react';
 import AddExpenseModal from '../components/AddExpenseModal';
 import ExpenseDetailsModal from '../components/ExpenseDetailsModal';
+import ExportModal from '../components/ExportModal';
 import TransactionsTable from '../components/TransactionsTable';
 import Toast from '../components/Toast';
 import { useExpenses } from '../context/ExpenseContext';
@@ -32,6 +34,7 @@ function Transactions() {
   const { state, dispatch } = useExpenses();
   const [searchParams] = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [viewingExpense, setViewingExpense] = useState(null);
     const [toast, setToast] = useState('');
@@ -140,8 +143,23 @@ function Transactions() {
   return (
     <div className="page">
       <div className="page__header">
-        <h1>Transactions</h1>
-        <button className="btn btn--primary" onClick={handleOpenAddModal}>+ Add Expense</button>
+        <div>
+          <p className="eyebrow">Financial Records</p>
+          <h1>Transactions</h1>
+        </div>
+        <div className="page__actions">
+          <button
+            type="button"
+            className="btn btn--secondary btn--export"
+            onClick={() => setIsExportModalOpen(true)}
+          >
+            <Download size={15} />
+            <span>Export Data</span>
+          </button>
+          <button className="btn btn--primary" onClick={handleOpenAddModal}>
+            + Add Expense
+          </button>
+        </div>
       </div>
 
       <div className="panel toolbar-panel">
@@ -221,6 +239,18 @@ function Transactions() {
         onEdit={(expense) => {
           setViewingExpense(null);
           handleOpenEditModal(expense);
+        }}
+      />
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        allExpenses={state.expenses}
+        currentFilteredExpenses={filteredExpenses}
+        onExportSuccess={(msg) => {
+          setToastType('success');
+          setToast(msg);
+          setTimeout(() => setToast(''), 3000);
         }}
       />
 
