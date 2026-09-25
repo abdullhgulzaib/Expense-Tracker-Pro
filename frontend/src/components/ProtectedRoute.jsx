@@ -5,22 +5,14 @@ function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
-    return (
-      <div className="auth-loading-screen">
-        <div className="auth-loading-spinner">
-          <div className="auth-spinner-ring"></div>
-          <div className="auth-spinner-core">⚡</div>
-        </div>
-        <p className="auth-loading-text">Authenticating session...</p>
-      </div>
-    );
-  }
+  const hasToken = Boolean(localStorage.getItem('et_token'));
 
-  if (!isAuthenticated) {
+  // If no token exists at all and loading is finished, redirect to login
+  if (!loading && !isAuthenticated && !hasToken) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // If user has a token, AppShell renders with SecureVault covering the screen seamlessly
   return children;
 }
 

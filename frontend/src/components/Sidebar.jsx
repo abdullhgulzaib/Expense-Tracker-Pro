@@ -1,6 +1,8 @@
 import { Home, BarChart3, Receipt, FolderOpen, Settings } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
+import BrandLogo from './BrandLogo';
+
 const navItems = [
   { label: 'Dashboard', icon: Home, to: '/' },
   { label: 'Analytics', icon: BarChart3, to: '/analytics' },
@@ -13,8 +15,7 @@ function Sidebar({ isOpen = false, onNavigate }) {
   return (
     <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
       <div className="sidebar__brand">
-        <div className="brand__mark">ET</div>
-        <span>Expense Tracker</span>
+        <BrandLogo size="sm" showSubtitle={false} />
       </div>
 
       <nav className="sidebar__nav">

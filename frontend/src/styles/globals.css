@@ -1,4 +1,5 @@
 @import './variables.css';
+@import './vault.css';
 
 * {
   box-sizing: border-box;

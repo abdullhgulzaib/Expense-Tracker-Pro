@@ -88,7 +88,22 @@ function Dashboard() {
   };
 
   if (loading) {
-    return <div className="page"><div className="panel empty-panel"><p>Loading dashboard...</p></div></div>;
+    return (
+      <div className="page page--dashboard" style={{ opacity: 0.5 }}>
+        <div className="page__header">
+          <div>
+            <p className="eyebrow">Financial Workspace</p>
+            <h1>Dashboard</h1>
+          </div>
+        </div>
+        <div className="stats-grid">
+          <div className="panel" style={{ minHeight: '110px' }} />
+          <div className="panel" style={{ minHeight: '110px' }} />
+          <div className="panel" style={{ minHeight: '110px' }} />
+          <div className="panel" style={{ minHeight: '110px' }} />
+        </div>
+      </div>
+    );
   }
 
   if (error) {

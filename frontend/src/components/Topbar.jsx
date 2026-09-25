@@ -1,13 +1,15 @@
-import { Bell, Menu, Search, LogOut, User, ChevronDown, CheckCheck, Trash2, X } from "lucide-react";
+import { Bell, Menu, Search, LogOut, User, ChevronDown, CheckCheck, Trash2, X, Lock } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
+import { useVault } from "../context/VaultContext";
 
 function Topbar({ onMenuClick }) {
   const { settings } = useSettings();
   const { user, logout } = useAuth();
+  const { lockVault } = useVault();
   const {
     notifications,
     unreadCount,
@@ -103,6 +105,17 @@ function Topbar({ onMenuClick }) {
       </div>
 
       <div className="topbar__actions">
+        {/* Quick Lock Vault Button */}
+        <button
+          type="button"
+          className="topbar__icon"
+          aria-label="Lock Vault"
+          title="Lock Financial Vault (Conceal Data)"
+          onClick={() => lockVault('manual')}
+        >
+          <Lock size={17} />
+        </button>
+
         {/* Notification Bell & Dropdown */}
         <div className="notification-wrapper" ref={notificationRef}>
           <button

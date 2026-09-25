@@ -9,10 +9,11 @@ const getDefaultSettings = (user) => ({
   currency: 'USD',
   timezone: 'UTC-05:00',
   theme: 'Dark',
-  compactMode: false,
   monthlyAlerts: true,
   weeklySummary: true,
   budgetReminders: true,
+  vaultAnimation: 'full', // 'full' | 'reduced' | 'minimal'
+  autoLockTimeout: 15, // 5, 15, 30, or 0 (Never)
 });
 
 export function SettingsProvider({ children }) {

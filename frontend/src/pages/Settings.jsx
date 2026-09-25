@@ -127,6 +127,34 @@ function Settings() {
 
         <section className="panel settings-panel settings-panel--wide">
           <div className="panel__header">
+            <h3>Security & Vault</h3>
+            <p className="panel__subtitle">Configure vault startup animations and automatic inactivity locking.</p>
+          </div>
+
+          <div className="settings-form">
+            <label>
+              <span>Vault animation style</span>
+              <select name="vaultAnimation" value={settings.vaultAnimation || 'full'} onChange={handleChange}>
+                <option value="full">Full (Mechanical Dial & Live Terminal)</option>
+                <option value="reduced">Reduced (Fast Dial Rotation)</option>
+                <option value="minimal">Minimal (Progress Bar & Checklist)</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Auto-lock inactivity period</span>
+              <select name="autoLockTimeout" value={settings.autoLockTimeout ?? 15} onChange={handleChange}>
+                <option value="5">5 minutes</option>
+                <option value="15">15 minutes (Recommended)</option>
+                <option value="30">30 minutes</option>
+                <option value="0">Never (Manual Lock Only)</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section className="panel settings-panel settings-panel--wide">
+          <div className="panel__header">
             <h3>Preview</h3>
           </div>
           <div className="theme-preview">
@@ -138,6 +166,9 @@ function Settings() {
             </p>
             <p>
               <strong>Full name:</strong> {settings.fullName}
+            </p>
+            <p>
+              <strong>Vault:</strong> {settings.vaultAnimation === 'minimal' ? 'Minimal' : settings.vaultAnimation === 'reduced' ? 'Reduced' : 'Full'} • Auto-lock: {settings.autoLockTimeout > 0 ? `${settings.autoLockTimeout}m` : 'Disabled'}
             </p>
             {settings.compactMode && <p style={{ color: 'var(--color-success)' }}>✓ Compact mode is active</p>}
           </div>

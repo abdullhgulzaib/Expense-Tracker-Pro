@@ -1,0 +1,269 @@
+/* ==========================================================================
+   SECURE VAULT ENTRY EXPERIENCE & PRIVACY OVERLAY STYLES
+   ========================================================================== */
+
+/* Keyframe Animations */
+@keyframes vaultParticleFloat {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.35;
+  }
+  80% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateY(-160px) rotate(22deg);
+    opacity: 0;
+  }
+}
+
+@keyframes vaultPulseCyan {
+  0%, 100% {
+    filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.35));
+    opacity: 0.9;
+  }
+  50% {
+    filter: drop-shadow(0 0 35px rgba(56, 189, 248, 0.75));
+    opacity: 1;
+  }
+}
+
+@keyframes vaultPulseEmerald {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.5));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 45px rgba(16, 185, 129, 0.95));
+    transform: scale(1.03);
+  }
+}
+
+@keyframes vaultRotorSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vaultBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Master Fixed Overlay */
+.vault-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background-color: #030712;
+  background-image: 
+    radial-gradient(circle at 50% 25%, rgba(14, 165, 233, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(37, 99, 235, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 20% 70%, rgba(99, 102, 241, 0.06) 0%, transparent 50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 60fps Dissolve State */
+.vault-overlay.dissolve {
+  opacity: 0 !important;
+  transform: scale(1.05) !important;
+  filter: blur(14px) !important;
+  pointer-events: none !important;
+}
+
+/* Floating Currency Layer */
+.vault-currency-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  user-select: none;
+  z-index: 1;
+}
+
+.vault-particle {
+  position: absolute;
+  font-weight: 700;
+  color: rgba(56, 189, 248, 0.2);
+  animation: vaultParticleFloat 5.5s infinite ease-in-out;
+}
+
+/* Vault Content Box */
+.vault-content-card {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: auto;
+}
+
+/* Precision Mechanical SVG Dial */
+.vault-dial-wrapper {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.25rem 0;
+}
+
+@media (max-width: 640px) {
+  .vault-dial-wrapper {
+    width: 180px;
+    height: 180px;
+  }
+}
+
+.vault-dial-stator {
+  position: absolute;
+  inset: 0;
+}
+
+.vault-dial-rotor {
+  transform-origin: 100px 100px;
+  transition: transform 0.15s linear;
+}
+
+.vault-dial-hub {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Live Terminal Window */
+.vault-terminal {
+  background-color: #050b18;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.vault-terminal::-webkit-scrollbar {
+  width: 4px;
+}
+
+.vault-terminal::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 4px;
+}
+
+.vault-terminal-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  line-height: 1.6;
+}
+
+.vault-terminal-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 12px;
+  background-color: #38bdf8;
+  margin-left: 4px;
+  animation: vaultBlink 1s infinite;
+  vertical-align: middle;
+}
+
+/* Telemetry Degree Badge */
+.vault-degree-badge {
+  position: absolute;
+  right: -24px;
+  top: 14px;
+  background: rgba(11, 23, 48, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 4px 10px;
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 640px) {
+  .vault-degree-badge {
+    right: -8px;
+    top: 4px;
+  }
+}
+
+/* Progress Rail */
+.vault-progress-rail {
+  width: 100%;
+  background: #091224;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+  padding: 1px;
+}
+
+.vault-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0ea5e9, #38bdf8, #10b981);
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+  transition: width 0.25s ease-out;
+}
+
+/* Action Button */
+.vault-unlock-btn {
+  width: 100%;
+  max-width: 320px;
+  padding: 12px 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  color: #030712;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(14, 165, 233, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vault-unlock-btn:hover {
+  background: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%);
+  box-shadow: 0 16px 36px rgba(14, 165, 233, 0.55);
+  transform: translateY(-1px) scale(1.02);
+}
+
+.vault-unlock-btn:active {
+  transform: translateY(1px) scale(0.98);
+}

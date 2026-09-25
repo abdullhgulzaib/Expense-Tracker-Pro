@@ -13,6 +13,8 @@ import { AuthProvider } from './context/AuthContext';
 import { ExpenseProvider } from './context/ExpenseContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { VaultProvider } from './context/VaultContext';
+import SecureVault from './components/vault/SecureVault';
 import useExpenseData from './hooks/useExpenses';
 
 function AppShell() {
@@ -21,6 +23,9 @@ function AppShell() {
 
   return (
     <div className="app-shell">
+      {/* Fixed Privacy & Security Vault Overlay */}
+      <SecureVault />
+
       <Sidebar isOpen={isSidebarOpen} onNavigate={() => setIsSidebarOpen(false)} />
       {isSidebarOpen ? (
         <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
@@ -48,23 +53,25 @@ function App() {
       <AuthProvider>
         <SettingsProvider>
           <ExpenseProvider>
-            <NotificationProvider>
-              <Routes>
-                {/* Public Authentication Routes */}
-                <Route path="/login" element={<Auth initialMode="login" />} />
-                <Route path="/signup" element={<Auth initialMode="signup" />} />
+            <VaultProvider>
+              <NotificationProvider>
+                <Routes>
+                  {/* Public Authentication Routes */}
+                  <Route path="/login" element={<Auth initialMode="login" />} />
+                  <Route path="/signup" element={<Auth initialMode="signup" />} />
 
-                {/* Protected Main Application Shell */}
-                <Route
-                  path="/*"
-                  element={
-                    <ProtectedRoute>
-                      <AppShell />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </NotificationProvider>
+                  {/* Protected Main Application Shell */}
+                  <Route
+                    path="/*"
+                    element={
+                      <ProtectedRoute>
+                        <AppShell />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </NotificationProvider>
+            </VaultProvider>
           </ExpenseProvider>
         </SettingsProvider>
       </AuthProvider>

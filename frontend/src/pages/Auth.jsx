@@ -13,9 +13,10 @@ import {
   BarChart3,
   Brain,
   Target,
-  Shield
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import BrandLogo from '../components/BrandLogo';
 
 function Auth({ initialMode = 'login' }) {
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
@@ -103,17 +104,7 @@ function Auth({ initialMode = 'login' }) {
 
       {/* Top Header Bar */}
       <header className="auth-topbar">
-        <div className="auth-brand-badge">
-          <div className="auth-brand-logo">
-            <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-            </svg>
-          </div>
-          <div>
-            <div className="auth-brand-title">EXPENSE</div>
-            <div className="auth-brand-subtitle">TRACKER PRO</div>
-          </div>
-        </div>
+        <BrandLogo size="md" subtitle="Your Financial Life, Secured." />
 
         <div className="auth-security-pill">
           <Shield size={14} className="text-cyan-400" />
