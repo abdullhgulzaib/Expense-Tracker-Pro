@@ -743,14 +743,14 @@
 /* Modals */
 .sv-modal-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 1000;
+  height: 100dvh;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 10000 !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -765,9 +765,10 @@
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
+  max-height: calc(100dvh - 32px);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
   overflow: hidden;
   box-sizing: border-box;
   animation: svModalSlideIn 0.22s ease-out;
@@ -840,6 +841,7 @@
   justify-content: flex-end;
   gap: 12px;
   background: rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
 }
 
 /* Forms */
@@ -1148,17 +1150,27 @@
   display: none;
 }
 
+/* Automatically hide floating mobile nav whenever any modal, sheet, or overlay is open */
+body:has(.sv-modal-backdrop) .global-mobile-nav,
+body:has(.modal-backdrop) .global-mobile-nav,
+body:has(.sidebar-backdrop) .global-mobile-nav {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 @media (max-width: 768px) {
   .global-mobile-nav {
     display: flex;
     position: fixed;
-    bottom: 16px;
+    bottom: max(14px, env(safe-area-inset-bottom, 14px));
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 24px);
     max-width: 420px;
     height: 56px;
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.88) 0%, rgba(10, 15, 30, 0.96) 100%);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(10, 15, 30, 0.98) 100%);
     backdrop-filter: blur(28px) saturate(210%);
     -webkit-backdrop-filter: blur(28px) saturate(210%);
     border: 1px solid rgba(59, 130, 246, 0.35);
@@ -1219,7 +1231,7 @@
   }
 
   .main-panel {
-    padding-bottom: 90px !important;
+    padding-bottom: calc(108px + env(safe-area-inset-bottom, 24px)) !important;
   }
 }
 
@@ -1232,7 +1244,7 @@
 
 @media (max-width: 768px) {
   .splitvault-container {
-    padding: 16px 12px 90px;
+    padding: 16px 12px calc(108px + env(safe-area-inset-bottom, 24px)) !important;
     gap: 16px;
   }
 
@@ -1314,19 +1326,66 @@
     grid-template-columns: 1fr;
   }
 
+  .sv-modal-backdrop {
+    padding: 12px 10px;
+    align-items: center;
+    z-index: 10000 !important;
+  }
+
+  .sv-modal-dialog {
+    max-height: calc(100dvh - 20px) !important;
+    height: auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sv-modal-dialog > form,
+  .sv-modal-dialog > div:not(.sv-modal-header) {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .sv-modal-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 14px;
+    gap: 14px;
+  }
+
+  .sv-verification-image-col {
+    max-height: 220px;
+  }
+
+  .sv-verification-image {
+    max-height: 220px;
+  }
+
   .sv-modal-footer {
+    flex-shrink: 0;
     flex-direction: column-reverse;
+    padding: 12px 14px;
+    gap: 8px;
+    background: var(--sv-surface);
   }
 
   .sv-modal-footer .splitvault-btn {
     width: 100%;
+    min-height: 44px;
   }
 }
 
 /* Small mobile (360px Samsung Galaxy A53 & 390px iPhone) - Strictly 2x2 with No Text Wrap! */
 @media (max-width: 390px) {
   .splitvault-container {
-    padding: 12px 8px 90px;
+    padding: 12px 8px calc(108px + env(safe-area-inset-bottom, 24px)) !important;
     gap: 12px;
   }
 

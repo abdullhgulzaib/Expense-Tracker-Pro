@@ -40,6 +40,22 @@ function AppShell() {
     });
   };
 
+  // Hide mobile floating nav whenever any modal/drawer is open
+  const [hasModalOpen, setHasModalOpen] = useState(false);
+
+  useEffect(() => {
+    const checkModals = () => {
+      const modal = document.querySelector('.sv-modal-backdrop, .modal-backdrop, .sidebar-backdrop');
+      setHasModalOpen(Boolean(modal));
+    };
+
+    checkModals();
+    const observer = new MutationObserver(checkModals);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="app-shell">
       {/* Fixed Privacy & Security Vault Overlay */}
@@ -72,7 +88,7 @@ function AppShell() {
       </main>
 
       {/* Global Mobile Bottom Navigation Bar (Across All Pages on Mobile Screen) */}
-      <nav className="global-mobile-nav">
+      <nav className={`global-mobile-nav ${hasModalOpen ? 'hidden' : ''}`}>
         <NavLink
           to="/"
           end

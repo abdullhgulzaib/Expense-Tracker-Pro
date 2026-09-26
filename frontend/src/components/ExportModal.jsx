@@ -111,7 +111,7 @@ function ExportModal({
         const filename = `Expense_Export_${dateTag}.csv`;
         exportToCSV(targetExpenses, {
           filename,
-          currency: settings.currency || 'USD',
+          currency: settings.currency || 'PKR',
         });
         if (onExportSuccess) {
           onExportSuccess(`Downloaded CSV spreadsheet with ${targetExpenses.length} records.`);

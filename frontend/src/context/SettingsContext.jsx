@@ -6,8 +6,8 @@ const SettingsContext = createContext();
 const getDefaultSettings = (user) => ({
   fullName: user?.name || '',
   email: user?.email || '',
-  currency: 'USD',
-  timezone: 'UTC-05:00',
+  currency: 'PKR',
+  timezone: 'UTC+05:00',
   theme: 'Dark',
   monthlyAlerts: true,
   weeklySummary: true,
@@ -109,14 +109,17 @@ export function SettingsProvider({ children }) {
   };
 
   const getCurrencySymbol = () => {
-    const symbols = { USD: '$', EUR: '€', GBP: '£', PKR: 'PKR ' };
-    return symbols[settings.currency] || '$';
+    const symbols = { PKR: 'Rs ', USD: '$', EUR: '€', GBP: '£' };
+    return symbols[settings.currency] || 'Rs ';
   };
 
   const formatCurrency = (amount) => {
-    const formattedAmount = Number(amount || 0).toFixed(2);
+    const formattedAmount = Number(amount || 0).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
     return settings.currency === 'PKR'
-      ? `${formattedAmount} PKR`
+      ? `Rs ${formattedAmount}`
       : `${getCurrencySymbol()}${formattedAmount}`;
   };
 

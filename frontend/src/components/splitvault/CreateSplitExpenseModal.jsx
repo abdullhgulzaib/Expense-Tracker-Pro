@@ -314,7 +314,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <div className="sv-modal-body">
             {error && (
               <div

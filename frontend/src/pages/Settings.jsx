@@ -89,10 +89,10 @@ function Settings() {
             <label>
               <span>Currency</span>
               <select name="currency" value={settings.currency} onChange={handleChange}>
+                <option value="PKR">PKR (Rs)</option>
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
                 <option value="GBP">GBP (£)</option>
-                <option value="PKR">PKR (Rs)</option>
               </select>
             </label>
 

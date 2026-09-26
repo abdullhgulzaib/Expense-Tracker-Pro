@@ -881,12 +881,18 @@ th {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(11, 17, 32, 0.78);
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(5, 10, 20, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: grid;
   place-items: center;
-  z-index: 30;
+  z-index: 10000 !important;
   padding: 16px;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .modal {
@@ -1077,7 +1083,7 @@ th {
 
 @media (max-width: 640px) {
   .main-panel {
-    padding: 14px 12px 24px;
+    padding: 14px 12px calc(108px + env(safe-area-inset-bottom, 24px)) !important;
   }
 
   .topbar {
@@ -1283,7 +1289,7 @@ th {
   .main-panel {
     width: 100% !important;
     min-width: 0 !important;
-    padding: 14px 12px 28px !important;
+    padding: 14px 12px calc(108px + env(safe-area-inset-bottom, 24px)) !important;
   }
 }
 
@@ -1360,6 +1366,7 @@ th {
 
   .modal-backdrop {
     padding: 8px;
+    z-index: 10000 !important;
   }
 
   .modal {
@@ -1391,6 +1398,7 @@ th {
 @media (max-width: 360px) {
   .main-panel {
     padding-inline: 8px;
+    padding-bottom: calc(108px + env(safe-area-inset-bottom, 24px)) !important;
   }
 
   .topbar {

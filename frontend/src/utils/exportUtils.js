@@ -7,7 +7,7 @@ import autoTable from 'jspdf-autotable';
  * @param {Array} expenses - Array of expense items
  * @param {Object} options - Export options (filename, currency)
  */
-export function exportToCSV(expenses = [], { filename, currency = 'USD' } = {}) {
+export function exportToCSV(expenses = [], { filename, currency = 'PKR' } = {}) {
   const headers = ['Date', 'Title', 'Category', 'Amount', 'Currency', 'Payment Method', 'Status', 'Notes'];
 
   const rows = expenses.map((item) => {
@@ -59,7 +59,7 @@ export function exportToPDF(
 ) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  const currencySymbol = settings.currency === 'PKR' ? 'PKR ' : settings.currency === 'EUR' ? '€' : settings.currency === 'GBP' ? '£' : '$';
+  const currencySymbol = settings.currency === 'PKR' ? 'Rs ' : settings.currency === 'EUR' ? '€' : settings.currency === 'GBP' ? '£' : '$';
   const formatMoney = (val) => `${currencySymbol}${Number(val || 0).toFixed(2)}`;
 
   const totalSpent = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);

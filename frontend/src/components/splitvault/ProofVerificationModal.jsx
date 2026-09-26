@@ -111,7 +111,7 @@ export default function ProofVerificationModal({ isOpen, onClose, expense, split
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
             <div className="sv-modal-body">
               {error && (
                 <div
