@@ -1,18 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { X, Users, Plus, CheckCircle2, Clock, AlertCircle, Copy, Check, Share2, Receipt } from 'lucide-react';
+import {
+  X,
+  Users,
+  Plus,
+  CheckCircle2,
+  AlertCircle,
+  Copy,
+  Check,
+  Receipt,
+  Trash2,
+  UserPlus,
+  ShieldAlert,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSplitVault } from '../../context/SplitVaultContext';
 
-export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddExpense, onOpenVerification, onOpenProofSubmit }) {
+export default function GroupDetailsModal({
+  isOpen,
+  onClose,
+  groupId,
+  onOpenAddExpense,
+  onOpenVerification,
+  onOpenProofSubmit,
+}) {
   const { user } = useAuth();
-  const { fetchGroupDetails, activeGroupDetails, groupLoading } = useSplitVault();
+  const {
+    fetchGroupDetails,
+    activeGroupDetails,
+    groupLoading,
+    deleteGroup,
+    addMemberToGroup,
+    removeMemberFromGroup,
+  } = useSplitVault();
 
   const [activeTab, setActiveTab] = useState('expenses'); // 'expenses' | 'members' | 'invite'
   const [copied, setCopied] = useState(false);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [memberError, setMemberError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (isOpen && groupId) {
       fetchGroupDetails(groupId);
+      setShowDeleteConfirm(false);
+      setMemberError('');
+      setNewMemberName('');
+      setNewMemberEmail('');
     }
   }, [isOpen, groupId, fetchGroupDetails]);
 
@@ -28,7 +64,8 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
     settledPct: 0,
   };
 
-  const inviteCode = group?.inviteCode || 'GROUP-101';
+  const isCreator = group?.createdBy?.toString() === user?._id?.toString();
+  const inviteCode = group?.inviteCode || 'FLAT101';
 
   const handleCopyInvite = () => {
     navigator.clipboard.writeText(inviteCode);
@@ -36,10 +73,46 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    if (!newMemberName.trim()) {
+      setMemberError('Please enter member name.');
+      return;
+    }
+    setMemberError('');
+    setIsAddingMember(true);
+    const res = await addMemberToGroup(groupId, {
+      name: newMemberName.trim(),
+      email: newMemberEmail.trim(),
+    });
+    setIsAddingMember(false);
+    if (res.success) {
+      setNewMemberName('');
+      setNewMemberEmail('');
+    } else {
+      setMemberError(res.error || 'Failed to add member.');
+    }
+  };
+
+  const handleRemoveMember = async (memberId) => {
+    if (!window.confirm('Are you sure you want to remove this member from the group?')) return;
+    await removeMemberFromGroup(groupId, memberId);
+  };
+
+  const handleDeleteGroup = async () => {
+    setIsDeleting(true);
+    const res = await deleteGroup(groupId);
+    setIsDeleting(false);
+    if (res.success) {
+      onClose();
+    }
+  };
+
   // SVG circular ring calculation
-  const radius = 45;
+  const radius = 42;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - ((stats.settledPct || 0) / 100) * circumference;
+  const settledPct = stats.totalCount > 0 ? stats.settledPct : 0;
+  const strokeDashoffset = circumference - (settledPct / 100) * circumference;
 
   return (
     <div className="sv-modal-backdrop" onClick={onClose}>
@@ -57,6 +130,7 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
               <Users size={20} />
@@ -64,7 +138,7 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h2 className="sv-modal-header__title">{group?.name || 'Group Details'}</h2>
-                <span className="splitvault-pill splitvault-pill--beta">
+                <span className="splitvault-pill splitvault-pill--live">
                   {group?.category || 'Hostel'}
                 </span>
               </div>
@@ -74,10 +148,60 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
             </div>
           </div>
 
-          <button className="sv-modal-close-btn" onClick={onClose} aria-label="Close modal">
-            <X size={20} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {isCreator && (
+              <button
+                type="button"
+                className="splitvault-btn splitvault-btn--danger-outline splitvault-btn--sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                title="Delete this group"
+              >
+                <Trash2 size={14} /> Delete Group
+              </button>
+            )}
+            <button className="sv-modal-close-btn" onClick={onClose} aria-label="Close modal">
+              <X size={20} />
+            </button>
+          </div>
         </div>
+
+        {/* Delete Confirmation Banner */}
+        {showDeleteConfirm && (
+          <div
+            style={{
+              padding: '14px 20px',
+              background: 'rgba(239, 68, 68, 0.12)',
+              borderBottom: '1px solid rgba(239, 68, 68, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '10px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f87171', fontSize: '0.88rem' }}>
+              <ShieldAlert size={18} />
+              <span>Are you sure you want to delete <strong>{group?.name}</strong> and all its shared expenses?</span>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="splitvault-btn splitvault-btn--danger splitvault-btn--sm"
+                onClick={handleDeleteGroup}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="sv-modal-body">
           {groupLoading && !group ? (
@@ -86,25 +210,25 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
             </div>
           ) : (
             <>
-              {/* Circular Progress & Balance Ring (Screen 6 Highlight) */}
+              {/* Circular Progress & Balance Ring */}
               <div className="sv-progress-ring-card">
                 <div className="sv-progress-ring-wrapper">
-                  <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+                  <svg width="110" height="110" viewBox="0 0 110 110" style={{ transform: 'rotate(-90deg)' }}>
                     <circle
-                      cx="60"
-                      cy="60"
+                      cx="55"
+                      cy="55"
                       r={radius}
                       fill="none"
                       stroke="rgba(255, 255, 255, 0.08)"
-                      strokeWidth="10"
+                      strokeWidth="9"
                     />
                     <circle
-                      cx="60"
-                      cy="60"
+                      cx="55"
+                      cy="55"
                       r={radius}
                       fill="none"
                       stroke="#10b981"
-                      strokeWidth="10"
+                      strokeWidth="9"
                       strokeDasharray={circumference}
                       strokeDashoffset={strokeDashoffset}
                       strokeLinecap="round"
@@ -112,25 +236,36 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
                     />
                   </svg>
                   <div className="sv-progress-ring-text">
-                    <div className="sv-progress-ring-pct">{stats.settledPct}%</div>
+                    <div className="sv-progress-ring-pct" style={{ textShadow: '0 0 12px rgba(16, 185, 129, 0.5)' }}>
+                      {settledPct}%
+                    </div>
                     <div className="sv-progress-ring-sub">Settled</div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div>
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>
                       Remaining Outstanding
                     </span>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f59e0b' }}>
+                    <div
+                      style={{
+                        fontSize: '1.45rem',
+                        fontWeight: 800,
+                        color: '#ef4444',
+                        textShadow: '0 0 14px rgba(239, 68, 68, 0.45)',
+                      }}
+                    >
                       Rs {Number(stats.remainingAmount).toLocaleString()}
                     </div>
                   </div>
                   <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
                     Total Group Spend: <strong style={{ color: '#fff' }}>Rs {Number(stats.totalAmount).toLocaleString()}</strong>
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: '#10b981' }}>
-                    ✓ {stats.settledCount} of {stats.totalCount} splits completely settled
+                  <div style={{ fontSize: '0.8rem', color: stats.totalCount > 0 ? '#10b981' : '#94a3b8' }}>
+                    {stats.totalCount > 0
+                      ? `✓ ${stats.settledCount} of ${stats.totalCount} splits completely settled`
+                      : '0 expenses recorded yet'}
                   </div>
                 </div>
 
@@ -142,12 +277,12 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
                     onOpenAddExpense(groupId);
                   }}
                 >
-                  <Plus size={16} /> + Add Expense
+                  <Plus size={16} /> Add Expense
                 </button>
               </div>
 
               {/* Tabs Switcher */}
-              <div className="sv-tabs-nav" style={{ maxWidth: '400px', margin: '0 auto' }}>
+              <div className="sv-tabs-nav" style={{ maxWidth: '420px', margin: '0 auto' }}>
                 <button
                   type="button"
                   className={`sv-tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
@@ -175,12 +310,24 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
               {activeTab === 'expenses' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {expenses.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '30px 0', color: '#94a3b8' }}>
-                      No shared expenses recorded for this group yet.
+                    <div style={{ textAlign: 'center', padding: '36px 0', color: '#94a3b8' }}>
+                      <p style={{ margin: '0 0 10px', fontSize: '0.95rem' }}>
+                        No shared expenses recorded for this group yet.
+                      </p>
+                      <button
+                        type="button"
+                        className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
+                        onClick={() => {
+                          onClose();
+                          onOpenAddExpense(groupId);
+                        }}
+                      >
+                        <Plus size={14} /> Add First Expense
+                      </button>
                     </div>
                   ) : (
                     expenses.map((exp) => {
-                      const isCreator = exp.paidBy?.toString() === user?._id?.toString();
+                      const isExpensePayer = exp.paidBy?.toString() === user?._id?.toString();
                       return (
                         <div key={exp._id} className="splitvault-expense-item">
                           <div className="splitvault-expense-item__header">
@@ -191,7 +338,7 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
                               <div>
                                 <h4 className="splitvault-expense-item__title">{exp.title}</h4>
                                 <div className="splitvault-expense-item__meta">
-                                  <span>Paid upfront by {isCreator ? 'You' : exp.paidByName}</span>
+                                  <span>Paid by {isExpensePayer ? 'You' : exp.paidByName}</span>
                                   <span>•</span>
                                   <span>{new Date(exp.date).toLocaleDateString()}</span>
                                 </div>
@@ -207,17 +354,16 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
                                   exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
                                 }`}
                               >
-                                {exp.isFullySettled ? 'Fully Settled' : 'Pending Splits'}
+                                {exp.isFullySettled ? '✓ Fully Settled' : 'Pending Splits'}
                               </span>
                             </div>
                           </div>
 
-                          {/* Splits with Actions */}
                           <div className="splitvault-expense-item__splits">
                             {exp.splits.map((s, idx) => {
                               const isMySplit = s.user?.toString() === user?._id?.toString();
-                              const canVerify = isCreator && s.status === 'UnderReview';
-                              const canSubmit = isMySplit && (s.status === 'Unpaid' || s.status === 'Rejected');
+                              const canVerify = isExpensePayer && s.status === 'UnderReview';
+                              const canSubmit = isMySplit && !isExpensePayer && (s.status === 'Unpaid' || s.status === 'Rejected');
 
                               return (
                                 <div key={idx} className="splitvault-split-row">
@@ -257,7 +403,6 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
                                       </span>
                                     )}
 
-                                    {/* Action button: Payer verifies, Debtor submits */}
                                     {canVerify && (
                                       <button
                                         type="button"
@@ -297,39 +442,108 @@ export default function GroupDetailsModal({ isOpen, onClose, groupId, onOpenAddE
 
               {/* TAB 2: Members List */}
               {activeTab === 'members' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {group?.members?.map((m, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '12px 16px',
-                        borderRadius: '12px',
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid var(--sv-card-border)',
-                      }}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {/* Add Member Box */}
+                  <form
+                    onSubmit={handleAddMember}
+                    style={{
+                      display: 'flex',
+                      gap: '8px',
+                      padding: '12px 14px',
+                      background: 'rgba(255,255,255,0.02)',
+                      borderRadius: '12px',
+                      border: '1px solid var(--sv-card-border)',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <input
+                      type="text"
+                      className="sv-form-input"
+                      placeholder="Roommate name (e.g. Ali, Bilal)"
+                      value={newMemberName}
+                      onChange={(e) => setNewMemberName(e.target.value)}
+                      style={{ flex: 1, minWidth: '130px' }}
+                      required
+                    />
+                    <input
+                      type="email"
+                      className="sv-form-input"
+                      placeholder="Email (optional)"
+                      value={newMemberEmail}
+                      onChange={(e) => setNewMemberEmail(e.target.value)}
+                      style={{ flex: 1, minWidth: '130px' }}
+                    />
+                    <button
+                      type="submit"
+                      className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
+                      disabled={isAddingMember}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div className="sv-participant-avatar">
-                          {m.name?.charAt(0) || 'U'}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.92rem' }}>
-                            {m.name} {m.user?.toString() === user?._id?.toString() ? '(You)' : ''}
-                          </div>
-                          <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                            {m.email || 'Hostel Resident'}
-                          </div>
-                        </div>
-                      </div>
+                      <UserPlus size={16} />
+                      {isAddingMember ? 'Adding...' : 'Add Member'}
+                    </button>
+                  </form>
 
-                      <span className="splitvault-pill splitvault-pill--beta">
-                        {m.role || 'Member'}
-                      </span>
+                  {memberError && (
+                    <div style={{ color: '#f87171', fontSize: '0.82rem', padding: '0 4px' }}>
+                      {memberError}
                     </div>
-                  ))}
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {group?.members?.map((m) => {
+                      const isThisUser = m.user?.toString() === user?._id?.toString();
+                      return (
+                        <div
+                          key={m._id || m.user}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '12px 14px',
+                            borderRadius: '12px',
+                            background: 'rgba(255,255,255,0.02)',
+                            border: '1px solid var(--sv-card-border)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div className="sv-participant-avatar">
+                              {m.name?.charAt(0) || 'U'}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.92rem' }}>
+                                {m.name} {isThisUser ? '(You)' : ''}
+                              </div>
+                              <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                                {m.email || 'Group Member'}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span className="splitvault-pill splitvault-pill--live">
+                              {m.role || 'Member'}
+                            </span>
+                            {isCreator && !isThisUser && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMember(m._id || m.user)}
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#ef4444',
+                                  cursor: 'pointer',
+                                  padding: '4px',
+                                }}
+                                title="Remove member"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 

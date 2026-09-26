@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Users, DollarSign, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSplitVault } from '../../context/SplitVaultContext';
@@ -7,7 +7,7 @@ const DEFAULT_CATEGORIES = ['Food', 'Housing', 'Utilities', 'Transport', 'Entert
 
 export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGroupId = null }) {
   const { user } = useAuth();
-  const { summary, createSplitExpense } = useSplitVault();
+  const { summary, activeGroupDetails, createSplitExpense } = useSplitVault();
 
   const [title, setTitle] = useState('');
   const [totalAmount, setTotalAmount] = useState('');
@@ -18,11 +18,39 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Default participants: current user + common roommates
   const [participants, setParticipants] = useState([]);
   const [newParticipantName, setNewParticipantName] = useState('');
 
-  // Initialize participants
+  // Helper to recalculate splits automatically across all selected members
+  const recalculateSplits = useCallback((list, totalStr, type) => {
+    const total = parseFloat(totalStr) || 0;
+    const selectedCount = list.filter((p) => p.selected).length;
+
+    if (type === 'Equal') {
+      const splitAmount = selectedCount > 0 && total > 0 ? Math.round((total / selectedCount) * 100) / 100 : 0;
+      const splitPct = selectedCount > 0 ? Math.round((100 / selectedCount) * 10) / 10 : 0;
+
+      return list.map((p) =>
+        p.selected
+          ? { ...p, amount: splitAmount, percentage: splitPct }
+          : { ...p, amount: 0, percentage: 0 }
+      );
+    }
+
+    if (type === 'Percentage') {
+      const splitPct = selectedCount > 0 ? Math.round((100 / selectedCount) * 10) / 10 : 0;
+      return list.map((p) => {
+        if (!p.selected) return { ...p, amount: 0, percentage: 0 };
+        const pct = p.percentage || splitPct;
+        const amt = Math.round(((total * pct) / 100) * 100) / 100;
+        return { ...p, percentage: pct, amount: amt };
+      });
+    }
+
+    return list;
+  }, []);
+
+  // Initialize or re-populate members from the currently selected group
   useEffect(() => {
     if (!isOpen) return;
 
@@ -30,9 +58,16 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
     setTitle('');
     setTotalAmount('');
     setNotes('');
-    setGroupId(preselectedGroupId || (summary.groups.length > 0 ? summary.groups[0]._id : ''));
 
-    // Populate initial members: current user + seed members
+    const targetGroupId = preselectedGroupId || (summary.groups.length > 0 ? summary.groups[0]._id : '');
+    setGroupId(targetGroupId);
+
+    // Find declared members of this group
+    let groupObj = summary.groups.find((g) => g._id === targetGroupId);
+    if (!groupObj && activeGroupDetails?.group?._id === targetGroupId) {
+      groupObj = activeGroupDetails.group;
+    }
+
     const initial = [
       {
         userId: user?._id || 'user_me',
@@ -41,68 +76,133 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
         isCurrentUser: true,
         selected: true,
         amount: 0,
-        percentage: 50,
-      },
-      {
-        userId: 'roommate_1',
-        name: 'Ali Khan',
-        email: 'ali@hostel.edu',
-        isCurrentUser: false,
-        selected: true,
-        amount: 0,
-        percentage: 50,
-      },
-      {
-        userId: 'roommate_2',
-        name: 'Bilal Ahmed',
-        email: 'bilal@hostel.edu',
-        isCurrentUser: false,
-        selected: false,
-        amount: 0,
-        percentage: 0,
+        percentage: 100,
       },
     ];
 
-    setParticipants(initial);
-  }, [isOpen, user, summary.groups, preselectedGroupId]);
-
-  // Recalculate split amounts whenever total, participants, or splitType changes
-  useEffect(() => {
-    const total = parseFloat(totalAmount) || 0;
-    const selectedCount = participants.filter((p) => p.selected).length;
-
-    if (splitType === 'Equal') {
-      if (selectedCount === 0 || total === 0) {
-        setParticipants((prev) => prev.map((p) => ({ ...p, amount: 0, percentage: 0 })));
-        return;
-      }
-      const splitAmount = Math.round((total / selectedCount) * 100) / 100;
-      const splitPct = Math.round((100 / selectedCount) * 10) / 10;
-
-      setParticipants((prev) =>
-        prev.map((p) =>
-          p.selected
-            ? { ...p, amount: splitAmount, percentage: splitPct }
-            : { ...p, amount: 0, percentage: 0 }
-        )
-      );
+    if (groupObj && Array.isArray(groupObj.members)) {
+      groupObj.members.forEach((m) => {
+        const mUserId = m.user?._id || m.user || m._id;
+        if (mUserId?.toString() !== user?._id?.toString() && m.name) {
+          initial.push({
+            userId: mUserId,
+            name: m.name,
+            email: m.email || '',
+            isCurrentUser: false,
+            selected: true,
+            amount: 0,
+            percentage: 0,
+          });
+        }
+      });
     }
-  }, [totalAmount, splitType]);
 
-  if (!isOpen) return null;
+    setParticipants(recalculateSplits(initial, '', 'Equal'));
+  }, [isOpen, preselectedGroupId, summary.groups, activeGroupDetails, user, recalculateSplits]);
 
+  // When group selection changes in the dropdown, switch to that group's declared members
+  const handleGroupChange = (newGroupId) => {
+    setGroupId(newGroupId);
+
+    let groupObj = summary.groups.find((g) => g._id === newGroupId);
+    if (!groupObj && activeGroupDetails?.group?._id === newGroupId) {
+      groupObj = activeGroupDetails.group;
+    }
+
+    const updated = [
+      {
+        userId: user?._id || 'user_me',
+        name: `${user?.name || 'You'} (Payer)`,
+        email: user?.email || '',
+        isCurrentUser: true,
+        selected: true,
+        amount: 0,
+        percentage: 100,
+      },
+    ];
+
+    if (groupObj && Array.isArray(groupObj.members)) {
+      groupObj.members.forEach((m) => {
+        const mUserId = m.user?._id || m.user || m._id;
+        if (mUserId?.toString() !== user?._id?.toString() && m.name) {
+          updated.push({
+            userId: mUserId,
+            name: m.name,
+            email: m.email || '',
+            isCurrentUser: false,
+            selected: true,
+            amount: 0,
+            percentage: 0,
+          });
+        }
+      });
+    }
+
+    setParticipants(recalculateSplits(updated, totalAmount, splitType));
+  };
+
+  // When total amount changes, auto-update split amounts immediately
+  const handleTotalAmountChange = (val) => {
+    setTotalAmount(val);
+    setParticipants((prev) => recalculateSplits(prev, val, splitType));
+  };
+
+  // When split type tab changes, auto-update immediately
+  const handleSplitTypeChange = (type) => {
+    setSplitType(type);
+    setParticipants((prev) => recalculateSplits(prev, totalAmount, type));
+  };
+
+  // Toggle member participation: auto-updates split amounts immediately!
   const handleToggleSelect = (index) => {
     const p = participants[index];
-    if (p.isCurrentUser) return; // Current user always included as payer
+    if (p.isCurrentUser) return; // Account holder is always included as payer
 
     setParticipants((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], selected: !next[index].selected };
-      return next;
+      const next = prev.map((item, idx) => (idx === index ? { ...item, selected: !item.selected } : item));
+      return recalculateSplits(next, totalAmount, splitType);
     });
   };
 
-  const handleAmountChange = (index, value) => {
+  // Add new roommate member: auto-divides amounts immediately!
+  const handleAddParticipant = () => {
+    if (!newParticipantName.trim()) return;
+    const name = newParticipantName.trim();
+
+    setParticipants((prev) => {
+      // Check if duplicate
+      if (prev.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+        return prev;
+      }
+      const next = [
+        ...prev,
+        {
+          userId: `roommate_${Date.now()}`,
+          name,
+          email: '',
+          isCurrentUser: false,
+          selected: true,
+          amount: 0,
+          percentage: 0,
+        },
+      ];
+      return recalculateSplits(next, totalAmount, splitType);
+    });
+
+    setNewParticipantName('');
+  };
+
+  // Remove member: auto-updates split amounts immediately!
+  const handleRemoveParticipant = (index) => {
+    if (participants[index].isCurrentUser) return;
+    setParticipants((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      return recalculateSplits(next, totalAmount, splitType);
+    });
+  };
+
+  // Manual amount change (for Custom Amount mode)
+  const handleCustomAmountChange = (index, value) => {
     setParticipants((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], amount: parseFloat(value) || 0 };
@@ -110,6 +210,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
     });
   };
 
+  // Manual percentage change (for Percentage mode)
   const handlePercentageChange = (index, value) => {
     const pct = parseFloat(value) || 0;
     const total = parseFloat(totalAmount) || 0;
@@ -124,28 +225,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
     });
   };
 
-  const handleAddParticipant = () => {
-    if (!newParticipantName.trim()) return;
-    const newId = `roommate_${Date.now()}`;
-    setParticipants((prev) => [
-      ...prev,
-      {
-        userId: newId,
-        name: newParticipantName.trim(),
-        email: '',
-        isCurrentUser: false,
-        selected: true,
-        amount: 0,
-        percentage: 0,
-      },
-    ]);
-    setNewParticipantName('');
-  };
-
-  const handleRemoveParticipant = (index) => {
-    if (participants[index].isCurrentUser) return;
-    setParticipants((prev) => prev.filter((_, i) => i !== index));
-  };
+  if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -163,11 +243,11 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
 
     const activeParticipants = participants.filter((p) => p.selected);
     if (activeParticipants.length < 2) {
-      setError('Shared expenses require at least 2 participants (you + at least 1 roommate).');
+      setError('Shared expenses require at least 2 participants (you + at least 1 roommate). Please add a roommate below.');
       return;
     }
 
-    // Validate totals for Custom or Percentage
+    // Validate totals
     const sumAmounts = activeParticipants.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
     if (Math.abs(sumAmounts - total) > 2) {
       setError(`Split amounts (Rs ${sumAmounts.toFixed(0)}) must equal total amount (Rs ${total.toFixed(0)}).`);
@@ -188,6 +268,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
         email: p.email,
         amount: p.amount,
         percentage: p.percentage,
+        isCurrentUser: p.isCurrentUser,
       })),
     });
 
@@ -219,18 +300,19 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
             {error && (
               <div
                 style={{
-                  padding: '10px 14px',
+                  padding: '12px 14px',
                   borderRadius: '12px',
                   background: 'rgba(239, 68, 68, 0.15)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
                   color: '#f87171',
                   fontSize: '0.85rem',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
+                  boxShadow: '0 0 14px rgba(239, 68, 68, 0.25)',
                 }}
               >
-                <AlertCircle size={16} />
+                <AlertCircle size={18} style={{ flexShrink: 0 }} />
                 <span>{error}</span>
               </div>
             )}
@@ -242,7 +324,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                 <input
                   type="text"
                   className="sv-form-input"
-                  placeholder="e.g. Monal Dinner, Flat Wifi"
+                  placeholder="e.g. F8 Outing, Flat Groceries, Wifi Bill"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -256,15 +338,15 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                   step="1"
                   min="1"
                   className="sv-form-input"
-                  placeholder="e.g. 3000"
+                  placeholder="e.g. 1500"
                   value={totalAmount}
-                  onChange={(e) => setTotalAmount(e.target.value)}
+                  onChange={(e) => handleTotalAmountChange(e.target.value)}
                   required
                 />
               </div>
             </div>
 
-            {/* Category & Group */}
+            {/* Category & Group Selector */}
             <div className="sv-form-row">
               <div className="sv-form-group">
                 <label className="sv-form-label">Category</label>
@@ -286,7 +368,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                 <select
                   className="sv-form-select"
                   value={groupId}
-                  onChange={(e) => setGroupId(e.target.value)}
+                  onChange={(e) => handleGroupChange(e.target.value)}
                 >
                   <option value="">No Group (Direct Split)</option>
                   {summary.groups.map((grp) => (
@@ -298,28 +380,28 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
               </div>
             </div>
 
-            {/* Split Type Selector */}
+            {/* Splitting Method Tabs */}
             <div className="sv-form-group">
               <label className="sv-form-label">Splitting Method</label>
               <div className="sv-tabs-nav">
                 <button
                   type="button"
                   className={`sv-tab-btn ${splitType === 'Equal' ? 'active' : ''}`}
-                  onClick={() => setSplitType('Equal')}
+                  onClick={() => handleSplitTypeChange('Equal')}
                 >
                   Equal Split (÷)
                 </button>
                 <button
                   type="button"
                   className={`sv-tab-btn ${splitType === 'Custom' ? 'active' : ''}`}
-                  onClick={() => setSplitType('Custom')}
+                  onClick={() => handleSplitTypeChange('Custom')}
                 >
                   Custom Amount (Rs)
                 </button>
                 <button
                   type="button"
                   className={`sv-tab-btn ${splitType === 'Percentage' ? 'active' : ''}`}
-                  onClick={() => setSplitType('Percentage')}
+                  onClick={() => handleSplitTypeChange('Percentage')}
                 >
                   Percentage (%)
                 </button>
@@ -330,16 +412,16 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
             <div className="sv-form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label className="sv-form-label">
-                  Participants ({selectedCount} Selected)
+                  Participants ({selectedCount} Selected • Amounts Auto-Divided)
                 </label>
-                <span style={{ fontSize: '0.78rem', color: '#10b981' }}>
+                <span style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: 600 }}>
                   Paid upfront by You
                 </span>
               </div>
 
               <div className="sv-participants-list">
                 {participants.map((p, idx) => (
-                  <div key={p.userId} className="sv-participant-item">
+                  <div key={p.userId || idx} className="sv-participant-item">
                     <div className="sv-participant-info">
                       <input
                         type="checkbox"
@@ -354,8 +436,8 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                       <div>
                         <div className="sv-participant-name">{p.name}</div>
                         {p.isCurrentUser && (
-                          <span style={{ fontSize: '0.72rem', color: '#a5b4fc' }}>
-                            You will verify incoming proofs
+                          <span style={{ fontSize: '0.72rem', color: '#818cf8' }}>
+                            You will verify incoming receipts
                           </span>
                         )}
                       </div>
@@ -363,7 +445,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       {splitType === 'Equal' && p.selected && (
-                        <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#e5e7eb' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: '700', color: '#10b981' }}>
                           Rs {Number(p.amount).toLocaleString()}
                         </span>
                       )}
@@ -375,7 +457,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                             type="number"
                             className="sv-form-input sv-participant-input"
                             value={p.amount}
-                            onChange={(e) => handleAmountChange(idx, e.target.value)}
+                            onChange={(e) => handleCustomAmountChange(idx, e.target.value)}
                           />
                         </div>
                       )}
@@ -399,10 +481,11 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                           style={{
                             background: 'transparent',
                             border: 'none',
-                            color: '#9ca3af',
+                            color: '#ef4444',
                             cursor: 'pointer',
                             padding: '4px',
                           }}
+                          title="Remove roommate"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -412,12 +495,12 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                 ))}
               </div>
 
-              {/* Add Roommate Quick Input */}
+              {/* Add Roommate with instant auto-divide */}
               <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                 <input
                   type="text"
                   className="sv-form-input"
-                  placeholder="+ Add another roommate name..."
+                  placeholder="+ Add roommate name (e.g. Usman, Daniyal)..."
                   value={newParticipantName}
                   onChange={(e) => setNewParticipantName(e.target.value)}
                   onKeyDown={(e) => {
@@ -433,7 +516,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                   className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
                   onClick={handleAddParticipant}
                 >
-                  <Plus size={16} /> Add
+                  <Plus size={16} /> Add Member
                 </button>
               </div>
             </div>
@@ -444,7 +527,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
               <textarea
                 className="sv-form-textarea"
                 rows="2"
-                placeholder="Dinner outing notes, bill breakdown, etc."
+                placeholder="Dinner outing notes, item breakdown, etc."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />

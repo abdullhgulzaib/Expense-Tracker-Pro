@@ -140,6 +140,52 @@ export function SplitVaultProvider({ children }) {
     }
   };
 
+  // Delete a group
+  const deleteGroup = async (groupId) => {
+    try {
+      await api.delete(`/splitvault/groups/${groupId}`);
+      addNotification({
+        title: 'Group Deleted',
+        message: 'Group and associated split records removed.',
+        type: 'alert',
+      });
+      await fetchSummary();
+      setActiveGroupDetails(null);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || err.message };
+    }
+  };
+
+  // Add member to group
+  const addMemberToGroup = async (groupId, memberData) => {
+    try {
+      const { data } = await api.post(`/splitvault/groups/${groupId}/members`, memberData);
+      addNotification({
+        title: 'Member Added',
+        message: `${memberData.name} added to the group.`,
+        type: 'welcome',
+      });
+      await fetchGroupDetails(groupId);
+      await fetchSummary();
+      return { success: true, group: data };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || err.message };
+    }
+  };
+
+  // Remove member from group
+  const removeMemberFromGroup = async (groupId, memberId) => {
+    try {
+      const { data } = await api.delete(`/splitvault/groups/${groupId}/members/${memberId}`);
+      await fetchGroupDetails(groupId);
+      await fetchSummary();
+      return { success: true, group: data };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || err.message };
+    }
+  };
+
   return (
     <SplitVaultContext.Provider
       value={{
@@ -150,6 +196,9 @@ export function SplitVaultProvider({ children }) {
         groupLoading,
         fetchGroupDetails,
         createGroup,
+        deleteGroup,
+        addMemberToGroup,
+        removeMemberFromGroup,
         createSplitExpense,
         submitProof,
         verifyProof,

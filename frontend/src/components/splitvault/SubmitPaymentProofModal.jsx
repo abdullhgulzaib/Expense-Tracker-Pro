@@ -88,12 +88,12 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
 
   // Select Sample Presets
   const handleApplyPreset = (type) => {
-    setMethod(type === 'Bank Transfer' ? 'Raast' : type);
+    setMethod(type);
     const generatedTid = `${type.slice(0, 2).toUpperCase()}-${Math.floor(10000000 + Math.random() * 90000000)}`;
     setTransactionId(generatedTid);
     const sample = generateSampleReceipt(type, {
       amount: splitData?.amount || 1500,
-      recipient: expense.paidByName || 'Roommate',
+      recipient: expense?.paidByName || 'Roommate',
       tid: generatedTid,
     });
     setImageUrl(sample);
@@ -114,7 +114,7 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
     }
 
     setSubmitting(true);
-    const splitUserId = splitData?.user || user?._id;
+    const splitUserId = splitData?.user?._id || splitData?.user || splitData?._id || user?._id;
     const res = await submitProof(expense._id, splitUserId, {
       method,
       transactionId: transactionId.trim(),

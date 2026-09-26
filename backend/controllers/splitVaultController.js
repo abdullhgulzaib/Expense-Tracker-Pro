@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Group, SplitExpense, Expense, User } from '../models.js';
 
-// Helper to generate a unique invite code (e.g., HOSTEL-482)
+// Helper to generate a unique invite code (e.g., FLAT482)
 const generateInviteCode = (name = 'GROUP') => {
   const prefix = name.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'FLAT';
   const randomNum = Math.floor(100 + Math.random() * 900);
@@ -9,174 +9,13 @@ const generateInviteCode = (name = 'GROUP') => {
 };
 
 /**
- * Ensures seed data exists for a user if they are new,
- * so they instantly see the groups matching their design mockup.
- */
-const ensureSeedData = async (currentUser) => {
-  const existingGroupsCount = await Group.countDocuments({ 'members.user': currentUser._id });
-  if (existingGroupsCount > 0) return;
-
-  // Create standard starter groups from the UI mockup
-  const hostelGroup = await Group.create({
-    name: 'Hostel Group',
-    description: 'Room & flat shared expenses',
-    category: 'Hostel',
-    icon: 'home',
-    createdBy: currentUser._id,
-    inviteCode: generateInviteCode('HOSTEL'),
-    members: [
-      { user: currentUser._id, name: currentUser.name, email: currentUser.email, role: 'Admin' },
-    ],
-  });
-
-  const friendsGroup = await Group.create({
-    name: 'Friends Group',
-    description: 'Outings, dinners & casual hangouts',
-    category: 'Friends',
-    icon: 'users',
-    createdBy: currentUser._id,
-    inviteCode: generateInviteCode('FRIENDS'),
-    members: [
-      { user: currentUser._id, name: currentUser.name, email: currentUser.email, role: 'Admin' },
-    ],
-  });
-
-  const classmatesGroup = await Group.create({
-    name: 'Classmates',
-    description: 'Semester projects, books & printouts',
-    category: 'Classmates',
-    icon: 'graduation-cap',
-    createdBy: currentUser._id,
-    inviteCode: generateInviteCode('CLASS'),
-    members: [
-      { user: currentUser._id, name: currentUser.name, email: currentUser.email, role: 'Admin' },
-    ],
-  });
-
-  // Seed sample expenses matching the mockup
-  // Sample 1: Monal Dinner (Rs 1,500 total, 50% split)
-  const dummyAliId = new mongoose.Types.ObjectId();
-  await SplitExpense.create({
-    title: 'Monal Dinner',
-    totalAmount: 1500,
-    category: 'Food',
-    paidBy: currentUser._id,
-    paidByName: currentUser.name,
-    groupId: friendsGroup._id,
-    groupName: friendsGroup.name,
-    splitType: 'Equal',
-    date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    notes: 'Dinner at Monal Restaurant',
-    splits: [
-      {
-        user: currentUser._id,
-        name: `${currentUser.name} (You)`,
-        email: currentUser.email,
-        amount: 750,
-        percentage: 50,
-        status: 'Verified',
-      },
-      {
-        user: dummyAliId,
-        name: 'Ali',
-        email: 'ali@example.com',
-        amount: 750,
-        percentage: 50,
-        status: 'UnderReview', // Under review waiting for verification!
-        proof: {
-          method: 'Easypaisa',
-          imageUrl: '',
-          transactionId: '1234567890',
-          senderNote: 'Sent via Easypaisa mobile app',
-          paymentDate: '20 Sep 2026, 08:45 PM',
-          submittedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        },
-      },
-    ],
-  });
-
-  // Sample 2: Fuel (Rs 850)
-  const dummyHamzaId = new mongoose.Types.ObjectId();
-  await SplitExpense.create({
-    title: 'Fuel',
-    totalAmount: 850,
-    category: 'Transportation',
-    paidBy: dummyHamzaId,
-    paidByName: 'Hamza',
-    groupId: friendsGroup._id,
-    groupName: friendsGroup.name,
-    splitType: 'Equal',
-    date: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-    notes: 'Fuel for trip',
-    splits: [
-      {
-        user: dummyHamzaId,
-        name: 'Hamza',
-        email: 'hamza@example.com',
-        amount: 425,
-        percentage: 50,
-        status: 'Verified',
-      },
-      {
-        user: currentUser._id,
-        name: `${currentUser.name} (You)`,
-        email: currentUser.email,
-        amount: 425,
-        percentage: 50,
-        status: 'Unpaid', // User owes Hamza Rs 425
-      },
-    ],
-  });
-
-  // Sample 3: Groceries (Rs 1,200)
-  await SplitExpense.create({
-    title: 'Groceries',
-    totalAmount: 1200,
-    category: 'Groceries',
-    paidBy: dummyAliId,
-    paidByName: 'Ali',
-    groupId: hostelGroup._id,
-    groupName: hostelGroup.name,
-    splitType: 'Equal',
-    date: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-    notes: 'Hostel flat groceries & eggs',
-    splits: [
-      {
-        user: dummyAliId,
-        name: 'Ali',
-        email: 'ali@example.com',
-        amount: 400,
-        percentage: 33.3,
-        status: 'Verified',
-      },
-      {
-        user: currentUser._id,
-        name: `${currentUser.name} (You)`,
-        email: currentUser.email,
-        amount: 400,
-        percentage: 33.3,
-        status: 'Unpaid', // User owes Ali Rs 400
-      },
-      {
-        user: dummyHamzaId,
-        name: 'Hamza',
-        email: 'hamza@example.com',
-        amount: 400,
-        percentage: 33.3,
-        status: 'Unpaid',
-      },
-    ],
-  });
-};
-
-/**
  * @desc Get SplitVault dashboard summary (Cards, groups, recent activity)
  * @route GET /api/splitvault/summary
+ * ZERO SAMPLE DATA: Starts completely empty with 0 groups & 0 expenses for new accounts.
  */
 export const getSplitVaultSummary = async (req, res) => {
   try {
     const user = req.user;
-    await ensureSeedData(user);
 
     // 1. Get groups user is a member of
     const groups = await Group.find({ 'members.user': user._id }).sort({ updatedAt: -1 });
@@ -208,7 +47,7 @@ export const getSplitVaultSummary = async (req, res) => {
 
       // Check what user owes to others
       if (exp.paidBy.toString() !== user._id.toString()) {
-        const mySplit = exp.splits.find((s) => s.user.toString() === user._id.toString());
+        const mySplit = exp.splits.find((s) => s.user?.toString() === user._id.toString());
         if (mySplit && mySplit.status !== 'Verified') {
           amountYouOwe += mySplit.amount;
           pendingYouOweCount++;
@@ -218,7 +57,7 @@ export const getSplitVaultSummary = async (req, res) => {
       // Check what others owe to user
       if (exp.paidBy.toString() === user._id.toString()) {
         exp.splits.forEach((s) => {
-          if (s.user.toString() !== user._id.toString() && s.status !== 'Verified') {
+          if (s.user?.toString() !== user._id.toString() && s.status !== 'Verified') {
             amountYoureOwed += s.amount;
             pendingYoureOwedCount++;
           }
@@ -251,55 +90,57 @@ export const getSplitVaultSummary = async (req, res) => {
           name: grp.name,
           category: grp.category,
           icon: grp.icon,
-          memberCount: grp.members?.length || 1,
-          members: grp.members,
           inviteCode: grp.inviteCode,
-          settledRatio: totalSplits > 0 ? `${settledSplits}/${totalSplits}` : '1/1',
-          settledPct: totalSplits > 0 ? Math.round((settledSplits / totalSplits) * 100) : 100,
-          remainingAmount: remaining,
-          totalAmount: total,
+          createdBy: grp.createdBy,
+          memberCount: grp.members?.length || 1,
+          members: grp.members || [],
+          stats: {
+            totalAmount: total,
+            remainingAmount: remaining,
+            settledCount: settledSplits,
+            totalCount: totalSplits,
+            settledPct: totalSplits > 0 ? Math.round((settledSplits / totalSplits) * 100) : 0,
+          },
         };
       })
     );
 
-    // 5. Build Recent Activity Feed
+    // 5. Build recent activity feed
     const recentActivity = [];
     allExpenses.forEach((exp) => {
-      // Expense created event
+      // Creation event
       recentActivity.push({
         id: `created-${exp._id}`,
-        type: 'EXPENSE_ADDED',
-        title: `New expense added: ${exp.title}`,
-        subtitle: `Added by ${exp.paidBy.toString() === user._id.toString() ? 'You' : exp.paidByName}`,
+        type: 'EXPENSE_CREATED',
+        title: `${exp.paidBy.toString() === user._id.toString() ? 'You' : exp.paidByName} added "${exp.title}"`,
+        subtitle: exp.groupName || 'Direct Split',
         amount: exp.totalAmount,
-        badge: 'Split',
-        badgeColor: 'blue',
+        badge: exp.isFullySettled ? 'Settled' : 'Pending',
+        badgeColor: exp.isFullySettled ? 'emerald' : 'red',
         date: exp.date,
         expenseId: exp._id,
       });
 
-      // Proof events
+      // Proof / Verification events
       exp.splits.forEach((s) => {
         if (s.status === 'UnderReview' && s.proof?.submittedAt) {
           recentActivity.push({
             id: `proof-${exp._id}-${s.user}`,
             type: 'PROOF_SUBMITTED',
-            title: `${s.user.toString() === user._id.toString() ? 'You' : s.name} submitted payment proof for ${exp.title}`,
-            subtitle: 'Awaiting verification',
+            title: `${s.user?.toString() === user._id.toString() ? 'You' : s.name} submitted payment proof`,
+            subtitle: `${exp.title} • via ${s.proof.method || 'Transfer'}`,
             amount: s.amount,
             badge: 'Under Review',
-            badgeColor: 'amber',
+            badgeColor: 'red',
             date: s.proof.submittedAt,
             expenseId: exp._id,
-            splitUserId: s.user,
-            isPayer: exp.paidBy.toString() === user._id.toString(),
           });
         }
         if (s.status === 'Verified' && s.proof?.verifiedAt) {
           recentActivity.push({
             id: `verified-${exp._id}-${s.user}`,
             type: 'PAYMENT_VERIFIED',
-            title: `${exp.paidBy.toString() === user._id.toString() ? 'You' : exp.paidByName} verified payment from ${s.user.toString() === user._id.toString() ? 'You' : s.name}`,
+            title: `${exp.paidBy.toString() === user._id.toString() ? 'You' : exp.paidByName} verified payment from ${s.user?.toString() === user._id.toString() ? 'You' : s.name}`,
             subtitle: exp.title,
             amount: s.amount,
             badge: 'Verified',
@@ -347,7 +188,7 @@ export const getSplitVaultSummary = async (req, res) => {
       amountYoureOwed,
       pendingYoureOwedCount,
       groups: groupSummaries,
-      recentActivity: recentActivity.slice(0, 10),
+      recentActivity,
       pendingVerifications,
       allExpenses,
     });
@@ -376,7 +217,7 @@ export const getGroups = async (req, res) => {
  */
 export const createGroup = async (req, res) => {
   try {
-    const { name, description, category, icon, memberEmails = [] } = req.body;
+    const { name, description, category, icon, memberEmails = [], membersList = [] } = req.body;
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Group name is required' });
     }
@@ -390,11 +231,29 @@ export const createGroup = async (req, res) => {
       },
     ];
 
+    // Add any declared initial members
+    if (Array.isArray(membersList) && membersList.length > 0) {
+      for (const m of membersList) {
+        if (!m.name || !m.name.trim()) continue;
+        let memberUserId = new mongoose.Types.ObjectId();
+        if (m.email && m.email.trim()) {
+          const u = await User.findOne({ email: m.email.trim().toLowerCase() });
+          if (u) memberUserId = u._id;
+        }
+        members.push({
+          user: memberUserId,
+          name: m.name.trim(),
+          email: m.email?.trim() || '',
+          role: 'Member',
+        });
+      }
+    }
+
     // Find and add any existing users by email
     if (Array.isArray(memberEmails) && memberEmails.length > 0) {
       const foundUsers = await User.find({ email: { $in: memberEmails } });
       foundUsers.forEach((u) => {
-        if (u._id.toString() !== req.user._id.toString()) {
+        if (u._id.toString() !== req.user._id.toString() && !members.some((m) => m.email === u.email)) {
           members.push({
             user: u._id,
             name: u.name,
@@ -416,6 +275,102 @@ export const createGroup = async (req, res) => {
     });
 
     res.status(201).json(group);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * @desc Delete a SplitVault Group
+ * @route DELETE /api/splitvault/groups/:groupId
+ */
+export const deleteGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    // Only group creator can delete
+    if (group.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Only the group creator has permission to delete this group.' });
+    }
+
+    // Delete group and associated split expenses
+    await Group.findByIdAndDelete(groupId);
+    await SplitExpense.deleteMany({ groupId });
+
+    res.json({ message: 'Group and all associated shared expenses deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * @desc Add a member to an existing group
+ * @route POST /api/splitvault/groups/:groupId/members
+ */
+export const addMemberToGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { name, email } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Member name is required.' });
+    }
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found.' });
+    }
+
+    let memberUserId = new mongoose.Types.ObjectId();
+    if (email && email.trim()) {
+      const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
+      if (existingUser) {
+        memberUserId = existingUser._id;
+      }
+    }
+
+    // Prevent duplicate name
+    const alreadyExists = group.members.some(
+      (m) => m.name.toLowerCase() === name.trim().toLowerCase()
+    );
+    if (alreadyExists) {
+      return res.status(400).json({ error: `Member "${name.trim()}" is already in this group.` });
+    }
+
+    group.members.push({
+      user: memberUserId,
+      name: name.trim(),
+      email: email?.trim() || '',
+      role: 'Member',
+      joinedAt: new Date(),
+    });
+
+    await group.save();
+    res.json(group);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * @desc Remove a member from a group
+ * @route DELETE /api/splitvault/groups/:groupId/members/:memberId
+ */
+export const removeMemberFromGroup = async (req, res) => {
+  try {
+    const { groupId, memberId } = req.params;
+    const group = await Group.findById(groupId);
+    if (!group) return res.status(404).json({ error: 'Group not found.' });
+
+    group.members = group.members.filter(
+      (m) => m._id.toString() !== memberId && m.user?.toString() !== memberId
+    );
+    await group.save();
+    res.json(group);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -460,7 +415,7 @@ export const getGroupDetails = async (req, res) => {
         remainingAmount,
         settledCount,
         totalCount,
-        settledPct: totalCount > 0 ? Math.round((settledCount / totalCount) * 100) : 100,
+        settledPct: totalCount > 0 ? Math.round((settledCount / totalCount) * 100) : 0,
       },
     });
   } catch (error) {
@@ -488,24 +443,55 @@ export const createSplitExpense = async (req, res) => {
       return res.status(400).json({ error: 'At least one participant is required' });
     }
 
+    let group = null;
     let groupName = '';
     if (groupId) {
-      const grp = await Group.findById(groupId);
-      if (grp) groupName = grp.name;
+      group = await Group.findById(groupId);
+      if (group) groupName = group.name;
     }
 
-    // Build splits array
+    // Build splits array with SAFE OBJECT ID CASTING (Fixes BSONError!)
     const splits = participants.map((p) => {
-      const isPayer = p.userId?.toString() === req.user._id.toString();
+      const isPayer = p.isCurrentUser || p.userId?.toString() === req.user._id.toString();
+      let memberUserId;
+
+      if (isPayer) {
+        memberUserId = req.user._id;
+      } else if (p.userId && mongoose.Types.ObjectId.isValid(p.userId)) {
+        memberUserId = new mongoose.Types.ObjectId(p.userId);
+      } else {
+        memberUserId = new mongoose.Types.ObjectId();
+      }
+
+      // If group exists, ensure participant is recorded in group.members
+      if (group && !isPayer) {
+        const inGroup = group.members.some(
+          (m) => m.name.toLowerCase() === (p.name || '').trim().toLowerCase() ||
+                 (m.user && m.user.toString() === memberUserId.toString())
+        );
+        if (!inGroup && p.name?.trim()) {
+          group.members.push({
+            user: memberUserId,
+            name: p.name.trim(),
+            email: p.email?.trim() || '',
+            role: 'Member',
+          });
+        }
+      }
+
       return {
-        user: p.userId || req.user._id,
+        user: memberUserId,
         name: p.name || (isPayer ? `${req.user.name} (You)` : 'Roommate'),
         email: p.email || '',
         amount: Number(p.amount) || 0,
         percentage: Number(p.percentage) || 0,
-        status: isPayer ? 'Verified' : 'Unpaid', // Payer is already verified (paid upfront)
+        status: isPayer ? 'Verified' : 'Unpaid',
       };
     });
+
+    if (group) {
+      await group.save();
+    }
 
     const expense = await SplitExpense.create({
       title: title.trim(),
@@ -538,17 +524,19 @@ export const submitPaymentProof = async (req, res) => {
     const { expenseId, splitUserId } = req.params;
     const { method, imageUrl, transactionId, senderNote, paymentDate } = req.body;
 
-    // Authorization: User can only submit proof for their OWN share
-    if (req.user._id.toString() !== splitUserId.toString()) {
-      return res.status(403).json({ error: 'You can only submit payment proof for your own share.' });
-    }
-
     const expense = await SplitExpense.findById(expenseId);
     if (!expense) {
       return res.status(404).json({ error: 'Shared expense not found' });
     }
 
-    const split = expense.splits.find((s) => s.user.toString() === splitUserId.toString());
+    // Find split by user id, split doc id, or name
+    const split = expense.splits.find(
+      (s) =>
+        s.user?.toString() === splitUserId.toString() ||
+        s._id?.toString() === splitUserId.toString() ||
+        s.name === splitUserId
+    );
+
     if (!split) {
       return res.status(404).json({ error: 'Participant split not found in this expense' });
     }
@@ -599,7 +587,12 @@ export const verifyPaymentProof = async (req, res) => {
       });
     }
 
-    const split = expense.splits.find((s) => s.user.toString() === splitUserId.toString());
+    const split = expense.splits.find(
+      (s) =>
+        s.user?.toString() === splitUserId.toString() ||
+        s._id?.toString() === splitUserId.toString()
+    );
+
     if (!split) {
       return res.status(404).json({ error: 'Participant split not found in this expense' });
     }
@@ -650,7 +643,7 @@ export const verifyPaymentProof = async (req, res) => {
         status: 'Rejected',
       });
     } else {
-      // REQUEST_INFO / Note
+      // REQUEST_INFO
       if (!split.proof) split.proof = {};
       split.proof.rejectionReason = reason || 'Please provide clear transaction ID or full slip.';
       await expense.save();

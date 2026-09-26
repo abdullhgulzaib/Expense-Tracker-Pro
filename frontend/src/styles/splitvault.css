@@ -1,18 +1,26 @@
 /* ==========================================================================
    SplitVault: Mutual Expense Splitting & Verification System Stylesheet
    Designed Mobile-First for all screen sizes (including 360px Samsung A53 & 412px Pixel 6a)
+   Features Red & Emerald with Vibrant Glow Effects
    ========================================================================== */
 
 :root {
   --sv-primary: #6366f1;
   --sv-primary-hover: #4f46e5;
   --sv-primary-light: rgba(99, 102, 241, 0.15);
+  
+  /* Green Glow */
   --sv-emerald: #10b981;
-  --sv-emerald-light: rgba(16, 185, 129, 0.15);
-  --sv-amber: #f59e0b;
-  --sv-amber-light: rgba(245, 158, 11, 0.15);
-  --sv-rose: #f43f5e;
-  --sv-rose-light: rgba(244, 63, 94, 0.15);
+  --sv-emerald-light: rgba(16, 185, 129, 0.16);
+  --sv-emerald-glow: 0 0 16px rgba(16, 185, 129, 0.45), 0 0 32px rgba(16, 185, 129, 0.2);
+  --sv-emerald-text-glow: 0 0 12px rgba(16, 185, 129, 0.5);
+
+  /* Red Glow (Replacing Orange completely) */
+  --sv-red: #ef4444;
+  --sv-red-light: rgba(239, 68, 68, 0.16);
+  --sv-red-glow: 0 0 16px rgba(239, 68, 68, 0.45), 0 0 32px rgba(239, 68, 68, 0.2);
+  --sv-red-text-glow: 0 0 12px rgba(239, 68, 68, 0.5);
+
   --sv-sky: #0ea5e9;
   --sv-sky-light: rgba(14, 165, 233, 0.15);
   --sv-card-border: rgba(255, 255, 255, 0.08);
@@ -26,9 +34,8 @@
   --sv-surface-hover: #f8fafc;
   --sv-card-border: rgba(0, 0, 0, 0.08);
   --sv-primary-light: rgba(99, 102, 241, 0.1);
-  --sv-emerald-light: rgba(16, 185, 129, 0.1);
-  --sv-amber-light: rgba(245, 158, 11, 0.1);
-  --sv-rose-light: rgba(244, 63, 94, 0.1);
+  --sv-emerald-light: rgba(16, 185, 129, 0.12);
+  --sv-red-light: rgba(239, 68, 68, 0.12);
 }
 
 /* Base Container */
@@ -36,10 +43,10 @@
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 20px 24px 60px;
+  padding: 20px 24px 70px;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
   box-sizing: border-box;
 }
 
@@ -47,11 +54,11 @@
 .splitvault-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   flex-wrap: wrap;
   gap: 16px;
   border-bottom: 1px solid var(--sv-card-border);
-  padding-bottom: 20px;
+  padding-bottom: 18px;
 }
 
 .splitvault-header__left {
@@ -61,22 +68,22 @@
 }
 
 .splitvault-header__icon-box {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.35);
   flex-shrink: 0;
 }
 
 .splitvault-header__titles {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .splitvault-header__title-row {
@@ -87,7 +94,7 @@
 }
 
 .splitvault-header__title {
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -106,14 +113,15 @@
   gap: 4px;
 }
 
-.splitvault-pill--beta {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
-  border: 1px solid rgba(99, 102, 241, 0.4);
-  color: #a5b4fc;
+.splitvault-pill--live {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
 .splitvault-header__subtitle {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   margin: 0;
 }
@@ -121,24 +129,25 @@
 .splitvault-header__actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
+/* Global Buttons */
 .splitvault-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 18px;
-  font-size: 0.9rem;
+  padding: 10px 16px;
+  font-size: 0.88rem;
   font-weight: 600;
   border-radius: 12px;
   border: none;
   cursor: pointer;
   transition: all 0.18s ease;
   white-space: nowrap;
-  min-height: 44px;
+  min-height: 42px;
 }
 
 .splitvault-btn--primary {
@@ -165,26 +174,76 @@
 .splitvault-btn--emerald {
   background: linear-gradient(135deg, #10b981, #059669);
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  box-shadow: var(--sv-emerald-glow);
 }
 
 .splitvault-btn--emerald:hover {
   background: linear-gradient(135deg, #059669, #047857);
 }
 
-.splitvault-btn--rose {
-  background: linear-gradient(135deg, #f43f5e, #e11d48);
+.splitvault-btn--red,
+.splitvault-btn--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: #ffffff;
+  box-shadow: var(--sv-red-glow);
+}
+
+.splitvault-btn--danger-outline {
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #ef4444;
+}
+
+.splitvault-btn--danger-outline:hover {
+  background: var(--sv-red-light);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
 }
 
 .splitvault-btn--sm {
   padding: 6px 12px;
   font-size: 0.8rem;
   border-radius: 8px;
-  min-height: 36px;
+  min-height: 34px;
 }
 
-/* Stat Cards Grid */
+/* Navigation Segment Tabs (MY Balance | Group | Activity and Proof) */
+.splitvault-segment-tabs {
+  display: flex;
+  background: var(--sv-surface);
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid var(--sv-card-border);
+  gap: 4px;
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.splitvault-segment-tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: 10px;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.splitvault-segment-tab.active {
+  background: var(--sv-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+}
+
+/* ==========================================================================
+   SECTION 1: MY BALANCE (4 Analytics Divs + 3-4 Recent Activities)
+   ========================================================================== */
+
 .splitvault-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -199,7 +258,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
 }
@@ -207,6 +266,26 @@
 .splitvault-stat-card:hover {
   transform: translateY(-2px);
   border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Red Glow Card for Amount You Owe */
+.splitvault-stat-card--owe {
+  border-color: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.08);
+}
+.splitvault-stat-card--owe:hover {
+  box-shadow: var(--sv-red-glow);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Green Glow Card for Amount You're Owed */
+.splitvault-stat-card--owed {
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.08);
+}
+.splitvault-stat-card--owed:hover {
+  box-shadow: var(--sv-emerald-glow);
+  border-color: rgba(16, 185, 129, 0.5);
 }
 
 .splitvault-stat-card__top {
@@ -222,7 +301,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
 }
 
 .splitvault-stat-card__icon-box--indigo {
@@ -235,14 +313,16 @@
   color: #38bdf8;
 }
 
-.splitvault-stat-card__icon-box--amber {
-  background: var(--sv-amber-light);
-  color: #fbbf24;
+.splitvault-stat-card__icon-box--red {
+  background: var(--sv-red-light);
+  color: #ef4444;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
 }
 
 .splitvault-stat-card__icon-box--emerald {
   background: var(--sv-emerald-light);
-  color: #34d399;
+  color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
 }
 
 .splitvault-stat-card__label {
@@ -262,12 +342,14 @@
   line-height: 1.2;
 }
 
-.splitvault-stat-card__value--amber {
-  color: #f59e0b;
+.splitvault-stat-card__value--red {
+  color: #ef4444;
+  text-shadow: var(--sv-red-text-glow);
 }
 
 .splitvault-stat-card__value--emerald {
   color: #10b981;
+  text-shadow: var(--sv-emerald-text-glow);
 }
 
 .splitvault-stat-card__footer {
@@ -278,52 +360,25 @@
   color: var(--text-muted);
 }
 
-/* Mobile Segment Toggle */
-.splitvault-segment-tabs {
-  display: flex;
+/* Recent Activity in My Balance Section */
+.splitvault-recent-box {
   background: var(--sv-surface);
-  padding: 4px;
-  border-radius: 14px;
   border: 1px solid var(--sv-card-border);
-  gap: 4px;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
+  border-radius: var(--sv-radius);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.splitvault-segment-tab {
-  flex: 1;
-  text-align: center;
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: 10px;
-  color: var(--text-muted);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  white-space: nowrap;
-}
-
-.splitvault-segment-tab.active {
-  background: var(--sv-primary);
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
-}
-
-/* Section Header */
-.splitvault-section-title {
+.splitvault-recent-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  gap: 12px;
 }
 
-.splitvault-section-title h2 {
-  font-size: 1.25rem;
+.splitvault-recent-title {
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -332,10 +387,24 @@
   gap: 8px;
 }
 
-/* Groups Grid */
+.splitvault-recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--sv-card-border);
+  gap: 12px;
+}
+
+/* ==========================================================================
+   SECTION 2: GROUP (Group Cards + Clean Management + Delete)
+   ========================================================================== */
+
 .splitvault-groups-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 18px;
 }
 
@@ -343,19 +412,18 @@
   background: var(--sv-surface);
   border: 1px solid var(--sv-card-border);
   border-radius: var(--sv-radius);
-  padding: 20px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 16px;
   transition: all 0.2s ease;
-  cursor: pointer;
   position: relative;
 }
 
 .splitvault-group-card:hover {
   transform: translateY(-2px);
   border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
 }
 
 .splitvault-group-card__header {
@@ -384,7 +452,7 @@
 }
 
 .splitvault-group-card__name {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -395,13 +463,10 @@
   color: var(--text-muted);
 }
 
-.splitvault-group-card__badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
+.splitvault-group-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .splitvault-group-card__stats {
@@ -421,13 +486,13 @@
 }
 
 .splitvault-group-card__stat-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   text-transform: uppercase;
 }
 
 .splitvault-group-card__stat-value {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -457,32 +522,57 @@
   height: 100%;
   background: linear-gradient(90deg, #10b981, #34d399);
   border-radius: 999px;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
   transition: width 0.4s ease;
 }
 
-/* Two-column layout for Activity & Trust Vault */
-.splitvault-main-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-  align-items: start;
+.splitvault-group-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Activity / Expenses List Card */
-.splitvault-activity-card {
-  background: var(--sv-surface);
-  border: 1px solid var(--sv-card-border);
-  border-radius: var(--sv-radius);
-  padding: 24px;
+/* ==========================================================================
+   SECTION 3: ACTIVITY AND PROOF (Month-wise Grouping)
+   ========================================================================== */
+
+.splitvault-activity-section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
+}
+
+.splitvault-month-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.splitvault-month-header {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #a5b4fc;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 4px;
+}
+
+.splitvault-month-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .splitvault-expenses-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .splitvault-expense-item {
@@ -491,14 +581,13 @@
   gap: 12px;
   padding: 16px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--sv-surface);
   border: 1px solid var(--sv-card-border);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
 .splitvault-expense-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.28);
 }
 
 .splitvault-expense-item__header {
@@ -585,7 +674,7 @@
   gap: 8px;
 }
 
-/* Status Badges */
+/* Glowing Status Pills */
 .sv-status-pill {
   font-size: 0.75rem;
   font-weight: 700;
@@ -599,13 +688,15 @@
 .sv-status-pill--verified {
   background: var(--sv-emerald-light);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
 .sv-status-pill--review {
-  background: var(--sv-amber-light);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--sv-red-light);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
 }
 
 .sv-status-pill--unpaid {
@@ -615,114 +706,13 @@
 }
 
 .sv-status-pill--rejected {
-  background: var(--sv-rose-light);
-  color: #fb7185;
-  border: 1px solid rgba(244, 63, 94, 0.3);
-}
-
-/* Trust / Zero Disputes Card */
-.splitvault-trust-card {
-  background: linear-gradient(145deg, #131b2e, #1a2238);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  border-radius: var(--sv-radius);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  position: relative;
-  overflow: hidden;
-}
-
-.splitvault-trust-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 140px;
-  height: 140px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.splitvault-trust-card__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: rgba(99, 102, 241, 0.2);
-  color: #818cf8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.splitvault-trust-card__title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.splitvault-trust-card__desc {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin: 0;
-}
-
-.splitvault-trust-card__features {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.splitvault-trust-feature {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 0.82rem;
-  color: var(--text-primary);
-}
-
-.splitvault-trust-feature svg {
-  color: #10b981;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-/* Pending Verifications Desk Banner (Payer Alert) */
-.splitvault-payer-banner {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: var(--sv-radius);
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.splitvault-payer-banner__left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.splitvault-payer-banner__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  background: var(--sv-red-light);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
 /* ==========================================================================
-   MODAL DIALOGS (Screen 3, 4, 5, 6)
+   MODAL DIALOGS
    ========================================================================== */
 
 .sv-modal-backdrop {
@@ -773,7 +763,7 @@
 }
 
 .sv-modal-header {
-  padding: 20px 24px;
+  padding: 18px 22px;
   border-bottom: 1px solid var(--sv-card-border);
   display: flex;
   align-items: center;
@@ -809,15 +799,15 @@
 }
 
 .sv-modal-body {
-  padding: 24px;
+  padding: 22px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .sv-modal-footer {
-  padding: 18px 24px;
+  padding: 16px 22px;
   border-top: 1px solid var(--sv-card-border);
   display: flex;
   align-items: center;
@@ -826,7 +816,7 @@
   background: rgba(0, 0, 0, 0.15);
 }
 
-/* Split Form Elements */
+/* Forms */
 .sv-form-group {
   display: flex;
   flex-direction: column;
@@ -867,7 +857,6 @@
   gap: 14px;
 }
 
-/* Split Type Segment Switch */
 .sv-tabs-nav {
   display: flex;
   background: rgba(255, 255, 255, 0.05);
@@ -896,7 +885,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Participant Checklist */
+/* Participants List */
 .sv-participants-list {
   display: flex;
   flex-direction: column;
@@ -947,10 +936,7 @@
   text-align: right;
 }
 
-/* ==========================================================================
-   PROOF UPLOAD & DROPZONE (Screen 4)
-   ========================================================================== */
-
+/* Dropzone & Preview */
 .sv-dropzone {
   border: 2px dashed rgba(99, 102, 241, 0.35);
   border-radius: 16px;
@@ -1000,7 +986,6 @@
   display: block;
 }
 
-/* Presets bar */
 .sv-presets-bar {
   display: flex;
   align-items: center;
@@ -1025,10 +1010,7 @@
   border-color: var(--sv-primary);
 }
 
-/* ==========================================================================
-   PROOF VERIFICATION DESK (Screen 5 - Payer Only)
-   ========================================================================== */
-
+/* Verification Grid */
 .sv-verification-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1096,10 +1078,7 @@
   line-height: 1.5;
 }
 
-/* ==========================================================================
-   CIRCULAR PROGRESS RING & GROUP DETAILS (Screen 6)
-   ========================================================================== */
-
+/* Circular Progress Ring */
 .sv-progress-ring-card {
   display: flex;
   align-items: center;
@@ -1114,8 +1093,8 @@
 
 .sv-progress-ring-wrapper {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 110px;
+  height: 110px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1127,47 +1106,86 @@
 }
 
 .sv-progress-ring-pct {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: var(--text-primary);
 }
 
 .sv-progress-ring-sub {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
   text-transform: uppercase;
 }
 
-/* ==========================================================================
-   MOBILE BOTTOM BAR (Screen 2)
-   ========================================================================== */
-
-.sv-mobile-nav {
-  display: none; /* Desktop hidden */
+/* Global Mobile Bottom Navigation Bar (Used Across All Pages on Mobile <= 768px) */
+.global-mobile-nav {
+  display: none;
 }
 
-/* ==========================================================================
-   RESPONSIVE QUERIES (Down to 360px Samsung A53 & 412px Pixel 6a)
-   ========================================================================== */
+@media (max-width: 768px) {
+  .global-mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 62px;
+    background: #111827;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 999;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4px;
+    box-sizing: border-box;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.45);
+  }
 
+  [data-theme='light'] .global-mobile-nav {
+    background: #ffffff;
+    border-top-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .global-mobile-nav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-decoration: none;
+    flex: 1;
+    height: 100%;
+    transition: color 0.15s ease;
+  }
+
+  .global-mobile-nav__item.active {
+    color: #6366f1;
+    font-weight: 700;
+  }
+
+  .global-mobile-nav__item svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .main-panel {
+    padding-bottom: 74px !important;
+  }
+}
+
+/* Responsive Overrides */
 @media (max-width: 1024px) {
   .splitvault-stats-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .splitvault-groups-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .splitvault-main-grid {
-    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
   .splitvault-container {
     padding: 16px 14px 80px;
-    gap: 20px;
+    gap: 18px;
   }
 
   .splitvault-header {
@@ -1190,7 +1208,6 @@
 
   .splitvault-stat-card {
     padding: 14px;
-    border-radius: 14px;
   }
 
   .splitvault-stat-card__value {
@@ -1217,61 +1234,17 @@
   .sv-modal-footer .splitvault-btn {
     width: 100%;
   }
-
-  /* Fixed mobile bottom navigation bar */
-  .sv-mobile-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    height: 64px;
-    background: var(--sv-surface);
-    border-top: 1px solid var(--sv-card-border);
-    z-index: 99;
-    align-items: center;
-    justify-content: space-around;
-    padding: 0 10px;
-    box-sizing: border-box;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
-  }
-
-  .sv-mobile-nav__item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-decoration: none;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    flex: 1;
-    height: 100%;
-  }
-
-  .sv-mobile-nav__item.active {
-    color: var(--sv-primary);
-  }
-
-  .sv-mobile-nav__item svg {
-    width: 20px;
-    height: 20px;
-  }
 }
 
-/* Small mobile screens (360px Samsung Galaxy A53) */
+/* Small mobile (360px Samsung Galaxy A53) */
 @media (max-width: 380px) {
   .splitvault-container {
     padding: 12px 10px 80px;
-    gap: 16px;
+    gap: 14px;
   }
 
   .splitvault-header__title {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
   }
 
   .splitvault-stats-grid {
@@ -1281,10 +1254,6 @@
 
   .splitvault-stat-card {
     padding: 12px;
-  }
-
-  .splitvault-stat-card__value {
-    font-size: 1.3rem;
   }
 
   .sv-modal-dialog {
@@ -1297,20 +1266,9 @@
 
   .sv-modal-body {
     padding: 16px;
-    gap: 16px;
   }
 
   .sv-modal-footer {
     padding: 14px 16px;
-  }
-
-  .sv-tab-btn {
-    padding: 6px 8px;
-    font-size: 0.75rem;
-  }
-
-  .sv-participant-input {
-    width: 85px;
-    padding: 4px 6px;
   }
 }

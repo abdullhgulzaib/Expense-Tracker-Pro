@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Users,
   Plus,
@@ -6,18 +6,14 @@ import {
   ArrowDownLeft,
   Wallet,
   ShieldCheck,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
   Receipt,
   FileCheck,
   Sparkles,
   ChevronRight,
-  Home,
-  BarChart3,
-  Settings as SettingsIcon,
+  Trash2,
+  Calendar,
+  Layers,
 } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSplitVault } from '../context/SplitVaultContext';
 
@@ -30,13 +26,10 @@ import NewGroupModal from '../components/splitvault/NewGroupModal';
 
 export default function SplitVault() {
   const { user } = useAuth();
-  const { summary, loading } = useSplitVault();
+  const { summary, deleteGroup } = useSplitVault();
 
-  // Mobile Tab State ('balances' | 'groups' | 'activity')
-  const [mobileTab, setMobileTab] = useState('balances');
-
-  // Filter for shared expenses list
-  const [expenseFilter, setExpenseFilter] = useState('all'); // 'all' | 'owe' | 'owed' | 'settled'
+  // 3 Primary Sections: 'balance' | 'groups' | 'activity'
+  const [activeTab, setActiveTab] = useState('balance');
 
   // Modal states
   const [isCreateExpenseOpen, setIsCreateExpenseOpen] = useState(false);
@@ -47,23 +40,23 @@ export default function SplitVault() {
   const [proofSubmitState, setProofSubmitState] = useState({ isOpen: false, expense: null, splitData: null });
   const [verificationState, setVerificationState] = useState({ isOpen: false, expense: null, splitData: null });
 
-  // Filtered expenses
   const allExpenses = summary.allExpenses || [];
-  const filteredExpenses = allExpenses.filter((exp) => {
-    const isPayer = exp.paidBy?.toString() === user?._id?.toString();
-    const mySplit = exp.splits?.find((s) => s.user?.toString() === user?._id?.toString());
+  const groups = summary.groups || [];
+  const recentActivity = summary.recentActivity || [];
 
-    if (expenseFilter === 'owe') {
-      return !isPayer && mySplit && mySplit.status !== 'Verified';
-    }
-    if (expenseFilter === 'owed') {
-      return isPayer && exp.splits?.some((s) => s.user?.toString() !== user?._id?.toString() && s.status !== 'Verified');
-    }
-    if (expenseFilter === 'settled') {
-      return exp.isFullySettled;
-    }
-    return true;
-  });
+  // Group all expenses month-wise for "Activity and Proof" section
+  const monthWiseExpenses = useMemo(() => {
+    const map = {};
+    allExpenses.forEach((exp) => {
+      const d = new Date(exp.date);
+      const monthYear = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+      if (!map[monthYear]) {
+        map[monthYear] = [];
+      }
+      map[monthYear].push(exp);
+    });
+    return map;
+  }, [allExpenses]);
 
   // Open Proof Submit Modal (For Debtor)
   const handleOpenProofSubmit = (expense, splitData) => {
@@ -88,23 +81,31 @@ export default function SplitVault() {
     setActiveGroupModalId(groupId);
   };
 
+  // Handle Delete Group directly from card
+  const handleDeleteGroupCard = async (e, grp) => {
+    e.stopPropagation();
+    if (window.confirm(`Are you sure you want to delete "${grp.name}" and all its shared expenses?`)) {
+      await deleteGroup(grp._id);
+    }
+  };
+
   return (
     <div className="splitvault-container">
-      {/* HEADER SECTION (Screen 1 & 2) */}
+      {/* HEADER SECTION */}
       <header className="splitvault-header">
         <div className="splitvault-header__left">
           <div className="splitvault-header__icon-box">
-            <Users size={28} />
+            <Users size={26} />
           </div>
           <div className="splitvault-header__titles">
             <div className="splitvault-header__title-row">
               <h1 className="splitvault-header__title">SplitVault</h1>
-              <span className="splitvault-pill splitvault-pill--beta">
-                <Sparkles size={12} /> Beta
+              <span className="splitvault-pill splitvault-pill--live">
+                <Sparkles size={12} /> Active
               </span>
             </div>
             <p className="splitvault-header__subtitle">
-              Mutual roommate & hostel expense splitting with strict proof verification
+              Mutual roommate & hostel expense splitting with proof verification
             </p>
           </div>
         </div>
@@ -125,469 +126,563 @@ export default function SplitVault() {
               setIsCreateExpenseOpen(true);
             }}
           >
-            <Plus size={18} /> Create New Expense
+            <Plus size={18} /> Add Expense
           </button>
         </div>
       </header>
 
-      {/* MOBILE SEGMENT SELECTOR (Matches Screen 2 mockup) */}
+      {/* 3 PRIMARY SECTION SELECTOR */}
       <div className="splitvault-segment-tabs">
         <button
           type="button"
-          className={`splitvault-segment-tab ${mobileTab === 'balances' ? 'active' : ''}`}
-          onClick={() => setMobileTab('balances')}
+          className={`splitvault-segment-tab ${activeTab === 'balance' ? 'active' : ''}`}
+          onClick={() => setActiveTab('balance')}
         >
-          My Balances
+          MY Balance
         </button>
         <button
           type="button"
-          className={`splitvault-segment-tab ${mobileTab === 'groups' ? 'active' : ''}`}
-          onClick={() => setMobileTab('groups')}
+          className={`splitvault-segment-tab ${activeTab === 'groups' ? 'active' : ''}`}
+          onClick={() => setActiveTab('groups')}
         >
-          Groups ({summary.groups.length})
+          Group ({groups.length})
         </button>
         <button
           type="button"
-          className={`splitvault-segment-tab ${mobileTab === 'activity' ? 'active' : ''}`}
-          onClick={() => setMobileTab('activity')}
+          className={`splitvault-segment-tab ${activeTab === 'activity' ? 'active' : ''}`}
+          onClick={() => setActiveTab('activity')}
         >
-          Activity & Proofs
+          Activity and Proof ({allExpenses.length})
         </button>
       </div>
 
-      {/* 4 STAT CARDS (Desktop always, Mobile when in 'balances') */}
-      <section
-        className="splitvault-stats-grid"
-        style={{ display: mobileTab !== 'balances' ? undefined : undefined }}
-      >
-        {/* Card 1: Active Groups */}
-        <div className="splitvault-stat-card">
-          <div className="splitvault-stat-card__top">
-            <span className="splitvault-stat-card__label">Active Groups</span>
-            <div className="splitvault-stat-card__icon-box splitvault-stat-card__icon-box--indigo">
-              <Users size={20} />
-            </div>
-          </div>
-          <div className="splitvault-stat-card__value">{summary.activeGroupsCount || 0}</div>
-          <div className="splitvault-stat-card__footer">
-            <span>Hostel, Friends & Flatmates</span>
-          </div>
-        </div>
-
-        {/* Card 2: Total Shared Expenses */}
-        <div className="splitvault-stat-card">
-          <div className="splitvault-stat-card__top">
-            <span className="splitvault-stat-card__label">Total Shared Spend</span>
-            <div className="splitvault-stat-card__icon-box splitvault-stat-card__icon-box--sky">
-              <Wallet size={20} />
-            </div>
-          </div>
-          <div className="splitvault-stat-card__value">
-            Rs {Number(summary.totalSharedExpenses || 0).toLocaleString()}
-          </div>
-          <div className="splitvault-stat-card__footer">
-            <span>This month's group pool</span>
-          </div>
-        </div>
-
-        {/* Card 3: Amount You Owe */}
-        <div className="splitvault-stat-card">
-          <div className="splitvault-stat-card__top">
-            <span className="splitvault-stat-card__label">Amount You Owe</span>
-            <div className="splitvault-stat-card__icon-box splitvault-stat-card__icon-box--amber">
-              <ArrowUpRight size={20} />
-            </div>
-          </div>
-          <div className="splitvault-stat-card__value splitvault-stat-card__value--amber">
-            Rs {Number(summary.amountYouOwe || 0).toLocaleString()}
-          </div>
-          <div className="splitvault-stat-card__footer">
-            <span>{summary.pendingYouOweCount || 0} payments awaiting proof upload</span>
-          </div>
-        </div>
-
-        {/* Card 4: Amount You're Owed */}
-        <div className="splitvault-stat-card">
-          <div className="splitvault-stat-card__top">
-            <span className="splitvault-stat-card__label">Amount You're Owed</span>
-            <div className="splitvault-stat-card__icon-box splitvault-stat-card__icon-box--emerald">
-              <ArrowDownLeft size={20} />
-            </div>
-          </div>
-          <div className="splitvault-stat-card__value splitvault-stat-card__value--emerald">
-            Rs {Number(summary.amountYoureOwed || 0).toLocaleString()}
-          </div>
-          <div className="splitvault-stat-card__footer">
-            <span>
-              {summary.pendingVerifications?.length || 0} receipts ready for your verification
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* PAYER VERIFICATION DESK ALERT (Screen 1 & 5 banner) */}
-      {summary.pendingVerifications && summary.pendingVerifications.length > 0 && (
-        <div className="splitvault-payer-banner">
-          <div className="splitvault-payer-banner__left">
-            <div className="splitvault-payer-banner__icon">
-              <ShieldCheck size={22} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, color: '#f59e0b', fontSize: '0.98rem' }}>
-                Action Required: {summary.pendingVerifications.length} Payment Proof(s) Submitted
-              </div>
-              <div style={{ fontSize: '0.82rem', color: '#e5e7eb' }}>
-                Roommates uploaded transfer slips for bills you paid upfront. Verify and settle their balances.
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
-            onClick={() => {
-              const item = summary.pendingVerifications[0];
-              const exp = allExpenses.find((e) => e._id === item.expenseId);
-              if (exp) {
-                handleOpenVerification(exp, item.split);
-              }
-            }}
-          >
-            Review First Proof →
-          </button>
-        </div>
-      )}
-
-      {/* GROUPS SECTION (Screen 1 & 6) */}
-      {(mobileTab === 'balances' || mobileTab === 'groups') && (
-        <section>
-          <div className="splitvault-section-title">
-            <h2>
-              <Users size={20} color="#818cf8" />
-              <span>Your SplitVault Groups</span>
-            </h2>
-            <button
-              type="button"
-              className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
-              onClick={() => setIsNewGroupOpen(true)}
-            >
-              <Plus size={14} /> Add Group
-            </button>
-          </div>
-
-          <div className="splitvault-groups-grid">
-            {summary.groups.map((group) => {
-              const progressPct = group.stats?.settledPct ?? 0;
-              return (
-                <div
-                  key={group._id}
-                  className="splitvault-group-card"
-                  onClick={() => handleOpenGroupDetails(group._id)}
-                >
-                  <div className="splitvault-group-card__header">
-                    <div className="splitvault-group-card__info">
-                      <div className="splitvault-group-card__icon">
-                        <Users size={22} />
-                      </div>
-                      <div>
-                        <h3 className="splitvault-group-card__name">{group.name}</h3>
-                        <span className="splitvault-group-card__category">{group.category || 'Shared'}</span>
-                      </div>
-                    </div>
-                    <span className="splitvault-group-card__badge">
-                      {group.memberCount || 1} members
-                    </span>
-                  </div>
-
-                  <div className="splitvault-group-card__stats">
-                    <div className="splitvault-group-card__stat-item">
-                      <span className="splitvault-group-card__stat-label">Total Spend</span>
-                      <span className="splitvault-group-card__stat-value">
-                        Rs {Number(group.stats?.totalAmount || 0).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="splitvault-group-card__stat-item" style={{ textAlign: 'right' }}>
-                      <span className="splitvault-group-card__stat-label">Remaining</span>
-                      <span className="splitvault-group-card__stat-value" style={{ color: '#f59e0b' }}>
-                        Rs {Number(group.stats?.remainingAmount || 0).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="splitvault-group-card__progress-container">
-                    <div className="splitvault-group-card__progress-labels">
-                      <span style={{ color: '#10b981' }}>{progressPct}% Settled</span>
-                      <span style={{ color: '#9ca3af' }}>
-                        {group.stats?.settledCount || 0}/{group.stats?.totalCount || 0} Paid
-                      </span>
-                    </div>
-                    <div className="splitvault-group-card__progress-bar">
-                      <div
-                        className="splitvault-group-card__progress-fill"
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      fontSize: '0.82rem',
-                      color: '#a5b4fc',
-                      fontWeight: 600,
-                      marginTop: '4px',
-                    }}
-                  >
-                    <span>View Group & Settle</span>
-                    <ChevronRight size={16} />
-                  </div>
+      {/* =====================================================================
+          SECTION 1: MY BALANCE (4 Analytics Divs + 3-4 Recent Activities Only)
+          ===================================================================== */}
+      {activeTab === 'balance' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+          {/* 4 Stat Cards */}
+          <div className="splitvault-stats-grid">
+            {/* Div 1: Active Groups */}
+            <div className="splitvault-stat-card">
+              <div className="splitvault-stat-card__top">
+                <span className="splitvault-stat-card__label">Active Groups</span>
+                <div className="splitvault-stat-card__icon-box splitvault-stat-card__icon-box--indigo">
+                  <Users size={20} />
                 </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+              </div>
+              <div className="splitvault-stat-card__value">{summary.activeGroupsCount || 0}</div>
+              <div className="splitvault-stat-card__footer">
+                <span>Total groups you belong to</span>
+              </div>
+            </div>
 
-      {/* LOWER GRID: SHARED ACTIVITY + TRUST VAULT (Desktop 2-Col, Mobile in 'activity' or 'balances') */}
-      {(mobileTab === 'balances' || mobileTab === 'activity') && (
-        <div className="splitvault-main-grid">
-          {/* LEFT COLUMN: ACTIVITY & EXPENSES LIST */}
-          <div className="splitvault-activity-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
-                <Receipt size={20} color="#6366f1" />
-                <span>Recent Shared Expenses</span>
+            {/* Div 2: Total Shared Spend */}
+            <div className="splitvault-stat-card">
+              <div className="splitvault-stat-card__top">
+                <span className="splitvault-stat-card__label">Total Shared Spend</span>
+                <div className="splitvault-stat-card__icon-box splitvault-stat-card__icon-box--sky">
+                  <Wallet size={20} />
+                </div>
+              </div>
+              <div className="splitvault-stat-card__value">
+                Rs {Number(summary.totalSharedExpenses || 0).toLocaleString()}
+              </div>
+              <div className="splitvault-stat-card__footer">
+                <span>Month-to-date group total</span>
+              </div>
+            </div>
+
+            {/* Div 3: Amount You Owe (Glowing Red) */}
+            <div className="splitvault-stat-card splitvault-stat-card--owe">
+              <div className="splitvault-stat-card__top">
+                <span className="splitvault-stat-card__label" style={{ color: '#f87171' }}>
+                  Amount You Owe
+                </span>
+                <div className="splitvault-stat-card__icon-box splitvault-stat-card__icon-box--red">
+                  <ArrowUpRight size={20} />
+                </div>
+              </div>
+              <div className="splitvault-stat-card__value splitvault-stat-card__value--red">
+                Rs {Number(summary.amountYouOwe || 0).toLocaleString()}
+              </div>
+              <div className="splitvault-stat-card__footer">
+                <span style={{ color: '#f87171' }}>
+                  {summary.pendingYouOweCount || 0} split payments due
+                </span>
+              </div>
+            </div>
+
+            {/* Div 4: Amount You're Owed (Glowing Green) */}
+            <div className="splitvault-stat-card splitvault-stat-card--owed">
+              <div className="splitvault-stat-card__top">
+                <span className="splitvault-stat-card__label" style={{ color: '#34d399' }}>
+                  Amount You're Owed
+                </span>
+                <div className="splitvault-stat-card__icon-box splitvault-stat-card__icon-box--emerald">
+                  <ArrowDownLeft size={20} />
+                </div>
+              </div>
+              <div className="splitvault-stat-card__value splitvault-stat-card__value--emerald">
+                Rs {Number(summary.amountYoureOwed || 0).toLocaleString()}
+              </div>
+              <div className="splitvault-stat-card__footer">
+                <span style={{ color: '#34d399' }}>
+                  {summary.pendingVerifications?.length || 0} proofs waiting your approval
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3-4 Recent Activities */}
+          <div className="splitvault-recent-box">
+            <div className="splitvault-recent-header">
+              <h2 className="splitvault-recent-title">
+                <Receipt size={18} color="#6366f1" />
+                <span>Recent Activities</span>
               </h2>
-
-              {/* Expense Filter Pills */}
-              <div className="sv-tabs-nav" style={{ padding: '2px' }}>
+              {recentActivity.length > 4 && (
                 <button
                   type="button"
-                  className={`sv-tab-btn ${expenseFilter === 'all' ? 'active' : ''}`}
-                  onClick={() => setExpenseFilter('all')}
-                  style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                  className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
+                  onClick={() => setActiveTab('activity')}
                 >
-                  All
+                  View All ({recentActivity.length})
                 </button>
-                <button
-                  type="button"
-                  className={`sv-tab-btn ${expenseFilter === 'owe' ? 'active' : ''}`}
-                  onClick={() => setExpenseFilter('owe')}
-                  style={{ fontSize: '0.78rem', padding: '4px 8px' }}
-                >
-                  You Owe
-                </button>
-                <button
-                  type="button"
-                  className={`sv-tab-btn ${expenseFilter === 'owed' ? 'active' : ''}`}
-                  onClick={() => setExpenseFilter('owed')}
-                  style={{ fontSize: '0.78rem', padding: '4px 8px' }}
-                >
-                  You're Owed
-                </button>
-                <button
-                  type="button"
-                  className={`sv-tab-btn ${expenseFilter === 'settled' ? 'active' : ''}`}
-                  onClick={() => setExpenseFilter('settled')}
-                  style={{ fontSize: '0.78rem', padding: '4px 8px' }}
-                >
-                  Settled
-                </button>
-              </div>
-            </div>
-
-            <div className="splitvault-expenses-list">
-              {filteredExpenses.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '36px 0', color: '#94a3b8' }}>
-                  No split expenses found matching the selected filter.
-                </div>
-              ) : (
-                filteredExpenses.map((exp) => {
-                  const isPayer = exp.paidBy?.toString() === user?._id?.toString();
-
-                  return (
-                    <div key={exp._id} className="splitvault-expense-item">
-                      <div className="splitvault-expense-item__header">
-                        <div className="splitvault-expense-item__title-box">
-                          <div className="splitvault-expense-item__category-icon">
-                            <Receipt size={18} />
-                          </div>
-                          <div>
-                            <h4 className="splitvault-expense-item__title">{exp.title}</h4>
-                            <div className="splitvault-expense-item__meta">
-                              <span>
-                                {isPayer ? 'Paid upfront by You' : `Paid by ${exp.paidByName}`}
-                              </span>
-                              {exp.groupName && (
-                                <>
-                                  <span>•</span>
-                                  <span style={{ color: '#a5b4fc' }}>{exp.groupName}</span>
-                                </>
-                              )}
-                              <span>•</span>
-                              <span>{new Date(exp.date).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="splitvault-expense-item__amount-box">
-                          <span className="splitvault-expense-item__amount">
-                            Rs {Number(exp.totalAmount).toLocaleString()}
-                          </span>
-                          <span
-                            className={`sv-status-pill ${
-                              exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
-                            }`}
-                          >
-                            {exp.isFullySettled ? '✓ Fully Settled' : 'Pending Splits'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Splits List with Role-based Actions */}
-                      <div className="splitvault-expense-item__splits">
-                        {exp.splits.map((s, idx) => {
-                          const isMySplit = s.user?.toString() === user?._id?.toString();
-                          // STRICT SECURITY LOGIC:
-                          // ONLY payer can verify! Debtor CANNOT verify their own proof!
-                          const canPayerVerify = isPayer && s.status === 'UnderReview';
-                          const canDebtorUpload = isMySplit && !isPayer && (s.status === 'Unpaid' || s.status === 'Rejected');
-
-                          return (
-                            <div key={idx} className="splitvault-split-row">
-                              <div className="splitvault-split-user">
-                                <div
-                                  className="sv-participant-avatar"
-                                  style={{ width: '26px', height: '26px', fontSize: '0.75rem' }}
-                                >
-                                  {s.name?.charAt(0) || 'U'}
-                                </div>
-                                <span>{s.name}</span>
-                              </div>
-
-                              <div className="splitvault-split-status">
-                                <span style={{ fontWeight: 700, color: '#e5e7eb' }}>
-                                  Rs {Number(s.amount).toLocaleString()}
-                                </span>
-
-                                {s.status === 'Verified' && (
-                                  <span className="sv-status-pill sv-status-pill--verified">
-                                    ✓ Settled
-                                  </span>
-                                )}
-
-                                {s.status === 'UnderReview' && (
-                                  <span className="sv-status-pill sv-status-pill--review">
-                                    Proof Under Review
-                                  </span>
-                                )}
-
-                                {s.status === 'Unpaid' && (
-                                  <span className="sv-status-pill sv-status-pill--unpaid">
-                                    Unpaid
-                                  </span>
-                                )}
-
-                                {s.status === 'Rejected' && (
-                                  <span className="sv-status-pill sv-status-pill--rejected">
-                                    Rejected
-                                  </span>
-                                )}
-
-                                {/* ACTION 1: STRICT PAYER ONLY VERIFY */}
-                                {canPayerVerify && (
-                                  <button
-                                    type="button"
-                                    className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
-                                    onClick={() => handleOpenVerification(exp, s)}
-                                  >
-                                    <ShieldCheck size={14} /> Review Proof
-                                  </button>
-                                )}
-
-                                {/* ACTION 2: DEBTOR UPLOAD PROOF */}
-                                {canDebtorUpload && (
-                                  <button
-                                    type="button"
-                                    className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
-                                    onClick={() => handleOpenProofSubmit(exp, s)}
-                                  >
-                                    <FileCheck size={14} /> Upload Proof
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })
               )}
             </div>
+
+            {recentActivity.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '30px 0', color: '#94a3b8' }}>
+                No recent activity. Create a group and split an expense to start tracking.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {recentActivity.slice(0, 4).map((act) => (
+                  <div key={act.id} className="splitvault-recent-item">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div className="splitvault-expense-item__category-icon" style={{ width: '36px', height: '36px' }}>
+                        <Receipt size={16} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.92rem' }}>
+                          {act.title}
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                          {act.subtitle} • {new Date(act.date).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
+                        Rs {Number(act.amount).toLocaleString()}
+                      </span>
+                      <span
+                        className={`sv-status-pill ${
+                          act.badgeColor === 'emerald' ? 'sv-status-pill--verified' : 'sv-status-pill--review'
+                        }`}
+                      >
+                        {act.badge}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+        </div>
+      )}
 
-          {/* RIGHT COLUMN: ZERO DISPUTES GUARANTEE & TRUST CARD */}
-          <div className="splitvault-trust-card">
-            <div className="splitvault-trust-card__icon">
-              <ShieldCheck size={28} />
-            </div>
-
+      {/* =====================================================================
+          SECTION 2: GROUP (Group Cards + Add + Delete Functionality Only)
+          ===================================================================== */}
+      {activeTab === 'groups' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
             <div>
-              <h3 className="splitvault-trust-card__title">Zero-Disputes Settlement</h3>
-              <p className="splitvault-trust-card__desc">
-                SplitVault removes hostel & roommate friction by requiring verified transaction receipts
-                before deducting mutual balances.
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Users size={22} color="#6366f1" />
+                <span>Your Groups</span>
+              </h2>
+              <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>
+                Manage groups, track member splits, and settle balances
               </p>
             </div>
 
-            <div className="splitvault-trust-card__features">
-              <div className="splitvault-trust-feature">
-                <CheckCircle2 size={16} />
-                <span><strong>Strict Payer-Only Approval:</strong> Only whoever paid upfront can approve transfer proofs.</span>
-              </div>
-              <div className="splitvault-trust-feature">
-                <CheckCircle2 size={16} />
-                <span><strong>E-Receipt Capture:</strong> Supports JazzCash, Easypaisa, Raast & Bank Transfer slips.</span>
-              </div>
-              <div className="splitvault-trust-feature">
-                <CheckCircle2 size={16} />
-                <span><strong>Auto Personal Ledger:</strong> Settling a split automatically logs an expense entry in the debtor's account.</span>
-              </div>
-              <div className="splitvault-trust-feature">
-                <CheckCircle2 size={16} />
-                <span><strong>Audit Trail & TID:</strong> Reference numbers and timestamps are permanently tracked.</span>
-              </div>
-            </div>
+            <button
+              type="button"
+              className="splitvault-btn splitvault-btn--primary"
+              onClick={() => setIsNewGroupOpen(true)}
+            >
+              <Plus size={16} /> Add Group
+            </button>
           </div>
+
+          {groups.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '50px 20px',
+                background: 'var(--sv-surface)',
+                borderRadius: 'var(--sv-radius)',
+                border: '1px solid var(--sv-card-border)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '14px',
+              }}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '16px',
+                  background: 'var(--sv-primary-light)',
+                  color: '#818cf8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Users size={28} />
+              </div>
+              <h3 style={{ margin: 0, color: '#fff', fontSize: '1.15rem' }}>No Groups Created Yet</h3>
+              <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.88rem', maxWidth: '380px' }}>
+                Create a group for your hostel room, flat, or outing friends to split expenses effortlessly.
+              </p>
+              <button
+                type="button"
+                className="splitvault-btn splitvault-btn--primary"
+                onClick={() => setIsNewGroupOpen(true)}
+              >
+                <Plus size={16} /> Create Your First Group
+              </button>
+            </div>
+          ) : (
+            <div className="splitvault-groups-grid">
+              {groups.map((group) => {
+                const progressPct = group.stats?.settledPct ?? 0;
+                const isGroupCreator = group.createdBy?.toString() === user?._id?.toString();
+
+                return (
+                  <div
+                    key={group._id}
+                    className="splitvault-group-card"
+                    onClick={() => handleOpenGroupDetails(group._id)}
+                  >
+                    <div className="splitvault-group-card__header">
+                      <div className="splitvault-group-card__info">
+                        <div className="splitvault-group-card__icon">
+                          <Users size={22} />
+                        </div>
+                        <div>
+                          <h3 className="splitvault-group-card__name">{group.name}</h3>
+                          <span className="splitvault-group-card__category">{group.category || 'Shared'}</span>
+                        </div>
+                      </div>
+
+                      <div className="splitvault-group-card__actions">
+                        <span className="splitvault-pill splitvault-pill--live">
+                          {group.memberCount || 1} members
+                        </span>
+                        {isGroupCreator && (
+                          <button
+                            type="button"
+                            className="splitvault-btn splitvault-btn--danger-outline splitvault-btn--sm"
+                            onClick={(e) => handleDeleteGroupCard(e, group)}
+                            title="Delete Group"
+                            style={{ padding: '4px 8px', minHeight: '30px' }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="splitvault-group-card__stats">
+                      <div className="splitvault-group-card__stat-item">
+                        <span className="splitvault-group-card__stat-label">Total Spend</span>
+                        <span className="splitvault-group-card__stat-value">
+                          Rs {Number(group.stats?.totalAmount || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="splitvault-group-card__stat-item" style={{ textAlign: 'right' }}>
+                        <span className="splitvault-group-card__stat-label">Remaining</span>
+                        <span
+                          className="splitvault-group-card__stat-value"
+                          style={{
+                            color: '#ef4444',
+                            textShadow: '0 0 10px rgba(239, 68, 68, 0.4)',
+                          }}
+                        >
+                          Rs {Number(group.stats?.remainingAmount || 0).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="splitvault-group-card__progress-container">
+                      <div className="splitvault-group-card__progress-labels">
+                        <span style={{ color: '#10b981', fontWeight: 700 }}>
+                          {progressPct}% Settled
+                        </span>
+                        <span style={{ color: '#9ca3af' }}>
+                          {group.stats?.settledCount || 0}/{group.stats?.totalCount || 0} Paid
+                        </span>
+                      </div>
+                      <div className="splitvault-group-card__progress-bar">
+                        <div
+                          className="splitvault-group-card__progress-fill"
+                          style={{ width: `${progressPct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="splitvault-group-card__footer">
+                      <button
+                        type="button"
+                        className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedGroupIdForNewExpense(group._id);
+                          setIsCreateExpenseOpen(true);
+                        }}
+                      >
+                        <Plus size={14} /> Add Expense
+                      </button>
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '0.82rem',
+                          color: '#818cf8',
+                          fontWeight: 600,
+                        }}
+                      >
+                        <span>Manage Group</span>
+                        <ChevronRight size={16} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
-      {/* MOBILE BOTTOM NAVIGATION BAR (Screen 2) */}
-      <nav className="sv-mobile-nav">
-        <NavLink to="/" className="sv-mobile-nav__item">
-          <Home size={20} />
-          <span>Home</span>
-        </NavLink>
-        <NavLink to="/transactions" className="sv-mobile-nav__item">
-          <Receipt size={20} />
-          <span>Transactions</span>
-        </NavLink>
-        <NavLink to="/splitvault" className="sv-mobile-nav__item active">
-          <Users size={20} />
-          <span>SplitVault</span>
-        </NavLink>
-        <NavLink to="/analytics" className="sv-mobile-nav__item">
-          <BarChart3 size={20} />
-          <span>Analytics</span>
-        </NavLink>
-        <NavLink to="/settings" className="sv-mobile-nav__item">
-          <SettingsIcon size={20} />
-          <span>Settings</span>
-        </NavLink>
-      </nav>
+      {/* =====================================================================
+          SECTION 3: ACTIVITY AND PROOF (Month-Wise Grouping, Trust Div Removed)
+          ===================================================================== */}
+      {activeTab === 'activity' && (
+        <div className="splitvault-activity-section">
+          {/* Payer Verification Alert Banner */}
+          {summary.pendingVerifications && summary.pendingVerifications.length > 0 && (
+            <div
+              style={{
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05))',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
+                borderRadius: 'var(--sv-radius)',
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
+                boxShadow: 'var(--sv-red-glow)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '10px',
+                    background: 'var(--sv-red-light)',
+                    color: '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <ShieldCheck size={22} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#f87171', fontSize: '0.98rem' }}>
+                    Action Required: {summary.pendingVerifications.length} Payment Proof(s) Submitted
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: '#e5e7eb' }}>
+                    Roommates uploaded transfer receipts for expenses you paid. Verify to settle their balance.
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
+                onClick={() => {
+                  const item = summary.pendingVerifications[0];
+                  const exp = allExpenses.find((e) => e._id === item.expenseId);
+                  if (exp) {
+                    handleOpenVerification(exp, item.split);
+                  }
+                }}
+              >
+                Review Proof →
+              </button>
+            </div>
+          )}
+
+          {allExpenses.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '50px 20px',
+                background: 'var(--sv-surface)',
+                borderRadius: 'var(--sv-radius)',
+                border: '1px solid var(--sv-card-border)',
+                color: '#94a3b8',
+              }}
+            >
+              <Receipt size={32} style={{ margin: '0 auto 12px', color: '#6366f1' }} />
+              <h3 style={{ margin: '0 0 6px', color: '#fff', fontSize: '1.1rem' }}>No Shared Expenses Yet</h3>
+              <p style={{ margin: 0, fontSize: '0.88rem' }}>
+                When you or your roommates add shared expenses, all records will appear here grouped by month.
+              </p>
+            </div>
+          ) : (
+            Object.keys(monthWiseExpenses).map((monthKey) => (
+              <div key={monthKey} className="splitvault-month-group">
+                <div className="splitvault-month-header">
+                  <Calendar size={16} />
+                  <span>{monthKey}</span>
+                </div>
+
+                <div className="splitvault-expenses-list">
+                  {monthWiseExpenses[monthKey].map((exp) => {
+                    const isExpensePayer = exp.paidBy?.toString() === user?._id?.toString();
+
+                    return (
+                      <div key={exp._id} className="splitvault-expense-item">
+                        <div className="splitvault-expense-item__header">
+                          <div className="splitvault-expense-item__title-box">
+                            <div className="splitvault-expense-item__category-icon">
+                              <Receipt size={18} />
+                            </div>
+                            <div>
+                              <h4 className="splitvault-expense-item__title">{exp.title}</h4>
+                              <div className="splitvault-expense-item__meta">
+                                <span>Paid upfront by {isExpensePayer ? 'You' : exp.paidByName}</span>
+                                {exp.groupName && (
+                                  <>
+                                    <span>•</span>
+                                    <span style={{ color: '#818cf8' }}>{exp.groupName}</span>
+                                  </>
+                                )}
+                                <span>•</span>
+                                <span>{new Date(exp.date).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="splitvault-expense-item__amount-box">
+                            <span className="splitvault-expense-item__amount">
+                              Rs {Number(exp.totalAmount).toLocaleString()}
+                            </span>
+                            <span
+                              className={`sv-status-pill ${
+                                exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
+                              }`}
+                            >
+                              {exp.isFullySettled ? '✓ Fully Settled' : 'Pending Splits'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Splits */}
+                        <div className="splitvault-expense-item__splits">
+                          {exp.splits.map((s, idx) => {
+                            const isMySplit = s.user?.toString() === user?._id?.toString();
+                            const canVerify = isExpensePayer && s.status === 'UnderReview';
+                            const canDebtorUpload = isMySplit && !isExpensePayer && (s.status === 'Unpaid' || s.status === 'Rejected');
+
+                            return (
+                              <div key={idx} className="splitvault-split-row">
+                                <div className="splitvault-split-user">
+                                  <div
+                                    className="sv-participant-avatar"
+                                    style={{ width: '26px', height: '26px', fontSize: '0.75rem' }}
+                                  >
+                                    {s.name?.charAt(0) || 'U'}
+                                  </div>
+                                  <span>{s.name}</span>
+                                </div>
+
+                                <div className="splitvault-split-status">
+                                  <span style={{ fontWeight: 700, color: '#e5e7eb' }}>
+                                    Rs {Number(s.amount).toLocaleString()}
+                                  </span>
+
+                                  {s.status === 'Verified' && (
+                                    <span className="sv-status-pill sv-status-pill--verified">
+                                      ✓ Settled
+                                    </span>
+                                  )}
+
+                                  {s.status === 'UnderReview' && (
+                                    <span className="sv-status-pill sv-status-pill--review">
+                                      Proof Under Review
+                                    </span>
+                                  )}
+
+                                  {s.status === 'Unpaid' && (
+                                    <span className="sv-status-pill sv-status-pill--unpaid">
+                                      Unpaid
+                                    </span>
+                                  )}
+
+                                  {s.status === 'Rejected' && (
+                                    <span className="sv-status-pill sv-status-pill--rejected">
+                                      Rejected
+                                    </span>
+                                  )}
+
+                                  {canVerify && (
+                                    <button
+                                      type="button"
+                                      className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
+                                      onClick={() => handleOpenVerification(exp, s)}
+                                    >
+                                      <ShieldCheck size={14} /> Review Proof
+                                    </button>
+                                  )}
+
+                                  {canDebtorUpload && (
+                                    <button
+                                      type="button"
+                                      className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
+                                      onClick={() => handleOpenProofSubmit(exp, s)}
+                                    >
+                                      <FileCheck size={14} /> Upload Proof
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* MODALS */}
       {/* 1. Create Split Expense Modal */}

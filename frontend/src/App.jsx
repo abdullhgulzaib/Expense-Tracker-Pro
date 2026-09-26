@@ -1,5 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { useState } from 'react';
+import { Home, Receipt, Users, BarChart3, Settings as SettingsIcon } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import Dashboard from './pages/Dashboard';
@@ -22,13 +23,31 @@ import useExpenseData from './hooks/useExpenses';
 function AppShell() {
   useExpenseData();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('et_sidebar_collapsed') === 'true';
+  });
+
+  const handleToggleCollapse = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('et_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
 
   return (
     <div className="app-shell">
       {/* Fixed Privacy & Security Vault Overlay */}
       <SecureVault />
 
-      <Sidebar isOpen={isSidebarOpen} onNavigate={() => setIsSidebarOpen(false)} />
+      {/* Responsive & Collapsible Sidebar */}
+      <Sidebar
+        isOpen={isSidebarOpen}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleCollapse}
+        onNavigate={() => setIsSidebarOpen(false)}
+      />
+
       {isSidebarOpen ? (
         <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
       ) : null}
@@ -46,6 +65,46 @@ function AppShell() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+
+      {/* Global Mobile Bottom Navigation Bar (Across All Pages on Mobile Screen) */}
+      <nav className="global-mobile-nav">
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) => `global-mobile-nav__item ${isActive ? 'active' : ''}`}
+        >
+          <Home size={20} />
+          <span>Home</span>
+        </NavLink>
+        <NavLink
+          to="/transactions"
+          className={({ isActive }) => `global-mobile-nav__item ${isActive ? 'active' : ''}`}
+        >
+          <Receipt size={20} />
+          <span>Transactions</span>
+        </NavLink>
+        <NavLink
+          to="/splitvault"
+          className={({ isActive }) => `global-mobile-nav__item ${isActive ? 'active' : ''}`}
+        >
+          <Users size={20} />
+          <span>SplitVault</span>
+        </NavLink>
+        <NavLink
+          to="/analytics"
+          className={({ isActive }) => `global-mobile-nav__item ${isActive ? 'active' : ''}`}
+        >
+          <BarChart3 size={20} />
+          <span>Analytics</span>
+        </NavLink>
+        <NavLink
+          to="/settings"
+          className={({ isActive }) => `global-mobile-nav__item ${isActive ? 'active' : ''}`}
+        >
+          <SettingsIcon size={20} />
+          <span>Settings</span>
+        </NavLink>
+      </nav>
     </div>
   );
 }
