@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { useState } from 'react';
 import { Home, Receipt, Users, BarChart3, Settings as SettingsIcon } from 'lucide-react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import Dashboard from './pages/Dashboard';
@@ -19,6 +20,10 @@ import { VaultProvider } from './context/VaultContext';
 import { SplitVaultProvider } from './context/SplitVaultContext';
 import SecureVault from './components/vault/SecureVault';
 import useExpenseData from './hooks/useExpenses';
+
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  '502898752167-6ld0b8gim1b5uvghr5o9uvb3t5kmd39f.apps.googleusercontent.com';
 
 function AppShell() {
   useExpenseData();
@@ -111,35 +116,37 @@ function AppShell() {
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <SettingsProvider>
-          <ExpenseProvider>
-            <VaultProvider>
-              <NotificationProvider>
-                <SplitVaultProvider>
-                  <Routes>
-                    {/* Public Authentication Routes */}
-                    <Route path="/login" element={<Auth initialMode="login" />} />
-                    <Route path="/signup" element={<Auth initialMode="signup" />} />
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <Router>
+        <AuthProvider>
+          <SettingsProvider>
+            <ExpenseProvider>
+              <VaultProvider>
+                <NotificationProvider>
+                  <SplitVaultProvider>
+                    <Routes>
+                      {/* Public Authentication Routes */}
+                      <Route path="/login" element={<Auth initialMode="login" />} />
+                      <Route path="/signup" element={<Auth initialMode="signup" />} />
 
-                    {/* Protected Main Application Shell */}
-                    <Route
-                      path="/*"
-                      element={
-                        <ProtectedRoute>
-                          <AppShell />
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </SplitVaultProvider>
-              </NotificationProvider>
-            </VaultProvider>
-          </ExpenseProvider>
-        </SettingsProvider>
-      </AuthProvider>
-    </Router>
+                      {/* Protected Main Application Shell */}
+                      <Route
+                        path="/*"
+                        element={
+                          <ProtectedRoute>
+                            <AppShell />
+                          </ProtectedRoute>
+                        }
+                      />
+                    </Routes>
+                  </SplitVaultProvider>
+                </NotificationProvider>
+              </VaultProvider>
+            </ExpenseProvider>
+          </SettingsProvider>
+        </AuthProvider>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 

@@ -1,12 +1,14 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import { User } from '../models.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-
 const JWT_SECRET = process.env.JWT_SECRET;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '502898752167-6ld0b8gim1b5uvghr5o9uvb3t5kmd39f.apps.googleusercontent.com';
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 if (!JWT_SECRET) {
   throw new Error(
@@ -162,5 +164,70 @@ export const updateProfile = async (req, res) => {
       return res.status(400).json({ error: 'This email is already registered to another account' });
     }
     return res.status(500).json({ error: error.message });
+  }
+};
+
+// @desc    Authenticate with Google OAuth ID token
+// @route   POST /auth/google or /api/auth/google
+// @access  Public
+export const googleAuth = async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ error: 'Google credential token is required' });
+    }
+
+    // Verify token with Google
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      return res.status(400).json({ error: 'Unable to retrieve user profile from Google' });
+    }
+
+    const { sub: googleId, email, name, picture } = payload;
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Find existing user by googleId or email
+    let user = await User.findOne({
+      $or: [{ googleId }, { email: cleanEmail }],
+    });
+
+    if (user) {
+      let isUpdated = false;
+      if (!user.googleId) {
+        user.googleId = googleId;
+        isUpdated = true;
+      }
+      if (picture && !user.avatar) {
+        user.avatar = picture;
+        isUpdated = true;
+      }
+      if (isUpdated) {
+        await user.save();
+      }
+    } else {
+      user = await User.create({
+        name: name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        googleId,
+        avatar: picture || '',
+        authProvider: 'google',
+      });
+    }
+
+    return res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar || '',
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    console.error('Google auth error:', error);
+    return res.status(401).json({ error: 'Google authentication failed. Please try again.' });
   }
 };

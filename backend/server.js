@@ -10,6 +10,7 @@ import morgan from 'morgan';
 import {
   registerUser,
   loginUser,
+  googleAuth,
   getMe,
   updateProfile,
 } from './controllers/authController.js';
@@ -96,6 +97,7 @@ app.use(['/auth', '/api/auth', '/expenses', '/api/expenses', '/analytics', '/api
 // Authentication Routes (supports both /auth and /api/auth prefixes)
 app.post(['/auth/register', '/api/auth/register'], registerUser);
 app.post(['/auth/login', '/api/auth/login'], loginUser);
+app.post(['/auth/google', '/api/auth/google'], googleAuth);
 app.get(['/auth/me', '/api/auth/me'], protect, getMe);
 app.put(['/auth/profile', '/api/auth/profile'], protect, updateProfile);
 

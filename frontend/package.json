@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.5",
     "axios": "^1.3.4",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",

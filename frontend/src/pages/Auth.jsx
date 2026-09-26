@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { 
   ShieldCheck, 
   Lock, 
@@ -28,7 +29,7 @@ function Auth({ initialMode = 'login' }) {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -88,6 +89,27 @@ function Auth({ initialMode = 'login' }) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setError('');
+      setIsSubmitting(true);
+      const result = await loginWithGoogle(credentialResponse.credential);
+      if (result.success) {
+        navigate(from, { replace: true });
+      } else {
+        setError(result.error || 'Google sign-in failed. Please try again.');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred during Google sign-in.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google sign-in was unsuccessful. Please try again or use email.');
   };
 
   const setAuthMode = (mode) => {
@@ -311,6 +333,26 @@ function Auth({ initialMode = 'login' }) {
                 <span>{error}</span>
               </div>
             )}
+
+            {/* Google One-Click Auth */}
+            <div className="google-auth-wrapper">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                text={isLogin ? 'signin_with' : 'signup_with'}
+                theme="filled_black"
+                shape="rectangular"
+                size="large"
+                width="100%"
+              />
+            </div>
+
+            {/* Divider */}
+            <div className="auth-divider-row">
+              <div className="auth-divider-line" />
+              <span className="auth-divider-text">Or continue with email</span>
+              <div className="auth-divider-line" />
+            </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="auth-form-fields" noValidate>

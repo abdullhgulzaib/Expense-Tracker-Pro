@@ -73,6 +73,24 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const loginWithGoogle = async (credential) => {
+    try {
+      const res = await api.post('/auth/google', { credential });
+      const { token: authToken, ...userData } = res.data;
+
+      localStorage.setItem('et_token', authToken);
+      localStorage.setItem('et_user', JSON.stringify(userData));
+
+      setToken(authToken);
+      setUser(userData);
+      return { success: true, user: userData };
+    } catch (err) {
+      const errorMsg =
+        err?.response?.data?.error || 'Google sign-in failed. Please try again.';
+      return { success: false, error: errorMsg };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('et_token');
     localStorage.removeItem('et_user');
@@ -106,6 +124,7 @@ export function AuthProvider({ children }) {
     loading,
     isAuthenticated: !!token && !!user,
     login,
+    loginWithGoogle,
     register,
     logout,
     updateUser,

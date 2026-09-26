@@ -2000,6 +2000,48 @@ th {
   animation: fadeIn 0.2s ease-out;
 }
 
+/* Google OAuth Button & Divider */
+.google-auth-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.google-auth-wrapper > div {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.google-auth-wrapper iframe {
+  margin: 0 auto !important;
+}
+
+.auth-divider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.auth-divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.auth-divider-text {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 /* Form Fields */
 .auth-form-fields {
   display: flex;

@@ -11,3 +11,5 @@ build/
 UserName-Password.txt
 mongodb-backup/
 backend/test-backend-auth.js
+client_secret*.json
+*.credentials.json
