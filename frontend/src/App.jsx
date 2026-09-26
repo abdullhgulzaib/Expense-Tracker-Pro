@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Home, Receipt, Users, BarChart3, Settings as SettingsIcon } from 'lucide-react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Sidebar from './components/Sidebar';
