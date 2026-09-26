@@ -23,10 +23,10 @@
 @keyframes vaultPulseCyan {
   0%, 100% {
     filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.35));
-    opacity: 0.9;
+    opacity: 0.95;
   }
   50% {
-    filter: drop-shadow(0 0 35px rgba(56, 189, 248, 0.75));
+    filter: drop-shadow(0 0 32px rgba(56, 189, 248, 0.75));
     opacity: 1;
   }
 }
@@ -38,16 +38,7 @@
   }
   50% {
     filter: drop-shadow(0 0 45px rgba(16, 185, 129, 0.95));
-    transform: scale(1.03);
-  }
-}
-
-@keyframes vaultRotorSpin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+    transform: scale(1.02);
   }
 }
 
@@ -85,8 +76,8 @@
 /* 60fps Dissolve State */
 .vault-overlay.dissolve {
   opacity: 0 !important;
-  transform: scale(1.05) !important;
-  filter: blur(14px) !important;
+  transform: scale(1.04) !important;
+  filter: blur(12px) !important;
   pointer-events: none !important;
 }
 
@@ -103,7 +94,7 @@
 .vault-particle {
   position: absolute;
   font-weight: 700;
-  color: rgba(56, 189, 248, 0.2);
+  color: rgba(56, 189, 248, 0.18);
   animation: vaultParticleFloat 5.5s infinite ease-in-out;
 }
 
@@ -112,35 +103,54 @@
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 680px;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   margin: auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* Typography Helpers */
+.vault-heading {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 10px 0 4px;
+  letter-spacing: -0.01em;
+  font-family: var(--font-heading, Inter, sans-serif);
+}
+
+.vault-description {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  max-width: 320px;
+  margin: 0 auto;
+  line-height: 1.4;
+  font-family: var(--font-body, Inter, sans-serif);
 }
 
 /* Precision Mechanical SVG Dial */
 .vault-dial-wrapper {
   position: relative;
-  width: 220px;
-  height: 220px;
+  width: 200px;
+  height: 200px;
+  max-width: 200px;
+  max-height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 1.25rem 0;
+  margin: 1.25rem auto;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
-@media (max-width: 640px) {
-  .vault-dial-wrapper {
-    width: 180px;
-    height: 180px;
-  }
-}
-
-.vault-dial-stator {
-  position: absolute;
-  inset: 0;
+.vault-dial-wrapper svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .vault-dial-rotor {
@@ -154,21 +164,55 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
+}
+
+/* Explicit SVG bounds inside dial hub so SVGs never stretch */
+.vault-dial-hub svg {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  display: block !important;
+}
+
+/* Telemetry Degree Badge */
+.vault-degree-badge {
+  position: absolute;
+  right: -24px;
+  top: 14px;
+  background: rgba(11, 23, 48, 0.94);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 4px 10px;
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  text-align: left;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 20;
+}
+
+.vault-degree-badge p {
+  margin: 0;
+  line-height: 1.2;
 }
 
 /* Live Terminal Window */
 .vault-terminal {
   background-color: #050b18;
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.25);
   border-radius: 14px;
   padding: 12px 14px;
   text-align: left;
-  font-family: 'JetBrains Mono', monospace, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas;
+  font-family: 'JetBrains Mono', monospace, ui-monospace, Consolas;
   font-size: 0.72rem;
   color: #94a3b8;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
-  max-height: 150px;
+  max-height: 140px;
+  width: 100%;
+  max-width: 440px;
+  margin: 8px auto;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .vault-terminal::-webkit-scrollbar {
@@ -197,28 +241,14 @@
   vertical-align: middle;
 }
 
-/* Telemetry Degree Badge */
-.vault-degree-badge {
-  position: absolute;
-  right: -24px;
-  top: 14px;
-  background: rgba(11, 23, 48, 0.92);
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  padding: 4px 10px;
-  border-radius: 10px;
-  backdrop-filter: blur(8px);
-  text-align: left;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-}
-
-@media (max-width: 640px) {
-  .vault-degree-badge {
-    right: -8px;
-    top: 4px;
-  }
-}
-
 /* Progress Rail */
+.vault-progress-wrapper {
+  width: 100%;
+  max-width: 440px;
+  margin: 8px auto 0;
+  box-sizing: border-box;
+}
+
 .vault-progress-rail {
   width: 100%;
   background: #091224;
@@ -227,6 +257,7 @@
   height: 8px;
   overflow: hidden;
   padding: 1px;
+  box-sizing: border-box;
 }
 
 .vault-progress-fill {
@@ -240,30 +271,166 @@
 /* Action Button */
 .vault-unlock-btn {
   width: 100%;
-  max-width: 320px;
-  padding: 12px 24px;
-  border-radius: 16px;
+  max-width: 280px;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
   color: #030712;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.85rem;
   letter-spacing: 0.05em;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 12px 30px rgba(14, 165, 233, 0.35);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  margin: 12px auto 6px;
+  text-decoration: none;
 }
 
 .vault-unlock-btn:hover {
   background: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%);
-  box-shadow: 0 16px 36px rgba(14, 165, 233, 0.55);
+  box-shadow: 0 12px 30px rgba(14, 165, 233, 0.55);
   transform: translateY(-1px) scale(1.02);
 }
 
 .vault-unlock-btn:active {
   transform: translateY(1px) scale(0.98);
+}
+
+/* CRITICAL: Lock icon inside button MUST BE FIXED 18px */
+.vault-unlock-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
+  color: #030712 !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+}
+
+/* Security Notice Below Button */
+.vault-secure-notice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 6px;
+  user-select: none;
+}
+
+/* CRITICAL: Shield icon MUST BE FIXED 14px */
+.vault-secure-notice svg {
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  max-width: 14px !important;
+  min-height: 14px !important;
+  max-height: 14px !important;
+  color: #38bdf8 !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+}
+
+/* Auto-Lock Center Ring */
+.vault-autolock-icon-box {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: #091326;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+.vault-autolock-icon-box svg {
+  width: 42px !important;
+  height: 42px !important;
+  color: #94a3b8 !important;
+}
+
+/* Access Denied Red Center Ring */
+.vault-denied-icon-box {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem auto;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25);
+}
+
+.vault-denied-icon-box svg {
+  width: 36px !important;
+  height: 36px !important;
+  color: #ef4444 !important;
+}
+
+/* Responsive Overrides for Mobile (<= 640px) */
+@media (max-width: 640px) {
+  .vault-overlay {
+    padding: 1rem 0.75rem;
+  }
+
+  .vault-content-card {
+    padding: 0.5rem;
+  }
+
+  .vault-dial-wrapper {
+    width: 140px;
+    height: 140px;
+    max-width: 140px;
+    max-height: 140px;
+    margin: 0.75rem auto;
+  }
+
+  .vault-dial-hub svg {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+  }
+
+  .vault-degree-badge {
+    right: -8px;
+    top: -2px;
+    padding: 3px 7px;
+  }
+
+  .vault-heading {
+    font-size: 1.25rem;
+    margin: 6px 0 2px;
+  }
+
+  .vault-description {
+    font-size: 0.75rem;
+  }
+
+  .vault-unlock-btn {
+    width: 100%;
+    max-width: 260px;
+    height: 44px;
+    font-size: 0.82rem;
+  }
+
+  .vault-terminal {
+    font-size: 0.65rem;
+    padding: 8px 10px;
+    max-height: 110px;
+  }
 }

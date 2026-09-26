@@ -95,15 +95,36 @@ function VaultDial({
       {/* Center Lock / Checkmark Emblem */}
       <div className="vault-dial-hub">
         {isEmerald ? (
-          <svg className="w-10 h-10 text-emerald-400 filter drop-shadow(0 0 10px rgba(16,185,129,0.9)) animate-scale-in" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            width="34"
+            height="34"
+            style={{ width: 34, height: 34, color: '#10b981', filter: 'drop-shadow(0 0 10px rgba(16,185,129,0.9))' }}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
           </svg>
         ) : isRed ? (
-          <svg className="w-8 h-8 text-rose-500 filter drop-shadow(0 0 8px rgba(244,63,94,0.7))" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            width="28"
+            height="28"
+            style={{ width: 28, height: 28, color: '#ef4444', filter: 'drop-shadow(0 0 8px rgba(244,63,94,0.7))' }}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
           </svg>
         ) : (
-          <svg className="w-8 h-8 text-cyan-400 filter drop-shadow(0 0 8px rgba(56,189,248,0.7))" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            width="30"
+            height="30"
+            style={{ width: 30, height: 30, color: '#38bdf8', filter: 'drop-shadow(0 0 8px rgba(56,189,248,0.7))' }}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         )}

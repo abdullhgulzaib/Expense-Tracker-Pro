@@ -2,8 +2,8 @@ import React from 'react';
 
 /**
  * Universal BrandLogo component for Expense Tracker Pro.
- * Guarantees 100% brand consistency (emblem, colors, typography, letter-spacing)
- * across Vault, Sidebar, Auth, and Topbar.
+ * Uses 100% pure standard inline CSS & explicit pixel dimensions.
+ * Guaranteed zero overflow or layout shifts on all desktop & mobile browsers.
  */
 function BrandLogo({
   size = 'md',
@@ -12,68 +12,95 @@ function BrandLogo({
   className = '',
   onClick,
 }) {
-  // Dimension definitions
-  const dimensions = {
-    sm: {
-      box: 'w-8 h-8 rounded-xl',
-      svg: 'w-4 h-4',
-      title: 'text-[11px] tracking-[0.14em]',
-      subtitle: 'text-[9px] tracking-wide',
-      gap: 'gap-2.5',
-    },
-    md: {
-      box: 'w-9 h-9 rounded-xl',
-      svg: 'w-5 h-5',
-      title: 'text-xs md:text-sm tracking-[0.16em]',
-      subtitle: 'text-[10px] md:text-[11px] tracking-wide',
-      gap: 'gap-3',
-    },
-    lg: {
-      box: 'w-12 h-12 rounded-2xl',
-      svg: 'w-6 h-6',
-      title: 'text-base md:text-lg tracking-[0.18em]',
-      subtitle: 'text-xs tracking-wider',
-      gap: 'gap-3.5',
-    },
+  const sizeMap = {
+    sm: { box: 34, font: 12, titleSize: '0.82rem', subSize: '0.66rem', gap: 10, radius: 10 },
+    md: { box: 40, font: 14, titleSize: '0.9rem', subSize: '0.72rem', gap: 12, radius: 12 },
+    lg: { box: 48, font: 17, titleSize: '1.05rem', subSize: '0.8rem', gap: 14, radius: 14 },
   };
 
-  const current = dimensions[size] || dimensions.md;
+  const s = sizeMap[size] || sizeMap.md;
 
   return (
     <div
-      className={`brand-logo-root flex items-center ${current.gap} select-none ${className}`}
+      className={`app-brand-badge ${className}`}
       onClick={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: `${s.gap}px`,
+        cursor: onClick ? 'pointer' : 'default',
+        userSelect: 'none',
+        textDecoration: 'none',
+        lineHeight: 1,
+      }}
     >
-      {/* Precision Geometric Gradient Brand Emblem */}
+      {/* Precision Gradient Brand Mark with 'ET' Typography */}
       <div
-        className={`${current.box} bg-gradient-to-tr from-[#0284c7] via-[#0ea5e9] to-[#2563eb] flex items-center justify-center shadow-lg shadow-cyan-500/25 flex-shrink-0 border border-cyan-400/30`}
+        style={{
+          width: `${s.box}px`,
+          height: `${s.box}px`,
+          minWidth: `${s.box}px`,
+          minHeight: `${s.box}px`,
+          maxWidth: `${s.box}px`,
+          maxHeight: `${s.box}px`,
+          borderRadius: `${s.radius}px`,
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 50%, #4f46e5 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 6px 18px rgba(14, 165, 233, 0.4)',
+          border: '1px solid rgba(56, 189, 248, 0.45)',
+          color: '#ffffff',
+          fontWeight: 900,
+          fontSize: `${s.font}px`,
+          letterSpacing: '0.06em',
+          flexShrink: 0,
+          boxSizing: 'border-box',
+        }}
       >
-        <svg
-          className={`${current.svg} text-white filter drop-shadow(0 1px 2px rgba(0,0,0,0.4))` }
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          {/* Geometric Diamond & Secure Vault Shield Node */}
-          <polygon points="12 2 2 7 12 12 22 7 12 2" fill="rgba(255,255,255,0.18)" />
-          <polyline points="2 17 12 22 22 17" />
-          <polyline points="2 12 12 17 22 12" />
-        </svg>
+        ET
       </div>
 
-      {/* Standardized Typography */}
-      <div className="flex flex-col leading-tight">
-        <div className={`font-black text-white uppercase font-sans ${current.title}`}>
-          EXPENSE TRACKER <span className="text-cyan-400">PRO</span>
-        </div>
+      {/* Brand Name & Subtitle */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          textAlign: 'left',
+          justifyContent: 'center',
+        }}
+      >
+        <span
+          style={{
+            fontSize: s.titleSize,
+            fontWeight: 800,
+            color: '#ffffff',
+            letterSpacing: '0.12em',
+            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            textTransform: 'uppercase',
+            display: 'block',
+            lineHeight: 1.15,
+          }}
+        >
+          EXPENSE TRACKER <span style={{ color: '#38bdf8' }}>PRO</span>
+        </span>
+
         {showSubtitle && (
-          <div className={`font-medium text-slate-400 font-sans mt-0.5 ${current.subtitle}`}>
+          <span
+            style={{
+              fontSize: s.subSize,
+              fontWeight: 600,
+              color: '#94a3b8',
+              letterSpacing: '0.04em',
+              marginTop: '3px',
+              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              display: 'block',
+              lineHeight: 1.1,
+            }}
+          >
             {subtitle}
-          </div>
+          </span>
         )}
       </div>
     </div>

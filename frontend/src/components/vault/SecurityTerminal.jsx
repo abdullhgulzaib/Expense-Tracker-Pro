@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 
 /**
  * Authentic Security Terminal Component.
- * Displays real-time HTTP & state lifecycle logs without fake hacker text.
+ * Pure CSS telemetry component.
  */
 function SecurityTerminal({
   logs = [],
@@ -17,34 +17,57 @@ function SecurityTerminal({
 
   return (
     <div className={`vault-terminal ${className}`}>
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-1.5 mb-2 select-none">
-        <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          paddingBottom: '6px',
+          marginBottom: '8px',
+          userSelect: 'none',
+        }}
+      >
+        <span
+          style={{
+            fontSize: '0.65rem',
+            fontWeight: 800,
+            letterSpacing: '0.1em',
+            color: '#94a3b8',
+            textTransform: 'uppercase',
+          }}
+        >
           SECURITY TERMINAL
         </span>
-        <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span
+          style={{
+            display: 'inline-block',
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            backgroundColor: '#10b981',
+          }}
+        />
       </div>
 
-      <div className="space-y-1">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         {logs.map((log) => {
           const isError = log.status === 'ERROR' || log.status === 'WARN';
           const isSuccess = log.status === 'OK';
-          const isPending = log.status === 'PENDING';
 
           return (
             <div key={log.id} className="vault-terminal-line">
-              <span className={isError ? 'text-rose-400' : isSuccess ? 'text-slate-300' : 'text-cyan-400'}>
+              <span style={{ color: isError ? '#f87171' : isSuccess ? '#cbd5e1' : '#38bdf8' }}>
                 ▶ {log.text}
               </span>
               <span
-                className={`font-mono font-bold text-[10px] ml-2 ${
-                  isError
-                    ? 'text-rose-400'
-                    : isSuccess
-                    ? 'text-emerald-400'
-                    : isPending
-                    ? 'text-cyan-400 animate-pulse'
-                    : 'text-slate-500'
-                }`}
+                style={{
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
+                  fontSize: '0.65rem',
+                  marginLeft: '8px',
+                  color: isError ? '#f87171' : isSuccess ? '#10b981' : '#38bdf8',
+                }}
               >
                 {log.status || '...'}
               </span>
@@ -53,9 +76,9 @@ function SecurityTerminal({
         })}
 
         {activeStep && (
-          <div className="text-cyan-300 animate-pulse text-[11px] pt-0.5">
+          <div style={{ color: '#38bdf8', fontSize: '0.68rem', paddingTop: '2px' }}>
             ▶ {activeStep}
-            <span className="vault-terminal-cursor"></span>
+            <span className="vault-terminal-cursor" />
           </div>
         )}
 
