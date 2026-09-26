@@ -1,7 +1,7 @@
 /* ==========================================================================
    SplitVault: Mutual Expense Splitting & Verification System Stylesheet
    Designed Mobile-First for all screen sizes (including 360px Samsung A53 & 412px Pixel 6a)
-   Features Red & Emerald with Vibrant Glow Effects
+   Features Warm Amber/Orange & Emerald Glow Effects + Beta Badges
    ========================================================================== */
 
 :root {
@@ -9,17 +9,20 @@
   --sv-primary-hover: #4f46e5;
   --sv-primary-light: rgba(99, 102, 241, 0.15);
   
-  /* Green Glow */
+  /* Emerald / Green Glow */
   --sv-emerald: #10b981;
   --sv-emerald-light: rgba(16, 185, 129, 0.16);
   --sv-emerald-glow: 0 0 16px rgba(16, 185, 129, 0.45), 0 0 32px rgba(16, 185, 129, 0.2);
   --sv-emerald-text-glow: 0 0 12px rgba(16, 185, 129, 0.5);
 
-  /* Red Glow (Replacing Orange completely) */
+  /* Warm Glowing Amber / Orange (Restored) */
+  --sv-amber: #f59e0b;
+  --sv-amber-light: rgba(245, 158, 11, 0.16);
+  --sv-amber-glow: 0 0 16px rgba(245, 158, 11, 0.45), 0 0 32px rgba(245, 158, 11, 0.2);
+  --sv-amber-text-glow: 0 0 12px rgba(245, 158, 11, 0.5);
+
   --sv-red: #ef4444;
   --sv-red-light: rgba(239, 68, 68, 0.16);
-  --sv-red-glow: 0 0 16px rgba(239, 68, 68, 0.45), 0 0 32px rgba(239, 68, 68, 0.2);
-  --sv-red-text-glow: 0 0 12px rgba(239, 68, 68, 0.5);
 
   --sv-sky: #0ea5e9;
   --sv-sky-light: rgba(14, 165, 233, 0.15);
@@ -35,7 +38,7 @@
   --sv-card-border: rgba(0, 0, 0, 0.08);
   --sv-primary-light: rgba(99, 102, 241, 0.1);
   --sv-emerald-light: rgba(16, 185, 129, 0.12);
-  --sv-red-light: rgba(239, 68, 68, 0.12);
+  --sv-amber-light: rgba(245, 158, 11, 0.12);
 }
 
 /* Base Container */
@@ -101,6 +104,7 @@
   margin: 0;
 }
 
+/* Beta Badge Pill */
 .splitvault-pill {
   font-size: 0.72rem;
   font-weight: 700;
@@ -113,11 +117,17 @@
   gap: 4px;
 }
 
+.splitvault-pill--beta {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  color: #a5b4fc;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+}
+
 .splitvault-pill--live {
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid rgba(16, 185, 129, 0.4);
   color: #34d399;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
 .splitvault-header__subtitle {
@@ -181,13 +191,6 @@
   background: linear-gradient(135deg, #059669, #047857);
 }
 
-.splitvault-btn--red,
-.splitvault-btn--danger {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: #ffffff;
-  box-shadow: var(--sv-red-glow);
-}
-
 .splitvault-btn--danger-outline {
   background: transparent;
   border: 1px solid rgba(239, 68, 68, 0.35);
@@ -206,7 +209,7 @@
   min-height: 34px;
 }
 
-/* Navigation Segment Tabs (MY Balance | Group | Activity and Proof) */
+/* Navigation Segment Tabs */
 .splitvault-segment-tabs {
   display: flex;
   background: var(--sv-surface);
@@ -268,14 +271,14 @@
   border-color: rgba(99, 102, 241, 0.3);
 }
 
-/* Red Glow Card for Amount You Owe */
+/* Warm Glowing Orange Card for Amount You Owe */
 .splitvault-stat-card--owe {
-  border-color: rgba(239, 68, 68, 0.3);
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.08);
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08);
 }
 .splitvault-stat-card--owe:hover {
-  box-shadow: var(--sv-red-glow);
-  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: var(--sv-amber-glow);
+  border-color: rgba(245, 158, 11, 0.6);
 }
 
 /* Green Glow Card for Amount You're Owed */
@@ -313,10 +316,10 @@
   color: #38bdf8;
 }
 
-.splitvault-stat-card__icon-box--red {
-  background: var(--sv-red-light);
-  color: #ef4444;
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+.splitvault-stat-card__icon-box--amber {
+  background: var(--sv-amber-light);
+  color: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
 }
 
 .splitvault-stat-card__icon-box--emerald {
@@ -342,9 +345,9 @@
   line-height: 1.2;
 }
 
-.splitvault-stat-card__value--red {
-  color: #ef4444;
-  text-shadow: var(--sv-red-text-glow);
+.splitvault-stat-card__value--amber {
+  color: #f59e0b;
+  text-shadow: var(--sv-amber-text-glow);
 }
 
 .splitvault-stat-card__value--emerald {
@@ -399,7 +402,7 @@
 }
 
 /* ==========================================================================
-   SECTION 2: GROUP (Group Cards + Clean Management + Delete)
+   SECTION 2: GROUP (Group Cards - Clean Professional Layout)
    ========================================================================== */
 
 .splitvault-groups-grid {
@@ -412,10 +415,10 @@
   background: var(--sv-surface);
   border: 1px solid var(--sv-card-border);
   border-radius: var(--sv-radius);
-  padding: 22px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   transition: all 0.2s ease;
   position: relative;
 }
@@ -426,17 +429,20 @@
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
 }
 
+/* Clean Header with flex-start and flex: 1 title to prevent wrapping bugs */
 .splitvault-group-card__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
 }
 
 .splitvault-group-card__info {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .splitvault-group-card__icon {
@@ -451,11 +457,22 @@
   flex-shrink: 0;
 }
 
+.splitvault-group-card__name-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
 .splitvault-group-card__name {
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .splitvault-group-card__category {
@@ -467,6 +484,15 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Member Count & Invite Row */
+.splitvault-group-card__badges-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .splitvault-group-card__stats {
@@ -530,8 +556,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
 }
 
 /* ==========================================================================
@@ -674,7 +702,7 @@
   gap: 8px;
 }
 
-/* Glowing Status Pills */
+/* Status Pills */
 .sv-status-pill {
   font-size: 0.75rem;
   font-weight: 700;
@@ -693,10 +721,10 @@
 }
 
 .sv-status-pill--review {
-  background: var(--sv-red-light);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+  background: var(--sv-amber-light);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
 }
 
 .sv-status-pill--unpaid {
@@ -711,10 +739,7 @@
   border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
-/* ==========================================================================
-   MODAL DIALOGS
-   ========================================================================== */
-
+/* Modals */
 .sv-modal-backdrop {
   position: fixed;
   top: 0;
@@ -1195,10 +1220,11 @@
 
   .splitvault-header__actions {
     width: 100%;
+    justify-content: stretch;
   }
 
-  .splitvault-btn {
-    width: 100%;
+  .splitvault-header__actions .splitvault-btn {
+    flex: 1;
   }
 
   .splitvault-stats-grid {
@@ -1217,6 +1243,15 @@
   .splitvault-groups-grid {
     grid-template-columns: 1fr;
     gap: 14px;
+  }
+
+  .splitvault-group-card__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .splitvault-group-card__footer .splitvault-btn {
+    width: 100%;
   }
 
   .sv-verification-grid {

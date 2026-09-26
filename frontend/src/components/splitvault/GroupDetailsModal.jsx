@@ -75,20 +75,19 @@ export default function GroupDetailsModal({
 
   const handleAddMember = async (e) => {
     e.preventDefault();
-    if (!newMemberName.trim()) {
-      setMemberError('Please enter member name.');
+    if (!newMemberEmail.trim()) {
+      setMemberError('Please enter roommate\'s registered email address.');
       return;
     }
     setMemberError('');
     setIsAddingMember(true);
     const res = await addMemberToGroup(groupId, {
-      name: newMemberName.trim(),
       email: newMemberEmail.trim(),
     });
     setIsAddingMember(false);
     if (res.success) {
-      setNewMemberName('');
       setNewMemberEmail('');
+      setNewMemberName('');
     } else {
       setMemberError(res.error || 'Failed to add member.');
     }
@@ -252,8 +251,8 @@ export default function GroupDetailsModal({
                       style={{
                         fontSize: '1.45rem',
                         fontWeight: 800,
-                        color: '#ef4444',
-                        textShadow: '0 0 14px rgba(239, 68, 68, 0.45)',
+                        color: '#f59e0b',
+                        textShadow: '0 0 14px rgba(245, 158, 11, 0.45)',
                       }}
                     >
                       Rs {Number(stats.remainingAmount).toLocaleString()}
@@ -443,44 +442,41 @@ export default function GroupDetailsModal({
               {/* TAB 2: Members List */}
               {activeTab === 'members' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {/* Add Member Box */}
+                  {/* Add Member Box - Precaution Enforced: Registered Email Only */}
                   <form
                     onSubmit={handleAddMember}
                     style={{
                       display: 'flex',
+                      flexDirection: 'column',
                       gap: '8px',
-                      padding: '12px 14px',
+                      padding: '14px 16px',
                       background: 'rgba(255,255,255,0.02)',
                       borderRadius: '12px',
                       border: '1px solid var(--sv-card-border)',
-                      flexWrap: 'wrap',
                     }}
                   >
-                    <input
-                      type="text"
-                      className="sv-form-input"
-                      placeholder="Roommate name (e.g. Ali, Bilal)"
-                      value={newMemberName}
-                      onChange={(e) => setNewMemberName(e.target.value)}
-                      style={{ flex: 1, minWidth: '130px' }}
-                      required
-                    />
-                    <input
-                      type="email"
-                      className="sv-form-input"
-                      placeholder="Email (optional)"
-                      value={newMemberEmail}
-                      onChange={(e) => setNewMemberEmail(e.target.value)}
-                      style={{ flex: 1, minWidth: '130px' }}
-                    />
-                    <button
-                      type="submit"
-                      className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
-                      disabled={isAddingMember}
-                    >
-                      <UserPlus size={16} />
-                      {isAddingMember ? 'Adding...' : 'Add Member'}
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <input
+                        type="email"
+                        className="sv-form-input"
+                        placeholder="Enter roommate's registered email (e.g. roommate@gmail.com)"
+                        value={newMemberEmail}
+                        onChange={(e) => setNewMemberEmail(e.target.value)}
+                        style={{ flex: 1, minWidth: '220px' }}
+                        required
+                      />
+                      <button
+                        type="submit"
+                        className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
+                        disabled={isAddingMember}
+                      >
+                        <UserPlus size={16} />
+                        {isAddingMember ? 'Linking...' : 'Link Roommate'}
+                      </button>
+                    </div>
+                    <span style={{ fontSize: '0.76rem', color: '#94a3b8' }}>
+                      🔒 Precaution: Your roommate must already have an Expense Tracker Pro account with this email to link them.
+                    </span>
                   </form>
 
                   {memberError && (

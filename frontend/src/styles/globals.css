@@ -173,6 +173,29 @@ h6 {
   }
 }
 
+.sidebar__resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.2s ease;
+  z-index: 10;
+}
+
+.sidebar__resizer:hover,
+.sidebar__resizer:active {
+  background: rgba(99, 102, 241, 0.45);
+}
+
+@media (max-width: 768px) {
+  .sidebar__resizer {
+    display: none;
+  }
+}
+
 .sidebar__brand {
   display: flex;
   align-items: center;

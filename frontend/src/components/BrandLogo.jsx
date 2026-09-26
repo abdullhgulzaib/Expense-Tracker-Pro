@@ -13,9 +13,9 @@ function BrandLogo({
   onClick,
 }) {
   const sizeMap = {
-    sm: { box: 34, font: 12, titleSize: '0.82rem', subSize: '0.66rem', gap: 10, radius: 10 },
-    md: { box: 40, font: 14, titleSize: '0.9rem', subSize: '0.72rem', gap: 12, radius: 12 },
-    lg: { box: 48, font: 17, titleSize: '1.05rem', subSize: '0.8rem', gap: 14, radius: 14 },
+    sm: { box: 32, font: 12, titleSize: '0.74rem', subSize: '0.60rem', gap: 8, radius: 8 },
+    md: { box: 40, font: 14, titleSize: '0.88rem', subSize: '0.70rem', gap: 10, radius: 12 },
+    lg: { box: 48, font: 17, titleSize: '1.02rem', subSize: '0.8rem', gap: 12, radius: 14 },
   };
 
   const s = sizeMap[size] || sizeMap.md;
@@ -79,11 +79,12 @@ function BrandLogo({
             fontSize: s.titleSize,
             fontWeight: 800,
             color: '#ffffff',
-            letterSpacing: '0.12em',
+            letterSpacing: '0.04em',
             fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             textTransform: 'uppercase',
             display: 'block',
             lineHeight: 1.15,
+            whiteSpace: 'nowrap',
           }}
         >
           EXPENSE TRACKER <span className="app-brand-highlight" style={{ color: '#38bdf8' }}>PRO</span>

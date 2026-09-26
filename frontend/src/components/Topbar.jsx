@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
 import { useAuth } from "../context/AuthContext";
-import { useNotifications } from "../context/NotificationContext";
+import { useNotifications, formatNotificationTime } from "../context/NotificationContext";
 import { useVault } from "../context/VaultContext";
 
 function Topbar({ onMenuClick }) {
@@ -171,7 +171,7 @@ function Topbar({ onMenuClick }) {
                       <div className="notification-item__content">
                         <div className="notification-item__header">
                           <span className="notification-item__title">{item.title}</span>
-                          <span className="notification-item__time">{item.time}</span>
+                          <span className="notification-item__time">{formatNotificationTime(item.timestamp)}</span>
                         </div>
                         <p className="notification-item__message">{item.message}</p>
                       </div>

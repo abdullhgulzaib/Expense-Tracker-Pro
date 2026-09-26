@@ -3,13 +3,34 @@ import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext();
 
+export const formatNotificationTime = (timestamp) => {
+  if (!timestamp) return 'Just now';
+  const timeNum = typeof timestamp === 'number' ? timestamp : new Date(timestamp).getTime();
+  if (isNaN(timeNum)) return 'Just now';
+
+  const diff = Date.now() - timeNum;
+  if (diff < 60 * 1000) return 'Just now';
+  if (diff < 60 * 60 * 1000) {
+    const mins = Math.max(1, Math.floor(diff / (60 * 1000)));
+    return `${mins}m ago`;
+  }
+  if (diff < 24 * 60 * 60 * 1000) {
+    const hrs = Math.floor(diff / (60 * 60 * 1000));
+    return `${hrs}h ago`;
+  }
+  if (diff < 48 * 60 * 60 * 1000) {
+    return 'Yesterday';
+  }
+  const d = new Date(timeNum);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
 const getDefaultNotifications = (userName) => [
   {
     id: 'welcome-alert',
     title: 'Welcome to Expense Tracker Pro',
     message: `Hello ${userName || 'User'}! Your financial activity and alert notifications will appear here.`,
-    time: 'Just now',
-    timestamp: Date.now(),
+    timestamp: Date.now() - 5 * 60 * 1000, // 5m ago
     unread: true,
     type: 'welcome',
   },
@@ -17,8 +38,7 @@ const getDefaultNotifications = (userName) => [
     id: 'tip-alert',
     title: 'Quick Tip',
     message: 'You can export your transactions anytime using the "Export Data" button.',
-    time: '1h ago',
-    timestamp: Date.now() - 3600000,
+    timestamp: Date.now() - 3600000, // 1h ago
     unread: true,
     type: 'tip',
   },
@@ -71,13 +91,12 @@ export function NotificationProvider({ children }) {
       id: String(Date.now()),
       title: title || 'Alert',
       message: message || '',
-      time: 'Just now',
       timestamp: Date.now(),
       unread: true,
       type,
     };
 
-    const updated = [newNotification, ...notifications.slice(0, 29)]; // Keep max 30 items
+    const updated = [newNotification, ...notifications.slice(0, 29)];
     persistNotifications(updated);
   };
 
@@ -112,6 +131,7 @@ export function NotificationProvider({ children }) {
         markAllAsRead,
         clearAll,
         removeNotification,
+        formatNotificationTime,
       }}
     >
       {children}
@@ -126,5 +146,3 @@ export function useNotifications() {
   }
   return context;
 }
-
-export default NotificationContext;

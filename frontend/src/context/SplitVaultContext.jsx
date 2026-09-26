@@ -186,6 +186,22 @@ export function SplitVaultProvider({ children }) {
     }
   };
 
+  // Join a group by invite code
+  const joinGroup = async (inviteCode) => {
+    try {
+      const { data } = await api.post('/splitvault/groups/join', { inviteCode });
+      addNotification({
+        title: 'Joined Group',
+        message: data.message || 'Joined group successfully!',
+        type: 'welcome',
+      });
+      await fetchSummary();
+      return { success: true, group: data.group };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || err.message };
+    }
+  };
+
   return (
     <SplitVaultContext.Provider
       value={{
@@ -196,6 +212,7 @@ export function SplitVaultProvider({ children }) {
         groupLoading,
         fetchGroupDetails,
         createGroup,
+        joinGroup,
         deleteGroup,
         addMemberToGroup,
         removeMemberFromGroup,

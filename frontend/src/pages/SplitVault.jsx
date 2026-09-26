@@ -12,7 +12,8 @@ import {
   ChevronRight,
   Trash2,
   Calendar,
-  Layers,
+  Key,
+  Copy,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSplitVault } from '../context/SplitVaultContext';
@@ -23,6 +24,7 @@ import SubmitPaymentProofModal from '../components/splitvault/SubmitPaymentProof
 import ProofVerificationModal from '../components/splitvault/ProofVerificationModal';
 import GroupDetailsModal from '../components/splitvault/GroupDetailsModal';
 import NewGroupModal from '../components/splitvault/NewGroupModal';
+import JoinGroupModal from '../components/splitvault/JoinGroupModal';
 
 export default function SplitVault() {
   const { user } = useAuth();
@@ -35,6 +37,7 @@ export default function SplitVault() {
   const [isCreateExpenseOpen, setIsCreateExpenseOpen] = useState(false);
   const [selectedGroupIdForNewExpense, setSelectedGroupIdForNewExpense] = useState(null);
   const [isNewGroupOpen, setIsNewGroupOpen] = useState(false);
+  const [isJoinGroupOpen, setIsJoinGroupOpen] = useState(false);
 
   const [activeGroupModalId, setActiveGroupModalId] = useState(null);
   const [proofSubmitState, setProofSubmitState] = useState({ isOpen: false, expense: null, splitData: null });
@@ -100,8 +103,8 @@ export default function SplitVault() {
           <div className="splitvault-header__titles">
             <div className="splitvault-header__title-row">
               <h1 className="splitvault-header__title">SplitVault</h1>
-              <span className="splitvault-pill splitvault-pill--live">
-                <Sparkles size={12} /> Active
+              <span className="splitvault-pill splitvault-pill--beta">
+                <Sparkles size={12} /> Beta
               </span>
             </div>
             <p className="splitvault-header__subtitle">
@@ -111,6 +114,14 @@ export default function SplitVault() {
         </div>
 
         <div className="splitvault-header__actions">
+          <button
+            type="button"
+            className="splitvault-btn splitvault-btn--secondary"
+            onClick={() => setIsJoinGroupOpen(true)}
+            title="Join an existing group with an invite code"
+          >
+            <Key size={16} /> Join Group
+          </button>
           <button
             type="button"
             className="splitvault-btn splitvault-btn--secondary"
@@ -193,21 +204,21 @@ export default function SplitVault() {
               </div>
             </div>
 
-            {/* Div 3: Amount You Owe (Glowing Red) */}
+            {/* Div 3: Amount You Owe (Warm Glowing Amber/Orange) */}
             <div className="splitvault-stat-card splitvault-stat-card--owe">
               <div className="splitvault-stat-card__top">
-                <span className="splitvault-stat-card__label" style={{ color: '#f87171' }}>
+                <span className="splitvault-stat-card__label" style={{ color: '#f59e0b' }}>
                   Amount You Owe
                 </span>
-                <div className="splitvault-stat-card__icon-box splitvault-stat-card__icon-box--red">
+                <div className="splitvault-stat-card__icon-box splitvault-stat-card__icon-box--amber">
                   <ArrowUpRight size={20} />
                 </div>
               </div>
-              <div className="splitvault-stat-card__value splitvault-stat-card__value--red">
+              <div className="splitvault-stat-card__value splitvault-stat-card__value--amber">
                 Rs {Number(summary.amountYouOwe || 0).toLocaleString()}
               </div>
               <div className="splitvault-stat-card__footer">
-                <span style={{ color: '#f87171' }}>
+                <span style={{ color: '#f59e0b' }}>
                   {summary.pendingYouOweCount || 0} split payments due
                 </span>
               </div>
@@ -254,7 +265,7 @@ export default function SplitVault() {
 
             {recentActivity.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px 0', color: '#94a3b8' }}>
-                No recent activity. Create a group and split an expense to start tracking.
+                No recent activity. Create or join a group to start tracking shared expenses.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -295,7 +306,7 @@ export default function SplitVault() {
       )}
 
       {/* =====================================================================
-          SECTION 2: GROUP (Group Cards + Add + Delete Functionality Only)
+          SECTION 2: GROUP (Group Cards - Clean Professional UI/UX)
           ===================================================================== */}
       {activeTab === 'groups' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
@@ -310,13 +321,22 @@ export default function SplitVault() {
               </p>
             </div>
 
-            <button
-              type="button"
-              className="splitvault-btn splitvault-btn--primary"
-              onClick={() => setIsNewGroupOpen(true)}
-            >
-              <Plus size={16} /> Add Group
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                className="splitvault-btn splitvault-btn--secondary"
+                onClick={() => setIsJoinGroupOpen(true)}
+              >
+                <Key size={16} /> Join via Code
+              </button>
+              <button
+                type="button"
+                className="splitvault-btn splitvault-btn--primary"
+                onClick={() => setIsNewGroupOpen(true)}
+              >
+                <Plus size={16} /> Add Group
+              </button>
+            </div>
           </div>
 
           {groups.length === 0 ? (
@@ -349,15 +369,24 @@ export default function SplitVault() {
               </div>
               <h3 style={{ margin: 0, color: '#fff', fontSize: '1.15rem' }}>No Groups Created Yet</h3>
               <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.88rem', maxWidth: '380px' }}>
-                Create a group for your hostel room, flat, or outing friends to split expenses effortlessly.
+                Create a group for your hostel room, flat, or outing friends — or join an existing group with an invite code.
               </p>
-              <button
-                type="button"
-                className="splitvault-btn splitvault-btn--primary"
-                onClick={() => setIsNewGroupOpen(true)}
-              >
-                <Plus size={16} /> Create Your First Group
-              </button>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  className="splitvault-btn splitvault-btn--secondary"
+                  onClick={() => setIsJoinGroupOpen(true)}
+                >
+                  <Key size={16} /> Join via Code
+                </button>
+                <button
+                  type="button"
+                  className="splitvault-btn splitvault-btn--primary"
+                  onClick={() => setIsNewGroupOpen(true)}
+                >
+                  <Plus size={16} /> Create Your First Group
+                </button>
+              </div>
             </div>
           ) : (
             <div className="splitvault-groups-grid">
@@ -371,21 +400,21 @@ export default function SplitVault() {
                     className="splitvault-group-card"
                     onClick={() => handleOpenGroupDetails(group._id)}
                   >
+                    {/* Header: Title & Category on left, Category badge & Delete on right */}
                     <div className="splitvault-group-card__header">
                       <div className="splitvault-group-card__info">
                         <div className="splitvault-group-card__icon">
                           <Users size={22} />
                         </div>
-                        <div>
-                          <h3 className="splitvault-group-card__name">{group.name}</h3>
-                          <span className="splitvault-group-card__category">{group.category || 'Shared'}</span>
+                        <div className="splitvault-group-card__name-block">
+                          <h3 className="splitvault-group-card__name" title={group.name}>
+                            {group.name}
+                          </h3>
+                          <span className="splitvault-group-card__category">{group.category || 'Shared Group'}</span>
                         </div>
                       </div>
 
                       <div className="splitvault-group-card__actions">
-                        <span className="splitvault-pill splitvault-pill--live">
-                          {group.memberCount || 1} members
-                        </span>
                         {isGroupCreator && (
                           <button
                             type="button"
@@ -400,6 +429,17 @@ export default function SplitVault() {
                       </div>
                     </div>
 
+                    {/* Row 2: Badges (Member Count + Invite Code) */}
+                    <div className="splitvault-group-card__badges-row">
+                      <span className="splitvault-pill splitvault-pill--live" style={{ fontSize: '0.75rem' }}>
+                        👥 {group.memberCount || 1} {group.memberCount === 1 ? 'member' : 'members'}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: '#818cf8', fontFamily: 'monospace', fontWeight: 600 }}>
+                        Code: {group.inviteCode}
+                      </span>
+                    </div>
+
+                    {/* Row 3: Spend Stats */}
                     <div className="splitvault-group-card__stats">
                       <div className="splitvault-group-card__stat-item">
                         <span className="splitvault-group-card__stat-label">Total Spend</span>
@@ -412,8 +452,8 @@ export default function SplitVault() {
                         <span
                           className="splitvault-group-card__stat-value"
                           style={{
-                            color: '#ef4444',
-                            textShadow: '0 0 10px rgba(239, 68, 68, 0.4)',
+                            color: '#f59e0b',
+                            textShadow: '0 0 10px rgba(245, 158, 11, 0.4)',
                           }}
                         >
                           Rs {Number(group.stats?.remainingAmount || 0).toLocaleString()}
@@ -421,6 +461,7 @@ export default function SplitVault() {
                       </div>
                     </div>
 
+                    {/* Row 4: Settlement Progress Bar */}
                     <div className="splitvault-group-card__progress-container">
                       <div className="splitvault-group-card__progress-labels">
                         <span style={{ color: '#10b981', fontWeight: 700 }}>
@@ -438,6 +479,7 @@ export default function SplitVault() {
                       </div>
                     </div>
 
+                    {/* Footer: Action Buttons */}
                     <div className="splitvault-group-card__footer">
                       <button
                         type="button"
@@ -451,19 +493,16 @@ export default function SplitVault() {
                         <Plus size={14} /> Add Expense
                       </button>
 
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          fontSize: '0.82rem',
-                          color: '#818cf8',
-                          fontWeight: 600,
+                      <button
+                        type="button"
+                        className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenGroupDetails(group._id);
                         }}
                       >
-                        <span>Manage Group</span>
-                        <ChevronRight size={16} />
-                      </div>
+                        Manage Group <ChevronRight size={14} />
+                      </button>
                     </div>
                   </div>
                 );
@@ -474,7 +513,7 @@ export default function SplitVault() {
       )}
 
       {/* =====================================================================
-          SECTION 3: ACTIVITY AND PROOF (Month-Wise Grouping, Trust Div Removed)
+          SECTION 3: ACTIVITY AND PROOF (Month-Wise Grouping)
           ===================================================================== */}
       {activeTab === 'activity' && (
         <div className="splitvault-activity-section">
@@ -482,8 +521,8 @@ export default function SplitVault() {
           {summary.pendingVerifications && summary.pendingVerifications.length > 0 && (
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05))',
-                border: '1px solid rgba(239, 68, 68, 0.35)',
+                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05))',
+                border: '1px solid rgba(245, 158, 11, 0.4)',
                 borderRadius: 'var(--sv-radius)',
                 padding: '16px 20px',
                 display: 'flex',
@@ -491,7 +530,7 @@ export default function SplitVault() {
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
                 gap: '12px',
-                boxShadow: 'var(--sv-red-glow)',
+                boxShadow: 'var(--sv-amber-glow)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -500,8 +539,8 @@ export default function SplitVault() {
                     width: '40px',
                     height: '40px',
                     borderRadius: '10px',
-                    background: 'var(--sv-red-light)',
-                    color: '#ef4444',
+                    background: 'var(--sv-amber-light)',
+                    color: '#f59e0b',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -511,7 +550,7 @@ export default function SplitVault() {
                   <ShieldCheck size={22} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, color: '#f87171', fontSize: '0.98rem' }}>
+                  <div style={{ fontWeight: 700, color: '#fbbf24', fontSize: '0.98rem' }}>
                     Action Required: {summary.pendingVerifications.length} Payment Proof(s) Submitted
                   </div>
                   <div style={{ fontSize: '0.82rem', color: '#e5e7eb' }}>
@@ -725,6 +764,12 @@ export default function SplitVault() {
       <NewGroupModal
         isOpen={isNewGroupOpen}
         onClose={() => setIsNewGroupOpen(false)}
+      />
+
+      {/* 6. Join Group Modal via Code */}
+      <JoinGroupModal
+        isOpen={isJoinGroupOpen}
+        onClose={() => setIsJoinGroupOpen(false)}
       />
     </div>
   );

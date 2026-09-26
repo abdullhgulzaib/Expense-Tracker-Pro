@@ -30,6 +30,7 @@ import {
   getSplitVaultSummary,
   getGroups,
   createGroup,
+  joinGroupByInviteCode,
   deleteGroup,
   addMemberToGroup,
   removeMemberFromGroup,
@@ -108,6 +109,7 @@ app.get(['/analytics/monthly-trend', '/api/analytics/monthly-trend'], protect, g
 app.get(['/splitvault/summary', '/api/splitvault/summary'], protect, getSplitVaultSummary);
 app.get(['/splitvault/groups', '/api/splitvault/groups'], protect, getGroups);
 app.post(['/splitvault/groups', '/api/splitvault/groups'], protect, createGroup);
+app.post(['/splitvault/groups/join', '/api/splitvault/groups/join'], protect, joinGroupByInviteCode);
 app.delete(['/splitvault/groups/:groupId', '/api/splitvault/groups/:groupId'], protect, deleteGroup);
 app.post(['/splitvault/groups/:groupId/members', '/api/splitvault/groups/:groupId/members'], protect, addMemberToGroup);
 app.delete(['/splitvault/groups/:groupId/members/:memberId', '/api/splitvault/groups/:groupId/members/:memberId'], protect, removeMemberFromGroup);
