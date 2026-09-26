@@ -57,15 +57,12 @@ function SecurityTerminal({
 
           return (
             <div key={log.id} className="vault-terminal-line">
-              <span style={{ color: isError ? '#f87171' : isSuccess ? '#cbd5e1' : '#38bdf8' }}>
+              <span className="vault-terminal-text" style={{ color: isError ? '#f87171' : isSuccess ? '#cbd5e1' : '#38bdf8' }}>
                 ▶ {log.text}
               </span>
               <span
+                className="vault-terminal-status"
                 style={{
-                  fontFamily: 'monospace',
-                  fontWeight: 700,
-                  fontSize: '0.65rem',
-                  marginLeft: '8px',
                   color: isError ? '#f87171' : isSuccess ? '#10b981' : '#38bdf8',
                 }}
               >
@@ -76,9 +73,11 @@ function SecurityTerminal({
         })}
 
         {activeStep && (
-          <div style={{ color: '#38bdf8', fontSize: '0.68rem', paddingTop: '2px' }}>
-            ▶ {activeStep}
-            <span className="vault-terminal-cursor" />
+          <div className="vault-terminal-line" style={{ color: '#38bdf8', paddingTop: '2px' }}>
+            <span className="vault-terminal-text">
+              ▶ {activeStep}
+              <span className="vault-terminal-cursor" />
+            </span>
           </div>
         )}
 

@@ -22,7 +22,7 @@ function BrandLogo({
 
   return (
     <div
-      className={`app-brand-badge ${className}`}
+      className={`app-brand-badge app-brand-${size} ${className}`}
       onClick={onClick}
       style={{
         display: 'inline-flex',
@@ -36,6 +36,7 @@ function BrandLogo({
     >
       {/* Precision Gradient Brand Mark with 'ET' Typography */}
       <div
+        className="app-brand-mark"
         style={{
           width: `${s.box}px`,
           height: `${s.box}px`,
@@ -63,6 +64,7 @@ function BrandLogo({
 
       {/* Brand Name & Subtitle */}
       <div
+        className="app-brand-text"
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -72,6 +74,7 @@ function BrandLogo({
         }}
       >
         <span
+          className="app-brand-title"
           style={{
             fontSize: s.titleSize,
             fontWeight: 800,
@@ -83,11 +86,12 @@ function BrandLogo({
             lineHeight: 1.15,
           }}
         >
-          EXPENSE TRACKER <span style={{ color: '#38bdf8' }}>PRO</span>
+          EXPENSE TRACKER <span className="app-brand-highlight" style={{ color: '#38bdf8' }}>PRO</span>
         </span>
 
         {showSubtitle && (
           <span
+            className="app-brand-subtitle"
             style={{
               fontSize: s.subSize,
               fontWeight: 600,

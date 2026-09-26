@@ -7,12 +7,12 @@ function ProtectedRoute({ children }) {
 
   const hasToken = Boolean(localStorage.getItem('et_token'));
 
-  // If no token exists at all and loading is finished, redirect to login
-  if (!loading && !isAuthenticated && !hasToken) {
+  // If no token exists at all in localStorage, immediately redirect to login (never show vault to unauthenticated guests)
+  if (!hasToken) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If user has a token, AppShell renders with SecureVault covering the screen seamlessly
+  // If user has a token, AppShell renders with SecureVault verifying the session
   return children;
 }
 

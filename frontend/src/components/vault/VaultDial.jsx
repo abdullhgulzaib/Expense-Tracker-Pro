@@ -30,7 +30,7 @@ function VaultDial({
 
   return (
     <div className={`vault-dial-wrapper ${className}`} style={glowStyle}>
-      <svg className="w-full h-full select-none" viewBox="0 0 200 200">
+      <svg className="vault-dial-svg" viewBox="0 0 200 200">
         <defs>
           <linearGradient id="dialRimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={isEmerald ? '#10b981' : isRed ? '#ef4444' : '#38bdf8'} stopOpacity="0.8" />
@@ -133,8 +133,8 @@ function VaultDial({
       {/* Real Degree Telemetry Readout Badge (Panel 2 from design) */}
       {showDegree && (state === 'VERIFYING' || angle > 0) && (
         <div className="vault-degree-badge">
-          <p className="text-[9px] uppercase tracking-wider text-slate-400">Rotating vault...</p>
-          <p className="text-xs font-bold font-mono text-cyan-400">{Math.round(angle % 360)}°</p>
+          <p className="vault-degree-badge-title">Rotating vault...</p>
+          <p className="vault-degree-badge-val">{Math.round(angle % 360)}°</p>
         </div>
       )}
     </div>

@@ -64,7 +64,7 @@ function SecureVault() {
       <div className="vault-content-card">
         
         {/* 2. Unified Brand Header */}
-        <div style={{ marginBottom: '12px' }}>
+        <div className="vault-brand-wrapper">
           <BrandLogo size="md" subtitle="Your Financial Life, Secured." />
         </div>
 
@@ -139,8 +139,8 @@ function SecureVault() {
               <>
                 <VaultDial angle={dialAngle} state="VERIFYING" showDegree={true} />
 
-                <div style={{ height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#38bdf8', fontFamily: 'monospace', fontWeight: 600 }}>
+                <div className="vault-step-wrapper">
+                  <p className="vault-step-text">
                     {activeStepText}
                   </p>
                 </div>
