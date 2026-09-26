@@ -1,4 +1,5 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer, useCallback } from 'react';
+import api from '../services/api';
 
 const ExpenseContext = createContext();
 
@@ -46,8 +47,26 @@ function reducer(state, action) {
 export function ExpenseProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  const fetchExpenses = useCallback(async () => {
+    try {
+      const [expensesRes, summaryRes] = await Promise.allSettled([
+        api.get('/expenses'),
+        api.get('/analytics/summary'),
+      ]);
+
+      if (expensesRes.status === 'fulfilled' && Array.isArray(expensesRes.value?.data)) {
+        dispatch({ type: 'SET_EXPENSES', payload: expensesRes.value.data });
+      }
+      if (summaryRes.status === 'fulfilled' && summaryRes.value?.data) {
+        dispatch({ type: 'SET_SUMMARY', payload: summaryRes.value.data });
+      }
+    } catch (err) {
+      console.warn('Failed to sync expenses:', err?.message);
+    }
+  }, []);
+
   return (
-    <ExpenseContext.Provider value={{ state, dispatch }}>
+    <ExpenseContext.Provider value={{ state, dispatch, fetchExpenses, refreshExpenses: fetchExpenses }}>
       {children}
     </ExpenseContext.Provider>
   );

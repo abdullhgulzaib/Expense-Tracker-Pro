@@ -2,12 +2,14 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import api from '../services/api';
 import { useAuth } from './AuthContext';
 import { useNotifications } from './NotificationContext';
+import { useExpenses } from './ExpenseContext';
 
 const SplitVaultContext = createContext(null);
 
 export function SplitVaultProvider({ children }) {
   const { user, isAuthenticated } = useAuth();
   const { addNotification } = useNotifications();
+  const { fetchExpenses } = useExpenses();
 
   const [summary, setSummary] = useState({
     activeGroupsCount: 0,
@@ -90,6 +92,9 @@ export function SplitVaultProvider({ children }) {
         type: 'expense-add',
       });
       await fetchSummary();
+      if (typeof fetchExpenses === 'function') {
+        fetchExpenses();
+      }
       if (data.groupId) {
         await fetchGroupDetails(data.groupId);
       }
@@ -139,6 +144,9 @@ export function SplitVaultProvider({ children }) {
         });
       }
       await fetchSummary();
+      if (typeof fetchExpenses === 'function') {
+        fetchExpenses();
+      }
       return { success: true, data };
     } catch (err) {
       return { success: false, error: err?.response?.data?.error || err.message };
