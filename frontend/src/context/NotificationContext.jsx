@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
+import api from '../services/api';
 
 const NotificationContext = createContext();
 
@@ -29,65 +30,56 @@ const getDefaultNotifications = (userName) => [
   {
     id: 'welcome-alert',
     title: 'Welcome to Expense Tracker Pro',
-    message: `Hello ${userName || 'User'}! Your financial activity and alert notifications will appear here.`,
-    timestamp: Date.now() - 5 * 60 * 1000, // 5m ago
-    unread: true,
+    message: `Hello ${userName || 'User'}! Your cross-user proof verifications and alert notifications will appear here.`,
+    timestamp: Date.now() - 5 * 60 * 1000,
+    unread: false,
     type: 'welcome',
-  },
-  {
-    id: 'tip-alert',
-    title: 'Quick Tip',
-    message: 'You can export your transactions anytime using the "Export Data" button.',
-    timestamp: Date.now() - 3600000, // 1h ago
-    unread: true,
-    type: 'tip',
   },
 ];
 
 export function NotificationProvider({ children }) {
-  const { user } = useAuth();
-  const storageKey = user?._id ? `appNotifications_${user._id}` : 'appNotifications_guest';
+  const { user, isAuthenticated } = useAuth();
+  const [notifications, setNotifications] = useState([]);
+  const isFetchingRef = useRef(false);
 
-  const [notifications, setNotifications] = useState(() => {
+  // Fetch real-time notifications from MongoDB backend
+  const fetchNotifications = useCallback(async () => {
+    if (!isAuthenticated || !user?._id || isFetchingRef.current) return;
     try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        return JSON.parse(saved);
+      isFetchingRef.current = true;
+      const res = await api.get('/notifications');
+      if (Array.isArray(res.data)) {
+        const formatted = res.data.map((n) => ({
+          id: n._id || String(n.createdAt),
+          title: n.title,
+          message: n.message,
+          timestamp: new Date(n.createdAt).getTime(),
+          unread: Boolean(n.unread),
+          type: n.type || 'info',
+          metadata: n.metadata,
+        }));
+        setNotifications(formatted);
       }
-    } catch {
-      // Fallback
+    } catch (err) {
+      // Fallback silently if offline
+    } finally {
+      isFetchingRef.current = false;
     }
-    return getDefaultNotifications(user?.name);
-  });
+  }, [isAuthenticated, user?._id]);
 
-  // Re-sync notifications when authenticated user changes
+  // Initial fetch and 8-second polling for true real-time cross-user notifications
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        setNotifications(JSON.parse(saved));
-      } else {
-        const defaults = getDefaultNotifications(user?.name);
-        setNotifications(defaults);
-        localStorage.setItem(storageKey, JSON.stringify(defaults));
-      }
-    } catch {
-      setNotifications(getDefaultNotifications(user?.name));
+    if (isAuthenticated) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 8000);
+      return () => clearInterval(interval);
+    } else {
+      setNotifications(getDefaultNotifications(''));
     }
-  }, [user?._id, user?.name, storageKey]);
+  }, [isAuthenticated, fetchNotifications]);
 
-  // Persist notifications on change
-  const persistNotifications = (updated) => {
-    setNotifications(updated);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to save notifications:', e);
-    }
-  };
-
-  const addNotification = ({ title, message, type = 'info' }) => {
-    const newNotification = {
+  const addNotification = async ({ title, message, type = 'info' }) => {
+    const localItem = {
       id: String(Date.now()),
       title: title || 'Alert',
       message: message || '',
@@ -95,28 +87,45 @@ export function NotificationProvider({ children }) {
       unread: true,
       type,
     };
-
-    const updated = [newNotification, ...notifications.slice(0, 29)];
-    persistNotifications(updated);
+    setNotifications((prev) => [localItem, ...prev]);
   };
 
-  const markAsRead = (id) => {
-    const updated = notifications.map((n) => (n.id === id ? { ...n, unread: false } : n));
-    persistNotifications(updated);
+  const markAsRead = async (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, unread: false } : n))
+    );
+    try {
+      await api.put(`/notifications/${id}/read`);
+    } catch {
+      // Ignore network errors
+    }
   };
 
-  const markAllAsRead = () => {
-    const updated = notifications.map((n) => ({ ...n, unread: false }));
-    persistNotifications(updated);
+  const markAllAsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+    try {
+      await api.put('/notifications/read-all');
+    } catch {
+      // Ignore network errors
+    }
   };
 
-  const clearAll = () => {
-    persistNotifications([]);
+  const clearAll = async () => {
+    setNotifications([]);
+    try {
+      await api.delete('/notifications');
+    } catch {
+      // Ignore network errors
+    }
   };
 
-  const removeNotification = (id) => {
-    const updated = notifications.filter((n) => n.id !== id);
-    persistNotifications(updated);
+  const removeNotification = async (id) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await api.delete(`/notifications/${id}`);
+    } catch {
+      // Ignore network errors
+    }
   };
 
   const unreadCount = notifications.filter((n) => n.unread).length;
@@ -132,6 +141,7 @@ export function NotificationProvider({ children }) {
         clearAll,
         removeNotification,
         formatNotificationTime,
+        refetchNotifications: fetchNotifications,
       }}
     >
       {children}

@@ -18,11 +18,12 @@ export default function ProofVerificationModal({ isOpen, onClose, expense, split
   // STRICT PAYER-ONLY AUTHORIZATION CHECK (Defense in Depth)
   const isPayer = expense.paidBy?.toString() === user?._id?.toString();
 
-  const proof = splitData.proof || {};
+  const proof = splitData.proof || (splitData.imageUrl ? splitData : {});
   const tid = proof.transactionId || 'N/A';
   const method = proof.method || 'Mobile Wallet';
   const amount = splitData.amount || 0;
-  const debtorName = splitData.name || 'Roommate';
+  const debtorName = splitData.name || splitData.debtorName || 'Roommate';
+  const targetUserId = splitData.user?._id || splitData.user || splitData.splitUserId || splitData._id;
 
   const handleCopyTid = () => {
     if (tid && tid !== 'N/A') {
@@ -35,7 +36,7 @@ export default function ProofVerificationModal({ isOpen, onClose, expense, split
   const handleApprove = async () => {
     setError('');
     setSubmitting(true);
-    const res = await verifyProof(expense._id, splitData.user, {
+    const res = await verifyProof(expense._id, targetUserId, {
       action: 'APPROVE',
     });
     setSubmitting(false);
@@ -53,7 +54,7 @@ export default function ProofVerificationModal({ isOpen, onClose, expense, split
     }
     setError('');
     setSubmitting(true);
-    const res = await verifyProof(expense._id, splitData.user, {
+    const res = await verifyProof(expense._id, targetUserId, {
       action: 'REJECT',
       reason: rejectionReason.trim(),
     });
@@ -64,6 +65,7 @@ export default function ProofVerificationModal({ isOpen, onClose, expense, split
       setError(res.error || 'Failed to reject payment proof.');
     }
   };
+
 
   return (
     <div className="sv-modal-backdrop" onClick={onClose}>

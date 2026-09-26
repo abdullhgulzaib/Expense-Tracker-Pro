@@ -68,7 +68,7 @@ function SecureVault() {
           <BrandLogo size="md" subtitle="Your Financial Life, Secured." />
         </div>
 
-        {/* STATE A: INITIAL LOCKED (Panel 1) */}
+        {/* STATE A: INITIAL LOCKED / AUTO-INITIALIZING */}
         {vaultState === 'LOCKED' && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
             <VaultDial angle={0} state="LOCKED" showDegree={false} />
@@ -77,25 +77,12 @@ function SecureVault() {
               Secure Vault
             </h2>
             <p className="vault-description">
-              Verify identity to access your financial command center
+              Auto-initializing your financial command center...
             </p>
 
-            <button
-              type="button"
-              onClick={unlockVault}
-              className="vault-unlock-btn"
-            >
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-              </svg>
-              <span>Unlock Vault</span>
-            </button>
-
-            <div className="vault-secure-notice">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <span>Protected financial session</span>
+            <div className="vault-secure-notice" style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}></span>
+              <span>Loading workspace securely...</span>
             </div>
           </div>
         )}

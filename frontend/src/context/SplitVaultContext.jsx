@@ -41,8 +41,13 @@ export function SplitVaultProvider({ children }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    fetchSummary();
-  }, [fetchSummary]);
+    if (isAuthenticated) {
+      fetchSummary();
+      const interval = setInterval(fetchSummary, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, fetchSummary]);
+
 
   // Fetch specific group details
   const fetchGroupDetails = useCallback(async (groupId) => {

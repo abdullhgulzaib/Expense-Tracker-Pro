@@ -217,12 +217,20 @@ export function VaultProvider({ children }) {
   }, [isAuthenticated, vaultState, autoLockMinutes, lockVault]);
 
   // Cleanup on unmount
+  // Auto-unlock vault on authenticated session without requiring manual button click
+  useEffect(() => {
+    if (isAuthenticated && vaultState === 'LOCKED' && !isExecutingRef.current) {
+      unlockVault();
+    }
+  }, [isAuthenticated, vaultState, unlockVault]);
+
   useEffect(() => {
     return () => {
       clearInterval(angleIntervalRef.current);
       clearTimeout(idleTimerRef.current);
     };
   }, []);
+
 
   const value = {
     vaultState,

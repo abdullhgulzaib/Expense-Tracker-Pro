@@ -39,6 +39,13 @@ import {
   submitPaymentProof,
   verifyPaymentProof,
 } from './controllers/splitVaultController.js';
+import {
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification,
+  clearAllNotifications,
+} from './controllers/notificationController.js';
 import { protect } from './middleware/authMiddleware.js';
 
 const app = express();
@@ -76,7 +83,7 @@ app.get('/health', (req, res) => {
 });
 
 // Wait for MongoDB before handling database-backed requests.
-app.use(['/auth', '/api/auth', '/expenses', '/api/expenses', '/analytics', '/api/analytics', '/splitvault', '/api/splitvault'], async (req, res, next) => {
+app.use(['/auth', '/api/auth', '/expenses', '/api/expenses', '/analytics', '/api/analytics', '/splitvault', '/api/splitvault', '/notifications', '/api/notifications'], async (req, res, next) => {
   try {
     await connectToDatabase();
     next();
@@ -117,6 +124,13 @@ app.get(['/splitvault/groups/:groupId', '/api/splitvault/groups/:groupId'], prot
 app.post(['/splitvault/expenses', '/api/splitvault/expenses'], protect, createSplitExpense);
 app.post(['/splitvault/expenses/:expenseId/splits/:splitUserId/proof', '/api/splitvault/expenses/:expenseId/splits/:splitUserId/proof'], protect, submitPaymentProof);
 app.post(['/splitvault/expenses/:expenseId/splits/:splitUserId/verify', '/api/splitvault/expenses/:expenseId/splits/:splitUserId/verify'], protect, verifyPaymentProof);
+
+// Notification Routes (Protected)
+app.get(['/notifications', '/api/notifications'], protect, getNotifications);
+app.put(['/notifications/read-all', '/api/notifications/read-all'], protect, markAllNotificationsAsRead);
+app.put(['/notifications/:id/read', '/api/notifications/:id/read'], protect, markNotificationAsRead);
+app.delete(['/notifications/:id', '/api/notifications/:id'], protect, deleteNotification);
+app.delete(['/notifications', '/api/notifications'], protect, clearAllNotifications);
 
 // Error handling fallback
 app.use((err, req, res, next) => {

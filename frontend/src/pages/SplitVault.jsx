@@ -550,28 +550,81 @@ export default function SplitVault() {
                   <ShieldCheck size={22} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, color: '#fbbf24', fontSize: '0.98rem' }}>
+                  <div style={{ fontWeight: 800, color: '#fbbf24', fontSize: '0.98rem' }}>
                     Action Required: {summary.pendingVerifications.length} Payment Proof(s) Submitted
                   </div>
                   <div style={{ fontSize: '0.82rem', color: '#e5e7eb' }}>
-                    Roommates uploaded transfer receipts for expenses you paid. Verify to settle their balance.
+                    Roommates uploaded transfer receipts for expenses you paid upfront. Verify each to settle their balance.
                   </div>
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
-                onClick={() => {
-                  const item = summary.pendingVerifications[0];
+              {/* Multiple Pending Proofs List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                {summary.pendingVerifications.map((item, idx) => {
                   const exp = allExpenses.find((e) => e._id === item.expenseId);
-                  if (exp) {
-                    handleOpenVerification(exp, item.split);
-                  }
-                }}
-              >
-                Review Proof →
-              </button>
+                  const matchingSplit = exp?.splits?.find(
+                    (s) =>
+                      s.user?.toString() === item.splitUserId?.toString() ||
+                      s._id?.toString() === item.splitUserId?.toString()
+                  );
+
+                  return (
+                    <div
+                      key={item.expenseId + '-' + (item.splitUserId || idx)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 14px',
+                        background: 'rgba(15, 23, 42, 0.75)',
+                        borderRadius: '12px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        flexWrap: 'wrap',
+                        gap: '8px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            background: 'rgba(59, 130, 246, 0.2)',
+                            color: '#60a5fa',
+                            display: 'grid',
+                            placeItems: 'center',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {item.debtorName?.charAt(0) || 'R'}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.88rem' }}>
+                            {item.debtorName} • <span style={{ color: '#10b981' }}>Rs {Number(item.amount).toLocaleString()}</span>
+                          </div>
+                          <div style={{ fontSize: '0.76rem', color: '#94a3b8' }}>
+                            {item.expenseTitle} • via {item.method} ({item.transactionId || 'Screenshot'})
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
+                        onClick={() => {
+                          if (exp) {
+                            handleOpenVerification(exp, matchingSplit || item);
+                          }
+                        }}
+                      >
+                        Review Proof →
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

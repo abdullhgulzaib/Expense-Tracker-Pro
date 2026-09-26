@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
-import { Group, SplitExpense, Expense, User } from '../models.js';
+import crypto from 'crypto';
+import { Group, SplitExpense, Expense, User, Notification } from '../models.js';
 
-// Helper to generate a unique invite code (e.g., FLAT482)
-const generateInviteCode = (name = 'GROUP') => {
-  const prefix = name.replace(/[^a-zA-Z]/g, '').slice(0, 4).toUpperCase() || 'FLAT';
-  const randomNum = Math.floor(100 + Math.random() * 900);
-  return `${prefix}${randomNum}`;
+// Helper to generate a secure, 8-character cryptographic alphanumeric invite code (e.g. 8F3B9A1C)
+const generateInviteCode = () => {
+  return crypto.randomBytes(4).toString('hex').toUpperCase();
 };
+
 
 /**
  * @desc Get SplitVault dashboard summary (Cards, groups, recent activity)
@@ -288,6 +288,18 @@ export const joinGroupByInviteCode = async (req, res) => {
     });
 
     await group.save();
+
+    // Notify group creator that a user joined
+    if (group.createdBy.toString() !== req.user._id.toString()) {
+      await Notification.create({
+        userId: group.createdBy,
+        title: 'New Member Joined Group 👥',
+        message: `${req.user.name} joined "${group.name}" using invite code ${group.inviteCode}.`,
+        type: 'info',
+        metadata: { groupId: group._id, joinedUserId: req.user._id },
+      }).catch((e) => console.error('Notification error:', e.message));
+    }
+
     res.json({ message: `Successfully joined "${group.name}"!`, group });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -367,11 +379,22 @@ export const addMemberToGroup = async (req, res) => {
     });
 
     await group.save();
+
+    // Notify added user
+    await Notification.create({
+      userId: existingUser._id,
+      title: 'Added to Group 👥',
+      message: `${req.user.name} added you to "${group.name}".`,
+      type: 'info',
+      metadata: { groupId: group._id },
+    }).catch((e) => console.error('Notification error:', e.message));
+
     res.json({ message: `${existingUser.name} linked to group successfully!`, group });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 /**
  * @desc Remove a member from a group
@@ -505,6 +528,19 @@ export const createSplitExpense = async (req, res) => {
       isFullySettled: false,
     });
 
+    // Notify all debtor participants
+    for (const split of splits) {
+      if (split.user && split.user.toString() !== req.user._id.toString()) {
+        await Notification.create({
+          userId: split.user,
+          title: 'New Split Expense Added',
+          message: `${req.user.name} added you to "${expense.title}" (${expense.groupName || 'Direct Split'}). Your share: Rs ${split.amount}.`,
+          type: 'info',
+          metadata: { expenseId: expense._id, amount: split.amount },
+        }).catch((e) => console.error('Notification error:', e.message));
+      }
+    }
+
     res.status(201).json(expense);
   } catch (error) {
     console.error('createSplitExpense error:', error);
@@ -552,6 +588,15 @@ export const submitPaymentProof = async (req, res) => {
     };
 
     await expense.save();
+
+    // Create persistent notification for the payer
+    await Notification.create({
+      userId: expense.paidBy,
+      title: 'Payment Proof Submitted 📄',
+      message: `${req.user.name} submitted payment proof of Rs ${split.amount} for "${expense.title}". Please verify to settle balance.`,
+      type: 'info',
+      metadata: { expenseId: expense._id, splitUserId, amount: split.amount },
+    }).catch((e) => console.error('Notification error:', e.message));
 
     res.json({ message: 'Payment proof submitted successfully!', expense });
   } catch (error) {
@@ -619,6 +664,15 @@ export const verifyPaymentProof = async (req, res) => {
         console.warn('Note: Could not auto-insert personal expense copy:', err.message);
       }
 
+      // Notify debtor of approval
+      await Notification.create({
+        userId: split.user,
+        title: 'Payment Proof Verified! ✅',
+        message: `Your payment of Rs ${split.amount} for "${expense.title}" was verified and approved by ${req.user.name}. Balance settled.`,
+        type: 'success',
+        metadata: { expenseId: expense._id, amount: split.amount },
+      }).catch((e) => console.error('Notification error:', e.message));
+
       return res.json({
         message: 'Payment verified and balance settled successfully!',
         expense,
@@ -631,6 +685,15 @@ export const verifyPaymentProof = async (req, res) => {
 
       await expense.save();
 
+      // Notify debtor of rejection WITH payer's reason
+      await Notification.create({
+        userId: split.user,
+        title: 'Payment Proof Rejected ❌',
+        message: `Your payment proof of Rs ${split.amount} for "${expense.title}" was rejected by ${req.user.name}. Reason: "${reason || 'Proof could not be verified'}". Please re-submit valid proof.`,
+        type: 'danger',
+        metadata: { expenseId: expense._id, amount: split.amount, reason },
+      }).catch((e) => console.error('Notification error:', e.message));
+
       return res.json({
         message: 'Payment proof rejected. Roommate has been notified to re-submit.',
         expense,
@@ -640,6 +703,15 @@ export const verifyPaymentProof = async (req, res) => {
       if (!split.proof) split.proof = {};
       split.proof.rejectionReason = reason || 'Please provide clear transaction ID or full slip.';
       await expense.save();
+
+      // Notify debtor
+      await Notification.create({
+        userId: split.user,
+        title: 'Information Requested ⚠️',
+        message: `${req.user.name} requested updated details for "${expense.title}": "${reason}".`,
+        type: 'warning',
+        metadata: { expenseId: expense._id, amount: split.amount, reason },
+      }).catch((e) => console.error('Notification error:', e.message));
 
       return res.json({
         message: 'Information requested from roommate.',
@@ -651,3 +723,4 @@ export const verifyPaymentProof = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, UploadCloud, CheckCircle2, AlertCircle, FileText, Image as ImageIcon } from 'lucide-react';
+import { X, UploadCloud, CheckCircle2, AlertCircle, Image as ImageIcon, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSplitVault } from '../../context/SplitVaultContext';
-import { generateSampleReceipt } from '../../utils/receiptPresets';
 
 const PAYMENT_METHODS = [
   'Easypaisa',
@@ -10,7 +9,7 @@ const PAYMENT_METHODS = [
   'Raast',
   'Bank Transfer',
   'SadaPay',
-  'Nayapay',
+  'NayaPay',
   'Cash / Other',
 ];
 
@@ -32,23 +31,15 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
 
     setError('');
     setMethod('Easypaisa');
-    setTransactionId(`EP-${Math.floor(10000000 + Math.random() * 90000000)}`);
+    setTransactionId('');
     setSenderNote('');
     setPaymentDate(new Date().toISOString().slice(0, 16));
     setImageUrl('');
-
-    // Pre-populate with sample Easypaisa receipt so user has a ready-to-test proof immediately
-    const sample = generateSampleReceipt('Easypaisa', {
-      amount: splitData?.amount || 1500,
-      recipient: expense?.paidByName || 'Hostel Roommate',
-      tid: `EP-${Math.floor(10000000 + Math.random() * 90000000)}`,
-    });
-    setImageUrl(sample);
-  }, [isOpen, expense, splitData]);
+  }, [isOpen]);
 
   if (!isOpen || !expense) return null;
 
-  // File Upload Handlers (converts image to Base64)
+  // File Upload Handlers (converts image from Gallery/Device to Base64)
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -58,12 +49,13 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
 
   const processFile = (file) => {
     if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file (PNG, JPG, WebP).');
+      setError('Please upload a valid image file (PNG, JPG, WebP) from your gallery.');
       return;
     }
     const reader = new FileReader();
     reader.onload = (event) => {
       setImageUrl(event.target.result);
+      setError('');
     };
     reader.readAsDataURL(file);
   };
@@ -86,30 +78,16 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
     }
   };
 
-  // Select Sample Presets
-  const handleApplyPreset = (type) => {
-    setMethod(type);
-    const generatedTid = `${type.slice(0, 2).toUpperCase()}-${Math.floor(10000000 + Math.random() * 90000000)}`;
-    setTransactionId(generatedTid);
-    const sample = generateSampleReceipt(type, {
-      amount: splitData?.amount || 1500,
-      recipient: expense?.paidByName || 'Roommate',
-      tid: generatedTid,
-    });
-    setImageUrl(sample);
-    setSenderNote(`Paid via ${type} mobile app. Transaction ID: ${generatedTid}`);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!transactionId.trim()) {
-      setError('Please provide a Transaction ID / Reference Number.');
+    if (!imageUrl) {
+      setError('Please upload a screenshot proof from your gallery before submitting.');
       return;
     }
-    if (!imageUrl) {
-      setError('Please upload or generate a screenshot receipt of the payment.');
+    if (!transactionId.trim()) {
+      setError('Please enter the Transaction ID (TID) or reference number.');
       return;
     }
 
@@ -136,8 +114,8 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
       <div className="sv-modal-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="sv-modal-header">
           <h2 className="sv-modal-header__title">
-            <UploadCloud size={20} color="#6366f1" />
-            <span>Submit Payment Proof</span>
+            <UploadCloud size={20} color="#2563eb" />
+            <span>Upload Payment Proof</span>
           </h2>
           <button className="sv-modal-close-btn" onClick={onClose} aria-label="Close modal">
             <X size={20} />
@@ -170,8 +148,8 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
               style={{
                 padding: '14px 16px',
                 borderRadius: '14px',
-                background: 'rgba(99, 102, 241, 0.08)',
-                border: '1px solid rgba(99, 102, 241, 0.25)',
+                background: 'rgba(37, 99, 235, 0.1)',
+                border: '1px solid rgba(37, 99, 235, 0.3)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -180,80 +158,64 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
               }}
             >
               <div>
-                <span style={{ fontSize: '0.75rem', color: '#a5b4fc', textTransform: 'uppercase', fontWeight: 600 }}>
-                  You are paying
+                <span style={{ fontSize: '0.72rem', color: '#93c5fd', textTransform: 'uppercase', fontWeight: 700 }}>
+                  You are settling
                 </span>
-                <h3 style={{ margin: '2px 0 0', fontSize: '1.05rem', color: '#ffffff' }}>
+                <h3 style={{ margin: '2px 0 0', fontSize: '1.05rem', color: '#ffffff', fontWeight: 800 }}>
                   {expense.title}
                 </h3>
                 <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                  Recipient: <strong style={{ color: '#ffffff' }}>{expense.paidByName}</strong>
+                  Payer / Recipient: <strong style={{ color: '#ffffff' }}>{expense.paidByName}</strong>
                 </span>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '0.75rem', color: '#a5b4fc', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.72rem', color: '#93c5fd', textTransform: 'uppercase', fontWeight: 700 }}>
                   Your Share
                 </span>
-                <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#10b981' }}>
+                <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#10b981' }}>
                   Rs {Number(splitData?.amount || 0).toLocaleString()}
                 </div>
               </div>
             </div>
 
-            {/* Presets Selection Bar */}
+            {/* Screenshot Upload from Gallery / Device */}
             <div className="sv-form-group">
               <label className="sv-form-label">
-                Quick Sample Presets (For instant testing)
+                Upload Payment Screenshot (From Gallery) <span style={{ color: '#ef4444' }}>*</span>
               </label>
-              <div className="sv-presets-bar">
-                <button
-                  type="button"
-                  className="sv-preset-chip"
-                  onClick={() => handleApplyPreset('Easypaisa')}
-                >
-                  🟢 Easypaisa Sample
-                </button>
-                <button
-                  type="button"
-                  className="sv-preset-chip"
-                  onClick={() => handleApplyPreset('JazzCash')}
-                >
-                  🔴 JazzCash Sample
-                </button>
-                <button
-                  type="button"
-                  className="sv-preset-chip"
-                  onClick={() => handleApplyPreset('Raast')}
-                >
-                  🔵 Raast / Bank Sample
-                </button>
-              </div>
-            </div>
 
-            {/* Screenshot Dropzone */}
-            <div className="sv-form-group">
-              <label className="sv-form-label">Payment Receipt Screenshot</label>
               {imageUrl ? (
-                <div className="sv-receipt-preview-box">
+                <div className="sv-receipt-preview-box" style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
                   <img
                     src={imageUrl}
                     alt="Receipt Screenshot"
                     className="sv-receipt-preview-img"
+                    style={{ maxHeight: '280px', width: '100%', objectFit: 'contain', background: '#0a0f1d' }}
                   />
                   <div
                     style={{
                       position: 'absolute',
-                      bottom: '8px',
-                      right: '8px',
+                      bottom: '10px',
+                      left: '10px',
+                      right: '10px',
                       display: 'flex',
-                      gap: '6px',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: 'rgba(5, 10, 24, 0.85)',
+                      backdropFilter: 'blur(8px)',
+                      padding: '8px 12px',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
                     }}
                   >
+                    <span style={{ fontSize: '0.75rem', color: '#60a5fa', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <Check size={14} color="#10b981" /> Ready to send to {expense.paidByName}
+                    </span>
                     <label
                       className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
-                      style={{ cursor: 'pointer', background: 'rgba(0,0,0,0.85)' }}
+                      style={{ cursor: 'pointer', padding: '5px 10px', fontSize: '0.75rem' }}
                     >
-                      <ImageIcon size={14} /> Change Image
+                      <ImageIcon size={13} /> Change Image
                       <input
                         type="file"
                         accept="image/*"
@@ -269,6 +231,19 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
+                  style={{
+                    border: '2px dashed rgba(59, 130, 246, 0.45)',
+                    borderRadius: '16px',
+                    padding: '28px 16px',
+                    cursor: 'pointer',
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    textAlign: 'center',
+                  }}
                 >
                   <input
                     type="file"
@@ -276,15 +251,15 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
                     onChange={handleFileChange}
                     style={{ display: 'none' }}
                   />
-                  <div className="sv-dropzone__icon">
-                    <UploadCloud size={24} />
+                  <div className="sv-dropzone__icon" style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(37, 99, 235, 0.15)', color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <UploadCloud size={26} />
                   </div>
                   <div>
-                    <strong style={{ color: '#e5e7eb', fontSize: '0.95rem' }}>
-                      Click to upload receipt screenshot
+                    <strong style={{ color: '#ffffff', fontSize: '0.95rem' }}>
+                      Click to choose screenshot from Gallery
                     </strong>
                     <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '4px' }}>
-                      or drag & drop PNG, JPG, or WebP screenshot
+                      Supports PNG, JPG, JPEG, WebP receipts from mobile banking apps
                     </div>
                   </div>
                 </label>
@@ -309,11 +284,11 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
               </div>
 
               <div className="sv-form-group">
-                <label className="sv-form-label">Transaction ID (TID) / Ref</label>
+                <label className="sv-form-label">Transaction ID (TID) / Ref <span style={{ color: '#ef4444' }}>*</span></label>
                 <input
                   type="text"
                   className="sv-form-input"
-                  placeholder="e.g. TRX-84920492"
+                  placeholder="e.g. 1029384756 or TRX-99218"
                   value={transactionId}
                   onChange={(e) => setTransactionId(e.target.value)}
                   required
@@ -334,11 +309,11 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
               </div>
 
               <div className="sv-form-group">
-                <label className="sv-form-label">Note for {expense.paidByName}</label>
+                <label className="sv-form-label">Note for {expense.paidByName} (Optional)</label>
                 <input
                   type="text"
                   className="sv-form-input"
-                  placeholder="e.g. Sent from my JazzCash account"
+                  placeholder="e.g. Sent via Raast from HBL app"
                   value={senderNote}
                   onChange={(e) => setSenderNote(e.target.value)}
                 />
@@ -361,7 +336,7 @@ export default function SubmitPaymentProofModal({ isOpen, onClose, expense, spli
               disabled={submitting}
             >
               <CheckCircle2 size={18} />
-              {submitting ? 'Submitting...' : 'Submit Proof to Payer'}
+              {submitting ? 'Submitting...' : 'Send Proof to Payer'}
             </button>
           </div>
         </form>

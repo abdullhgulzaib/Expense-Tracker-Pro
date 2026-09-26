@@ -294,4 +294,41 @@ const SplitExpenseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export { UserSchema, ExpenseSchema, GroupSchema, SplitExpenseSchema };
+const NotificationSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    message: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    type: {
+      type: String,
+      enum: ["info", "success", "warning", "danger", "tip", "welcome"],
+      default: "info",
+    },
+    unread: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+  },
+  { timestamps: true }
+);
+
+export { UserSchema, ExpenseSchema, GroupSchema, SplitExpenseSchema, NotificationSchema };
+
