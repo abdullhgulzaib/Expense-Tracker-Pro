@@ -26,6 +26,15 @@ import {
   getByCategory,
   getMonthlyTrend,
 } from './controllers/analyticsController.js';
+import {
+  getSplitVaultSummary,
+  getGroups,
+  createGroup,
+  getGroupDetails,
+  createSplitExpense,
+  submitPaymentProof,
+  verifyPaymentProof,
+} from './controllers/splitVaultController.js';
 import { protect } from './middleware/authMiddleware.js';
 
 const app = express();
@@ -53,7 +62,8 @@ const connectToDatabase = () => {
 
 // Middleware
 app.use(morgan('dev'));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
 
 // Health check route
@@ -62,7 +72,7 @@ app.get('/health', (req, res) => {
 });
 
 // Wait for MongoDB before handling database-backed requests.
-app.use(['/auth', '/api/auth', '/expenses', '/api/expenses', '/analytics', '/api/analytics'], async (req, res, next) => {
+app.use(['/auth', '/api/auth', '/expenses', '/api/expenses', '/analytics', '/api/analytics', '/splitvault', '/api/splitvault'], async (req, res, next) => {
   try {
     await connectToDatabase();
     next();
@@ -90,6 +100,15 @@ app.delete(['/expenses/:id', '/api/expenses/:id'], protect, delExpense);
 app.get(['/analytics/summary', '/api/analytics/summary'], protect, getSummary);
 app.get(['/analytics/by-category', '/api/analytics/by-category'], protect, getByCategory);
 app.get(['/analytics/monthly-trend', '/api/analytics/monthly-trend'], protect, getMonthlyTrend);
+
+// SplitVault Routes (Protected)
+app.get(['/splitvault/summary', '/api/splitvault/summary'], protect, getSplitVaultSummary);
+app.get(['/splitvault/groups', '/api/splitvault/groups'], protect, getGroups);
+app.post(['/splitvault/groups', '/api/splitvault/groups'], protect, createGroup);
+app.get(['/splitvault/groups/:groupId', '/api/splitvault/groups/:groupId'], protect, getGroupDetails);
+app.post(['/splitvault/expenses', '/api/splitvault/expenses'], protect, createSplitExpense);
+app.post(['/splitvault/expenses/:expenseId/splits/:splitUserId/proof', '/api/splitvault/expenses/:expenseId/splits/:splitUserId/proof'], protect, submitPaymentProof);
+app.post(['/splitvault/expenses/:expenseId/splits/:splitUserId/verify', '/api/splitvault/expenses/:expenseId/splits/:splitUserId/verify'], protect, verifyPaymentProof);
 
 // Error handling fallback
 app.use((err, req, res, next) => {

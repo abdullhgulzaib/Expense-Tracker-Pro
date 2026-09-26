@@ -1,5 +1,6 @@
 @import './variables.css';
 @import './vault.css';
+@import './splitvault.css';
 
 * {
   box-sizing: border-box;

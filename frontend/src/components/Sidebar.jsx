@@ -1,4 +1,4 @@
-import { Home, BarChart3, Receipt, FolderOpen, Settings, X } from 'lucide-react';
+import { Home, BarChart3, Receipt, FolderOpen, Settings, Users, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import BrandLogo from './BrandLogo';
@@ -7,6 +7,7 @@ const navItems = [
   { label: 'Dashboard', icon: Home, to: '/' },
   { label: 'Analytics', icon: BarChart3, to: '/analytics' },
   { label: 'Transactions', icon: Receipt, to: '/transactions' },
+  { label: 'SplitVault', icon: Users, to: '/splitvault', badge: 'Beta' },
   { label: 'Categories', icon: FolderOpen, to: '/categories' },
   { label: 'Settings', icon: Settings, to: '/settings' },
 ];
@@ -27,7 +28,7 @@ function Sidebar({ isOpen = false, onNavigate }) {
       </div>
 
       <nav className="sidebar__nav">
-        {navItems.map(({ label, icon: Icon, to }) => (
+        {navItems.map(({ label, icon: Icon, to, badge }) => (
           <NavLink
             key={label}
             to={to}
@@ -39,6 +40,14 @@ function Sidebar({ isOpen = false, onNavigate }) {
           >
             <Icon size={18} />
             <span>{label}</span>
+            {badge && (
+              <span
+                className="splitvault-pill splitvault-pill--beta"
+                style={{ marginLeft: 'auto', fontSize: '0.62rem', padding: '2px 6px' }}
+              >
+                {badge}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

@@ -104,4 +104,194 @@ const ExpenseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export { UserSchema, ExpenseSchema };
+const GroupSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Group name is required"],
+      trim: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    category: {
+      type: String,
+      default: "Hostel", // "Hostel", "Friends", "Classmates", "Trip", "General"
+    },
+    icon: {
+      type: String,
+      default: "home",
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    members: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        name: {
+          type: String,
+          default: "",
+        },
+        email: {
+          type: String,
+          default: "",
+        },
+        role: {
+          type: String,
+          enum: ["Admin", "Member"],
+          default: "Member",
+        },
+        joinedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    inviteCode: {
+      type: String,
+      unique: true,
+      uppercase: true,
+      trim: true,
+    },
+  },
+  { timestamps: true }
+);
+
+const SplitExpenseSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, "Expense title is required"],
+      trim: true,
+    },
+    totalAmount: {
+      type: Number,
+      required: [true, "Total amount is required"],
+      min: [0, "Amount must be positive"],
+    },
+    category: {
+      type: String,
+      default: "Food",
+    },
+    paidBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Paid by user ID is required"],
+      index: true,
+    },
+    paidByName: {
+      type: String,
+      default: "",
+    },
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+      index: true,
+    },
+    groupName: {
+      type: String,
+      default: "",
+    },
+    splitType: {
+      type: String,
+      enum: ["Equal", "Custom", "Percentage"],
+      default: "Equal",
+    },
+    date: {
+      type: Date,
+      default: Date.now,
+      index: true,
+    },
+    notes: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    splits: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        name: {
+          type: String,
+          default: "",
+        },
+        email: {
+          type: String,
+          default: "",
+        },
+        amount: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        percentage: {
+          type: Number,
+          default: 0,
+        },
+        status: {
+          type: String,
+          enum: ["Unpaid", "UnderReview", "Verified", "Rejected"],
+          default: "Unpaid",
+          index: true,
+        },
+        proof: {
+          method: {
+            type: String,
+            enum: ["Easypaisa", "JazzCash", "Bank Transfer", "Other", "Cash"],
+            default: "Easypaisa",
+          },
+          imageUrl: {
+            type: String,
+            default: "",
+          },
+          transactionId: {
+            type: String,
+            trim: true,
+            default: "",
+          },
+          senderNote: {
+            type: String,
+            default: "",
+          },
+          paymentDate: {
+            type: String,
+            default: "",
+          },
+          submittedAt: {
+            type: Date,
+          },
+          verifiedAt: {
+            type: Date,
+          },
+          verifiedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+          },
+          rejectionReason: {
+            type: String,
+            default: "",
+          },
+        },
+      },
+    ],
+    isFullySettled: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true }
+);
+
+export { UserSchema, ExpenseSchema, GroupSchema, SplitExpenseSchema };
