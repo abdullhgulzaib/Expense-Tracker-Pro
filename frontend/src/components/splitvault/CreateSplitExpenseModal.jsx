@@ -29,14 +29,26 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
     const selectedCount = list.filter((p) => p.selected).length;
 
     if (type === 'Equal') {
-      const splitAmount = selectedCount > 0 && total > 0 ? Math.round((total / selectedCount) * 100) / 100 : 0;
-      const splitPct = selectedCount > 0 ? Math.round((100 / selectedCount) * 10) / 10 : 0;
+      if (selectedCount === 0 || total <= 0) {
+        return list.map((p) => ({ ...p, amount: 0, percentage: 0 }));
+      }
+      const splitAmount = Math.floor((total / selectedCount) * 100) / 100;
+      const splitPct = Math.round((100 / selectedCount) * 10) / 10;
 
-      return list.map((p) =>
-        p.selected
-          ? { ...p, amount: splitAmount, percentage: splitPct }
-          : { ...p, amount: 0, percentage: 0 }
-      );
+      // Reconcile rounding remainder to the first selected participant (Splitwise approach)
+      const allocated = Math.round(splitAmount * selectedCount * 100) / 100;
+      const remainder = Math.round((total - allocated) * 100) / 100;
+
+      let remainderAssigned = false;
+      return list.map((p) => {
+        if (!p.selected) return { ...p, amount: 0, percentage: 0 };
+        let amt = splitAmount;
+        if (!remainderAssigned && remainder > 0) {
+          amt = Math.round((amt + remainder) * 100) / 100;
+          remainderAssigned = true;
+        }
+        return { ...p, amount: amt, percentage: splitPct };
+      });
     }
 
     if (type === 'Percentage') {
@@ -165,9 +177,6 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
 
   // Toggle member participation: auto-updates split amounts immediately!
   const handleToggleSelect = (index) => {
-    const p = participants[index];
-    if (p.isCurrentUser) return; // Account holder is always included as payer
-
     setParticipants((prev) => {
       const next = prev.map((item, idx) => (idx === index ? { ...item, selected: !item.selected } : item));
       return recalculateSplits(next, totalAmount, splitType);
@@ -253,7 +262,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
 
     const activeParticipants = participants.filter((p) => p.selected);
     if (activeParticipants.length < 2) {
-      setError('Shared expenses require at least 2 participants (you + at least 1 roommate). Please add a roommate below.');
+      setError('Shared expenses require at least 2 participants (e.g. you + at least 1 roommate, or 2 roommates). Please select or add roommates below.');
       return;
     }
 

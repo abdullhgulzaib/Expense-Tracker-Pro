@@ -83,18 +83,20 @@ export function AuthProvider({ children }) {
   const updateUser = async (updatedFields) => {
     try {
       if (token) {
-        api.put('/auth/profile', updatedFields).catch((err) => {
-          console.warn('Backend profile update failed:', err?.message);
+        const res = await api.put('/auth/profile', updatedFields);
+        const updatedData = res.data;
+        setUser((prev) => {
+          const next = { ...prev, ...updatedData };
+          localStorage.setItem('et_user', JSON.stringify(next));
+          return next;
         });
+        return { success: true, user: updatedData };
       }
-
-      setUser((prev) => {
-        const next = { ...prev, ...updatedFields };
-        localStorage.setItem('et_user', JSON.stringify(next));
-        return next;
-      });
+      return { success: false, error: 'Not authenticated' };
     } catch (err) {
-      console.error('Failed to update user profile:', err);
+      const errorMsg = err?.response?.data?.error || err.message || 'Failed to update user profile';
+      console.error('Failed to update user profile:', errorMsg);
+      return { success: false, error: errorMsg };
     }
   };
 

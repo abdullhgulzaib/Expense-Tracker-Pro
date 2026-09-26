@@ -136,10 +136,18 @@ export const updateProfile = async (req, res) => {
     }
     if (req.body.email && req.body.email.trim()) {
       const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-      if (!emailRegex.test(req.body.email.trim())) {
+      const cleanEmail = req.body.email.toLowerCase().trim();
+      if (!emailRegex.test(cleanEmail)) {
         return res.status(400).json({ error: 'Please provide a valid email address' });
       }
-      user.email = req.body.email.toLowerCase().trim();
+
+      // Check if email already taken by another user
+      const existingUser = await User.findOne({ email: cleanEmail, _id: { $ne: req.user._id } });
+      if (existingUser) {
+        return res.status(400).json({ error: 'This email is already registered to another account' });
+      }
+
+      user.email = cleanEmail;
     }
 
     const updatedUser = await user.save();
@@ -150,6 +158,9 @@ export const updateProfile = async (req, res) => {
     });
   } catch (error) {
     console.error('Update profile error:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({ error: 'This email is already registered to another account' });
+    }
     return res.status(500).json({ error: error.message });
   }
 };

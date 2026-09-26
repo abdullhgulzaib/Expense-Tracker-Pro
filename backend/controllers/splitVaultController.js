@@ -8,24 +8,35 @@ const generateInviteCode = () => {
 };
 
 
+// Helpers to ensure clean mapping to Expense schema
+const mapCategory = (cat) => {
+  const valid = [
+    "Food", "Shopping", "Travel", "Bills", "Health", "Education", "Entertainment",
+    "Online Services", "Groceries", "Transportation", "Transport", "Housing", "Utilities",
+    "Insurance", "Gifts", "Personal Care", "Subscriptions", "Charity", "Taxes", "Investments", "Other"
+  ];
+  if (cat === 'Transport') return 'Transportation';
+  if (valid.includes(cat)) return cat;
+  return 'Other';
+};
+
+const mapPaymentMethod = (pm) => {
+  const valid = [
+    "Card", "Cash", "Bank Transfer", "Auto-debit", "Cheque", "Mobile Payment",
+    "Online Payment", "Digital Wallet", "Easypaisa", "JazzCash", "Raast", "SadaPay", "NayaPay", "Other"
+  ];
+  if (valid.includes(pm)) return pm;
+  if (pm === 'Cash / Other') return 'Cash';
+  return 'Mobile Payment';
+};
+
 /**
  * @desc Get SplitVault dashboard summary (Cards, groups, recent activity)
  * @route GET /api/splitvault/summary
- * Automatically purges legacy sample groups from earlier demo runs, ensuring a 100% clean account.
  */
 export const getSplitVaultSummary = async (req, res) => {
   try {
     const user = req.user;
-
-    // Purge legacy sample/seed groups created in earlier demo runs
-    await Group.deleteMany({
-      createdBy: user._id,
-      name: { $in: ['Hostel Group', 'Friends Group', 'Classmates'] },
-    });
-    await SplitExpense.deleteMany({
-      paidBy: user._id,
-      title: { $in: ['Monal Dinner', 'Fuel', 'Groceries'] },
-    });
 
     // 1. Get groups user is a member of
     const groups = await Group.find({ 'members.user': user._id }).sort({ updatedAt: -1 });
@@ -406,11 +417,36 @@ export const removeMemberFromGroup = async (req, res) => {
     const group = await Group.findById(groupId);
     if (!group) return res.status(404).json({ error: 'Group not found.' });
 
+    const isCreator = group.createdBy.toString() === req.user._id.toString();
+    const isSelf =
+      memberId.toString() === req.user._id.toString() ||
+      group.members.some(
+        (m) =>
+          (m._id.toString() === memberId || m.user?.toString() === memberId) &&
+          m.user?.toString() === req.user._id.toString()
+      );
+
+    if (!isCreator && !isSelf) {
+      return res.status(403).json({
+        error: 'Permission denied. Only group admins can remove members, or members can leave the group themselves.',
+      });
+    }
+
+    // Do not allow removing the group creator
+    const targetMember = group.members.find(
+      (m) => m._id.toString() === memberId || m.user?.toString() === memberId
+    );
+    if (targetMember && targetMember.user?.toString() === group.createdBy.toString()) {
+      return res.status(400).json({
+        error: 'The group creator cannot be removed from the group. Delete the group instead.',
+      });
+    }
+
     group.members = group.members.filter(
       (m) => m._id.toString() !== memberId && m.user?.toString() !== memberId
     );
     await group.save();
-    res.json(group);
+    res.json({ message: 'Member removed successfully.', group });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -527,6 +563,25 @@ export const createSplitExpense = async (req, res) => {
       splits,
       isFullySettled: false,
     });
+
+    // Auto-log personal expense for the payer ONLY IF payer has a personal split share > 0
+    const payerSplit = splits.find((s) => s.user?.toString() === req.user._id.toString());
+    if (payerSplit && Number(payerSplit.amount) > 0) {
+      try {
+        await Expense.create({
+          title: `${expense.title} (My Share)`,
+          amount: Number(payerSplit.amount),
+          category: mapCategory(expense.category),
+          paymentMethod: 'Card',
+          date: expense.date || new Date(),
+          notes: `SplitVault share in "${expense.groupName || 'Direct Split'}". Total bill: Rs ${expense.totalAmount}.`,
+          status: 'Completed',
+          userId: req.user._id,
+        });
+      } catch (err) {
+        console.error('Failed to log payer personal expense share:', err.message);
+      }
+    }
 
     // Notify all debtor participants
     for (const split of splits) {
@@ -650,18 +705,29 @@ export const verifyPaymentProof = async (req, res) => {
 
       // AUTOMATICALLY LOG EXPENSE in Debtor's personal account
       try {
-        await Expense.create({
-          title: `${expense.title} (Paid to ${req.user.name})`,
-          amount: split.amount,
-          category: expense.category || 'Food',
-          paymentMethod: split.proof?.method || 'Mobile Payment',
-          date: new Date(),
-          notes: `SplitVault settlement for "${expense.title}". Reference: ${split.proof?.transactionId || 'Verified Screenshot'}`,
-          status: 'Completed',
-          userId: split.user,
-        });
+        const debtorUserId = split.user;
+        let debtorUser = null;
+        if (debtorUserId && mongoose.Types.ObjectId.isValid(debtorUserId)) {
+          debtorUser = await User.findById(debtorUserId);
+        }
+
+        if (debtorUser) {
+          const autoExpense = await Expense.create({
+            title: `${expense.title} (Split Paid to ${req.user.name})`,
+            amount: Number(split.amount),
+            category: mapCategory(expense.category),
+            paymentMethod: mapPaymentMethod(split.proof?.method),
+            date: split.proof?.paymentDate ? new Date(split.proof.paymentDate) : new Date(),
+            notes: `SplitVault settlement for "${expense.title}" (${expense.groupName || 'Direct'}). Reference TID: ${split.proof?.transactionId || 'Verified Proof'}`,
+            status: 'Completed',
+            userId: debtorUser._id,
+          });
+          console.log(`Auto-created personal expense ${autoExpense._id} for debtor ${debtorUser.name}`);
+        } else {
+          console.warn('Note: Debtor user ID is not registered in User collection:', debtorUserId);
+        }
       } catch (err) {
-        console.warn('Note: Could not auto-insert personal expense copy:', err.message);
+        console.error('Note: Could not auto-insert personal expense copy for debtor:', err.message);
       }
 
       // Notify debtor of approval
