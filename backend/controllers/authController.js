@@ -1,8 +1,18 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { User } from '../models.js';
+import dotenv from 'dotenv';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'expense_tracker_pro_jwt_secret_key_2026';
+dotenv.config();
+
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error(
+    'JWT_SECRET is not set — refusing to start with an insecure default.'
+  );
+}
 
 // Helper to generate JWT token
 const generateToken = (id) => {
