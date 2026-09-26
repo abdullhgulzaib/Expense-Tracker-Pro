@@ -1,4 +1,4 @@
-import { Home, BarChart3, Receipt, FolderOpen, Settings } from 'lucide-react';
+import { Home, BarChart3, Receipt, FolderOpen, Settings, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import BrandLogo from './BrandLogo';
@@ -16,6 +16,14 @@ function Sidebar({ isOpen = false, onNavigate }) {
     <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
       <div className="sidebar__brand">
         <BrandLogo size="sm" showSubtitle={false} />
+        <button
+          type="button"
+          className="sidebar__close-btn"
+          onClick={() => onNavigate?.()}
+          aria-label="Close menu"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       <nav className="sidebar__nav">
