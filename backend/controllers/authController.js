@@ -167,28 +167,54 @@ export const updateProfile = async (req, res) => {
   }
 };
 
-// @desc    Authenticate with Google OAuth ID token
+// @desc    Authenticate with Google OAuth token (ID token or access token)
 // @route   POST /auth/google or /api/auth/google
 // @access  Public
 export const googleAuth = async (req, res) => {
   try {
-    const { credential } = req.body;
-    if (!credential) {
-      return res.status(400).json({ error: 'Google credential token is required' });
+    const { credential, access_token } = req.body;
+    if (!credential && !access_token) {
+      return res.status(400).json({ error: 'Google credential or access token is required' });
     }
 
-    // Verify token with Google
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: GOOGLE_CLIENT_ID,
-    });
+    let googleId, email, name, picture;
 
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
-      return res.status(400).json({ error: 'Unable to retrieve user profile from Google' });
+    if (credential) {
+      // Verify ID token with Google
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email) {
+        return res.status(400).json({ error: 'Unable to retrieve user profile from Google' });
+      }
+
+      googleId = payload.sub;
+      email = payload.email;
+      name = payload.name;
+      picture = payload.picture;
+    } else if (access_token) {
+      // Retrieve user info using access_token via googleClient.request
+      const userInfoResponse = await googleClient.request({
+        url: 'https://www.googleapis.com/oauth2/v3/userinfo',
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
+
+      const profile = userInfoResponse.data;
+      if (!profile || !profile.email) {
+        return res.status(400).json({ error: 'Unable to retrieve user profile from Google' });
+      }
+
+      googleId = profile.sub;
+      email = profile.email;
+      name = profile.name;
+      picture = profile.picture;
     }
 
-    const { sub: googleId, email, name, picture } = payload;
     const cleanEmail = email.toLowerCase().trim();
 
     // Find existing user by googleId or email
