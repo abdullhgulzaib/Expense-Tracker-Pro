@@ -196,17 +196,24 @@ export const googleAuth = async (req, res) => {
       name = payload.name;
       picture = payload.picture;
     } else if (access_token) {
-      // Retrieve user info using access_token via googleClient.request
-      const userInfoResponse = await googleClient.request({
-        url: 'https://www.googleapis.com/oauth2/v3/userinfo',
+      // Retrieve user info using access_token directly from Google userinfo endpoint
+      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: {
           Authorization: `Bearer ${access_token}`,
         },
       });
 
-      const profile = userInfoResponse.data;
+      if (!userInfoResponse.ok) {
+        const errorData = await userInfoResponse.json().catch(() => ({}));
+        console.error('Google userinfo API failed:', userInfoResponse.status, errorData);
+        return res.status(401).json({
+          error: errorData.error_description || 'Invalid or expired Google authorization token',
+        });
+      }
+
+      const profile = await userInfoResponse.json();
       if (!profile || !profile.email) {
-        return res.status(400).json({ error: 'Unable to retrieve user profile from Google' });
+        return res.status(400).json({ error: 'Unable to retrieve user email from Google profile' });
       }
 
       googleId = profile.sub;
@@ -253,7 +260,9 @@ export const googleAuth = async (req, res) => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    console.error('Google auth error:', error);
-    return res.status(401).json({ error: 'Google authentication failed. Please try again.' });
+    console.error('Google auth error:', error.message, error.stack);
+    return res.status(401).json({
+      error: error.message || 'Google authentication failed. Please try again.',
+    });
   }
 };
