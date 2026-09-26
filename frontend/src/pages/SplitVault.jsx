@@ -149,21 +149,24 @@ export default function SplitVault() {
           className={`splitvault-segment-tab ${activeTab === 'balance' ? 'active' : ''}`}
           onClick={() => setActiveTab('balance')}
         >
-          MY Balance
+          <span className="tab-label-full">MY Balance</span>
+          <span className="tab-label-short">Balance</span>
         </button>
         <button
           type="button"
           className={`splitvault-segment-tab ${activeTab === 'groups' ? 'active' : ''}`}
           onClick={() => setActiveTab('groups')}
         >
-          Group ({groups.length})
+          <span className="tab-label-full">Group ({groups.length})</span>
+          <span className="tab-label-short">Groups ({groups.length})</span>
         </button>
         <button
           type="button"
           className={`splitvault-segment-tab ${activeTab === 'activity' ? 'active' : ''}`}
           onClick={() => setActiveTab('activity')}
         >
-          Activity and Proof ({allExpenses.length})
+          <span className="tab-label-full">Activity and Proof ({allExpenses.length})</span>
+          <span className="tab-label-short">Activity ({allExpenses.length})</span>
         </button>
       </div>
 

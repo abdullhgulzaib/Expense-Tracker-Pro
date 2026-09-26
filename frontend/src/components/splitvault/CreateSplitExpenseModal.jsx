@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Users, DollarSign, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSplitVault } from '../../context/SplitVaultContext';
@@ -20,6 +20,8 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
 
   const [participants, setParticipants] = useState([]);
   const [newParticipantName, setNewParticipantName] = useState('');
+  const prevIsOpenRef = useRef(false);
+
 
   // Helper to recalculate splits automatically across all selected members
   const recalculateSplits = useCallback((list, totalStr, type) => {
@@ -50,55 +52,63 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
     return list;
   }, []);
 
-  // Initialize or re-populate members from the currently selected group
+  // Initialize or re-populate members only when the modal opens (prevent polling wipes)
   useEffect(() => {
-    if (!isOpen) return;
-
-    setError('');
-    setTitle('');
-    setTotalAmount('');
-    setNotes('');
-
-    const targetGroupId = preselectedGroupId || (summary.groups.length > 0 ? summary.groups[0]._id : '');
-    setGroupId(targetGroupId);
-
-    // Find declared members of this group
-    let groupObj = summary.groups.find((g) => g._id === targetGroupId);
-    if (!groupObj && activeGroupDetails?.group?._id === targetGroupId) {
-      groupObj = activeGroupDetails.group;
+    if (!isOpen) {
+      prevIsOpenRef.current = false;
+      return;
     }
 
-    const initial = [
-      {
-        userId: user?._id || 'user_me',
-        name: `${user?.name || 'You'} (Payer)`,
-        email: user?.email || '',
-        isCurrentUser: true,
-        selected: true,
-        amount: 0,
-        percentage: 100,
-      },
-    ];
+    if (!prevIsOpenRef.current) {
+      prevIsOpenRef.current = true;
+      setError('');
+      setTitle('');
+      setTotalAmount('');
+      setNotes('');
+      setSplitType('Equal');
+      setCategory('Food');
 
-    if (groupObj && Array.isArray(groupObj.members)) {
-      groupObj.members.forEach((m) => {
-        const mUserId = m.user?._id || m.user || m._id;
-        if (mUserId?.toString() !== user?._id?.toString() && m.name) {
-          initial.push({
-            userId: mUserId,
-            name: m.name,
-            email: m.email || '',
-            isCurrentUser: false,
-            selected: true,
-            amount: 0,
-            percentage: 0,
-          });
-        }
-      });
+      const targetGroupId = preselectedGroupId || (summary.groups.length > 0 ? summary.groups[0]._id : '');
+      setGroupId(targetGroupId);
+
+      // Find declared members of this group
+      let groupObj = summary.groups.find((g) => g._id === targetGroupId);
+      if (!groupObj && activeGroupDetails?.group?._id === targetGroupId) {
+        groupObj = activeGroupDetails.group;
+      }
+
+      const initial = [
+        {
+          userId: user?._id || 'user_me',
+          name: `${user?.name || 'You'} (Payer)`,
+          email: user?.email || '',
+          isCurrentUser: true,
+          selected: true,
+          amount: 0,
+          percentage: 100,
+        },
+      ];
+
+      if (groupObj && Array.isArray(groupObj.members)) {
+        groupObj.members.forEach((m) => {
+          const mUserId = m.user?._id || m.user || m._id;
+          if (mUserId?.toString() !== user?._id?.toString() && m.name) {
+            initial.push({
+              userId: mUserId,
+              name: m.name,
+              email: m.email || '',
+              isCurrentUser: false,
+              selected: true,
+              amount: 0,
+              percentage: 0,
+            });
+          }
+        });
+      }
+
+      setParticipants(recalculateSplits(initial, '', 'Equal'));
     }
-
-    setParticipants(recalculateSplits(initial, '', 'Equal'));
-  }, [isOpen, preselectedGroupId, summary.groups, activeGroupDetails, user, recalculateSplits]);
+  }, [isOpen, preselectedGroupId]);
 
   // When group selection changes in the dropdown, switch to that group's declared members
   const handleGroupChange = (newGroupId) => {

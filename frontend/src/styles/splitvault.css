@@ -1260,6 +1260,17 @@
     min-height: 110px;
   }
 
+  .splitvault-stat-card__icon-box {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 9px !important;
+  }
+
+  .splitvault-stat-card__icon-box svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
   .splitvault-stat-card__label {
     font-size: 0.72rem !important;
     white-space: nowrap;
@@ -1270,6 +1281,15 @@
   .splitvault-stat-card__value {
     font-size: 1.35rem !important;
     font-weight: 800;
+  }
+
+  .splitvault-segment-tabs {
+    padding: 3px !important;
+  }
+
+  .splitvault-segment-tab {
+    padding: 8px 8px !important;
+    font-size: 0.82rem !important;
   }
 
   .splitvault-groups-grid {
@@ -1322,6 +1342,27 @@
   .splitvault-stat-card {
     padding: 11px 9px;
     min-height: 98px;
+  }
+
+  .splitvault-stat-card__icon-box {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 7px !important;
+  }
+
+  .splitvault-stat-card__icon-box svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
+
+  .splitvault-segment-tabs {
+    padding: 2px !important;
+    gap: 2px !important;
+  }
+
+  .splitvault-segment-tab {
+    padding: 7px 4px !important;
+    font-size: 0.74rem !important;
   }
 
   .splitvault-stat-card__label {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Download } from 'lucide-react';
+import { Download, SlidersHorizontal, ChevronDown, ChevronUp, RotateCcw, Search, X } from 'lucide-react';
 import AddExpenseModal from '../components/AddExpenseModal';
 import ExpenseDetailsModal from '../components/ExpenseDetailsModal';
 import ExportModal from '../components/ExportModal';
@@ -41,7 +41,7 @@ function Transactions() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [viewingExpense, setViewingExpense] = useState(null);
-    const [toast, setToast] = useState('');
+  const [toast, setToast] = useState('');
   const [toastType, setToastType] = useState('success');
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
@@ -49,6 +49,19 @@ function Transactions() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('date-desc');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  const activeFilterCount =
+    (categoryFilter !== 'All' ? 1 : 0) +
+    (statusFilter !== 'All' ? 1 : 0) +
+    (sortBy !== 'date-desc' ? 1 : 0);
+
+  const handleResetFilters = () => {
+    setCategoryFilter('All');
+    setStatusFilter('All');
+    setSortBy('date-desc');
+    setSearchTerm('');
+  };
 
   useEffect(() => {
     const paramSearch = searchParams.get('search');
@@ -186,18 +199,46 @@ function Transactions() {
       </div>
 
       <div className="panel toolbar-panel">
-        <div className="toolbar">
-          <div className="toolbar__field toolbar__field--wide">
-            <label htmlFor="transaction-search">Search</label>
-            <input
-              id="transaction-search"
-              type="text"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search by title, category, notes..."
-            />
+        <div className="toolbar-header-row">
+          <div className="toolbar__field toolbar__field--search">
+            <div className="search-input-wrapper">
+              <Search size={16} className="search-icon" />
+              <input
+                id="transaction-search"
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search by title, category, notes..."
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="search-clear-btn"
+                  onClick={() => setSearchTerm('')}
+                  title="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
           </div>
 
+          <button
+            type="button"
+            className={`btn btn--filter-toggle ${showMobileFilters || activeFilterCount > 0 ? 'active' : ''}`}
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            title="Toggle filters"
+          >
+            <SlidersHorizontal size={15} />
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="filter-badge">{activeFilterCount}</span>
+            )}
+            {showMobileFilters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+
+        <div className={`toolbar-collapsible ${showMobileFilters ? 'open' : ''}`}>
           <div className="toolbar__field">
             <label htmlFor="category-filter">Category</label>
             <select id="category-filter" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
@@ -224,6 +265,19 @@ function Transactions() {
               ))}
             </select>
           </div>
+
+          {(activeFilterCount > 0 || searchTerm) && (
+            <div className="toolbar__field" style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button
+                type="button"
+                className="btn btn--reset-filters"
+                onClick={handleResetFilters}
+              >
+                <RotateCcw size={14} />
+                <span>Reset</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

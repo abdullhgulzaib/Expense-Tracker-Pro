@@ -1105,12 +1105,34 @@ th {
     width: 100%;
   }
 
-  .stats-grid,
   .content-grid--two-cols,
   .form-grid,
   .settings-form--two-col,
+  .settings-grid,
   .toolbar {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .stat-card {
+    padding: 12px 10px !important;
+  }
+
+  .stat-card__header {
+    margin-bottom: 8px !important;
+  }
+
+  .stat-card__icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .stat-card__body h3 {
+    font-size: 1.15rem !important;
   }
 
   .toolbar__field--wide {
@@ -1405,6 +1427,34 @@ th {
 
   .btn {
     padding-inline: 12px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .stat-card {
+    padding: 10px 8px !important;
+    border-radius: 12px !important;
+  }
+
+  .stat-card__header {
+    margin-bottom: 6px !important;
+  }
+
+  .stat-card__header span {
+    font-size: 0.68rem !important;
+  }
+
+  .stat-card__icon {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 8px !important;
+  }
+
+  .stat-card__body h3 {
+    font-size: 1.05rem !important;
   }
 }
 
@@ -3127,6 +3177,210 @@ select:-webkit-autofill:focus {
     box-sizing: border-box;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
   }
+}
+
+/* ==========================================================================
+   Responsive Segment Tab Dual Labels (< 480px)
+   ========================================================================== */
+.tab-label-short {
+  display: none !important;
+}
+.tab-label-full {
+  display: inline !important;
+}
+
+@media (max-width: 480px) {
+  .tab-label-short {
+    display: inline !important;
+  }
+  .tab-label-full {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   Compact & Collapsible Transaction Filter Toolbar
+   ========================================================================== */
+.toolbar-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.toolbar__field--search {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-input-wrapper .search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-input-wrapper input {
+  width: 100%;
+  padding-left: 36px !important;
+  padding-right: 32px !important;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+.search-clear-btn:hover {
+  color: var(--text-primary);
+}
+
+.btn--filter-toggle {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 13px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  color: var(--text-primary);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn--filter-toggle.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+
+.filter-badge {
+  background: var(--color-primary);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 6px;
+  line-height: 1.2;
+}
+
+.toolbar-collapsible {
+  display: contents;
+}
+
+.btn--reset-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: 10px;
+}
+.btn--reset-filters:hover {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+@media (max-width: 768px) {
+  .btn--filter-toggle {
+    display: inline-flex;
+  }
+
+  .toolbar-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 12px !important;
+  }
+
+  .toolbar-collapsible {
+    display: none;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    animation: fadeIn 0.2s ease;
+  }
+
+  .toolbar-collapsible.open {
+    display: grid;
+  }
+}
+
+/* ==========================================================================
+   Modern Settings Switches & Panels
+   ========================================================================== */
+.settings-panel-header-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-panel-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.settings-toggle-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.settings-toggle-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.settings-toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.settings-toggle-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.settings-toggle-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
 
