@@ -256,7 +256,17 @@ const SplitExpenseSchema = new mongoose.Schema(
         proof: {
           method: {
             type: String,
-            enum: ["Easypaisa", "JazzCash", "Bank Transfer", "Other", "Cash"],
+            enum: [
+              "Easypaisa",
+              "JazzCash",
+              "Raast",
+              "Bank Transfer",
+              "SadaPay",
+              "NayaPay",
+              "Cash",
+              "Cash / Other",
+              "Other",
+            ],
             default: "Easypaisa",
           },
           imageUrl: {
