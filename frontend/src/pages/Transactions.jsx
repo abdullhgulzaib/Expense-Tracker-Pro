@@ -49,7 +49,7 @@ function Transactions() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('date-desc');
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const activeFilterCount =
     (categoryFilter !== 'All' ? 1 : 0) +
@@ -225,20 +225,21 @@ function Transactions() {
 
           <button
             type="button"
-            className={`btn btn--filter-toggle ${showMobileFilters || activeFilterCount > 0 ? 'active' : ''}`}
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className={`btn btn--filter-toggle ${showFilters || activeFilterCount > 0 ? 'active' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
             title="Toggle filters"
+            aria-expanded={showFilters}
           >
             <SlidersHorizontal size={15} />
             <span>Filters</span>
             {activeFilterCount > 0 && (
               <span className="filter-badge">{activeFilterCount}</span>
             )}
-            {showMobileFilters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {showFilters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
         </div>
 
-        <div className={`toolbar-collapsible ${showMobileFilters ? 'open' : ''}`}>
+        <div className={`toolbar-collapsible ${showFilters ? 'open' : ''}`}>
           <div className="toolbar__field">
             <label htmlFor="category-filter">Category</label>
             <select id="category-filter" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
@@ -267,7 +268,7 @@ function Transactions() {
           </div>
 
           {(activeFilterCount > 0 || searchTerm) && (
-            <div className="toolbar__field" style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <div className="toolbar__field toolbar__field--reset">
               <button
                 type="button"
                 className="btn btn--reset-filters"
