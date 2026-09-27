@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "video:studio": "remotion studio src/remotion/index.ts",
     "video:render": "remotion render src/remotion/index.ts TutorialVideo out/tutorial.mp4",
+    "video:render:part2": "remotion render src/remotion/index.ts TutorialPart2 out/tutorial_part2.mp4",
     "video:still": "remotion still src/remotion/index.ts TutorialVideo out/preview.png"
   },
   "dependencies": {
