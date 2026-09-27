@@ -17,12 +17,11 @@ export interface TutorialVideoProps {
   hasAudio?: boolean;
 }
 
-export const TutorialVideo: React.FC<TutorialVideoProps> = ({ hasAudio = false }) => {
+export const TutorialVideo: React.FC<TutorialVideoProps> = ({ hasAudio = true }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
 
-  // Global top progress bar
-  const totalDuration = 900; // 30 seconds @ 30fps
+  // Global top progress bar (900 frames / 30 seconds @ 30fps)
+  const totalDuration = 900;
   const progress = (frame / totalDuration) * 100;
 
   return (
@@ -34,15 +33,17 @@ export const TutorialVideo: React.FC<TutorialVideoProps> = ({ hasAudio = false }
         color: '#ffffff',
       }}
     >
-      {/* Optional Background Music */}
+      {/* Background Music from uploaded audio track, from second 15 to second 45 at 75% volume */}
       {hasAudio && (
         <Audio
-          src={staticFile('audio/bg.mp3')}
+          src={staticFile('audio/bg_raw.mp3')}
+          startFrom={15 * 30}
+          endAt={45 * 30}
           volume={(f) =>
             interpolate(
               f,
-              [0, 30, totalDuration - 60, totalDuration],
-              [0, 0.65, 0.65, 0],
+              [0, 30, 850, 900],
+              [0, 0.75, 0.75, 0],
               { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
             )
           }
@@ -84,7 +85,7 @@ export const TutorialVideo: React.FC<TutorialVideoProps> = ({ hasAudio = false }
           top: 0,
           left: 0,
           right: 0,
-          height: 4,
+          height: 5,
           backgroundColor: 'rgba(255, 255, 255, 0.08)',
           zIndex: 1000,
         }}
@@ -94,7 +95,7 @@ export const TutorialVideo: React.FC<TutorialVideoProps> = ({ hasAudio = false }
             height: '100%',
             width: `${progress}%`,
             background: 'linear-gradient(90deg, #00D9FF 0%, #2684FF 100%)',
-            boxShadow: '0 0 12px #00D9FF',
+            boxShadow: '0 0 14px #00D9FF',
           }}
         />
       </div>
@@ -180,16 +181,16 @@ const IntroScene: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        gap: 20,
+        gap: 22,
       }}
     >
       {/* Brand Icon Mark */}
       <div
         style={{
           transform: `scale(${logoScale})`,
-          width: 90,
-          height: 90,
-          borderRadius: 24,
+          width: 96,
+          height: 96,
+          borderRadius: 26,
           background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 50%, #4f46e5 100%)',
           display: 'flex',
           alignItems: 'center',
@@ -198,14 +199,14 @@ const IntroScene: React.FC = () => {
           border: '2px solid rgba(56, 189, 248, 0.5)',
           color: '#ffffff',
           fontWeight: 900,
-          fontSize: 36,
+          fontSize: 40,
           letterSpacing: '0.06em',
         }}
       >
         ET
       </div>
 
-      {/* Main Title */}
+      {/* Main Title with Typography Glow */}
       <div
         style={{
           opacity: textOpacity,
@@ -213,12 +214,12 @@ const IntroScene: React.FC = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 8,
+          gap: 10,
         }}
       >
         <h1
           style={{
-            fontSize: 54,
+            fontSize: 58,
             fontWeight: 800,
             letterSpacing: '-0.02em',
             margin: 0,
@@ -231,7 +232,7 @@ const IntroScene: React.FC = () => {
         </h1>
         <div
           style={{
-            fontSize: 22,
+            fontSize: 24,
             fontWeight: 500,
             color: '#94a3b8',
             letterSpacing: '0.04em',
@@ -245,16 +246,17 @@ const IntroScene: React.FC = () => {
       <div
         style={{
           opacity: subtitleOpacity,
-          padding: '8px 20px',
+          padding: '10px 24px',
           borderRadius: 999,
-          background: 'rgba(56, 189, 248, 0.1)',
-          border: '1px solid rgba(56, 189, 248, 0.3)',
+          background: 'rgba(56, 189, 248, 0.12)',
+          border: '1.5px solid rgba(56, 189, 248, 0.35)',
           color: '#38bdf8',
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: 700,
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           marginTop: 10,
+          boxShadow: '0 0 25px rgba(56, 189, 248, 0.2)',
         }}
       >
         Quick Start Tutorial • 2026 Edition
@@ -305,9 +307,10 @@ const SignUpScene: React.FC = () => {
       </div>
 
       <CalloutBadge
-        step="Step 1"
+        step="Step 01"
+        stepNumber="Onboarding"
         title="Zero-Knowledge Sign Up"
-        subtitle="End-to-end encrypted personal workspace with Google & Email auth"
+        subtitle="End-to-end encrypted workspace with instant Google & Email auth"
         icon="🔒"
       />
     </AbsoluteFill>
@@ -372,9 +375,10 @@ const DashboardEmptyScene: React.FC = () => {
       </div>
 
       <CalloutBadge
-        step="Step 2"
-        title="Workspace Overview & PKR Setup"
-        subtitle="Default currency set to Rs with real-time analytics ready"
+        step="Step 02"
+        stepNumber="Workspace"
+        title="Dashboard & PKR Setup"
+        subtitle="Default currency set to Rs with live tracking ready"
         icon="⚡"
       />
     </AbsoluteFill>
@@ -429,8 +433,9 @@ const AddExpenseScene: React.FC = () => {
       </div>
 
       <CalloutBadge
-        step="Step 3"
-        title="Add Expense & Smart Categorization"
+        step="Step 03"
+        stepNumber="Tracking"
+        title="Smart Categorization"
         subtitle="Select Category (Bills), Payment Method & Notes with 1-click Save"
         icon="✍️"
       />
@@ -498,9 +503,10 @@ const DashboardUpdatedScene: React.FC = () => {
       </div>
 
       <CalloutBadge
-        step="Step 4"
-        title="Live Metrics & Instant Visual Charts"
-        subtitle="Automatic calculation of totals, monthly trends & category breakdown"
+        step="Step 04"
+        stepNumber="Analytics"
+        title="Real-Time Visual Charts"
+        subtitle="Auto-calculated totals, monthly trends & instant Donut distribution"
         icon="📊"
       />
     </AbsoluteFill>
@@ -534,39 +540,39 @@ const OutroScene: React.FC = () => {
       <div
         style={{
           transform: `scale(${entrance})`,
-          width: 80,
-          height: 80,
-          borderRadius: 22,
+          width: 88,
+          height: 88,
+          borderRadius: 24,
           background: 'linear-gradient(135deg, #0ea5e9, #2563eb, #4f46e5)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 12px 35px rgba(14, 165, 233, 0.4)',
+          boxShadow: '0 12px 35px rgba(14, 165, 233, 0.45)',
           color: '#ffffff',
           fontWeight: 900,
-          fontSize: 32,
+          fontSize: 36,
         }}
       >
         ET
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <h2 style={{ fontSize: 44, fontWeight: 800, margin: 0 }}>
+        <h2 style={{ fontSize: 48, fontWeight: 800, margin: 0 }}>
           Take Control of Your Finances
         </h2>
-        <p style={{ fontSize: 20, color: '#94a3b8', margin: 0 }}>
+        <p style={{ fontSize: 22, color: '#94a3b8', margin: 0 }}>
           Zero Latency • Bank-Grade Vault • Real-Time Insights
         </p>
       </div>
 
       <div
         style={{
-          marginTop: 12,
-          padding: '12px 28px',
-          borderRadius: 14,
+          marginTop: 14,
+          padding: '14px 32px',
+          borderRadius: 16,
           background: 'linear-gradient(135deg, #00D9FF 0%, #2684FF 100%)',
           color: '#040913',
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: 800,
           letterSpacing: '0.02em',
           boxShadow: '0 8px 30px rgba(0, 217, 255, 0.35)',
