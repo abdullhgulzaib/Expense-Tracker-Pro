@@ -41,6 +41,7 @@ import {
   verifyPaymentProof,
 } from './controllers/splitVaultController.js';
 import {
+  createNotification,
   getNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
@@ -128,6 +129,7 @@ app.post(['/splitvault/expenses/:expenseId/splits/:splitUserId/proof', '/api/spl
 app.post(['/splitvault/expenses/:expenseId/splits/:splitUserId/verify', '/api/splitvault/expenses/:expenseId/splits/:splitUserId/verify'], protect, verifyPaymentProof);
 
 // Notification Routes (Protected)
+app.post(['/notifications', '/api/notifications'], protect, createNotification);
 app.get(['/notifications', '/api/notifications'], protect, getNotifications);
 app.put(['/notifications/read-all', '/api/notifications/read-all'], protect, markAllNotificationsAsRead);
 app.put(['/notifications/:id/read', '/api/notifications/:id/read'], protect, markNotificationAsRead);

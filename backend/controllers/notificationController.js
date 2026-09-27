@@ -1,6 +1,31 @@
 import { Notification } from '../models.js';
 
 /**
+ * @desc Create a new notification
+ * @route POST /api/notifications
+ */
+export const createNotification = async (req, res) => {
+  try {
+    const { title, message, type = 'info', metadata = {} } = req.body;
+    if (!title || !message) {
+      return res.status(400).json({ error: 'Title and message are required' });
+    }
+    const notification = await Notification.create({
+      userId: req.user._id,
+      title: String(title).trim(),
+      message: String(message).trim(),
+      type: type || 'info',
+      metadata: metadata || {},
+      unread: true,
+    });
+    res.status(201).json(notification);
+  } catch (error) {
+    console.error('createNotification error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
  * @desc Get user notifications
  * @route GET /api/notifications
  */

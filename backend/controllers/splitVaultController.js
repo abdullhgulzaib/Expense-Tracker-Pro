@@ -260,6 +260,15 @@ export const createGroup = async (req, res) => {
       members,
     });
 
+    // Persistent notification for group creator
+    await Notification.create({
+      userId: req.user._id,
+      title: 'Group Created 👥',
+      message: `SplitVault group "${group.name}" created successfully. Invite code: ${group.inviteCode}.`,
+      type: 'info',
+      metadata: { groupId: group._id },
+    }).catch((e) => console.error('Notification error:', e.message));
+
     res.status(201).json(group);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -310,6 +319,15 @@ export const joinGroupByInviteCode = async (req, res) => {
         metadata: { groupId: group._id, joinedUserId: req.user._id },
       }).catch((e) => console.error('Notification error:', e.message));
     }
+
+    // Notify joining user as well for their persistent record
+    await Notification.create({
+      userId: req.user._id,
+      title: 'Joined Group 👥',
+      message: `You successfully joined "${group.name}" via invite code ${group.inviteCode}.`,
+      type: 'info',
+      metadata: { groupId: group._id },
+    }).catch((e) => console.error('Notification error:', e.message));
 
     res.json({ message: `Successfully joined "${group.name}"!`, group });
   } catch (error) {
@@ -588,13 +606,22 @@ export const createSplitExpense = async (req, res) => {
       if (split.user && split.user.toString() !== req.user._id.toString()) {
         await Notification.create({
           userId: split.user,
-          title: 'New Split Expense Added',
+          title: 'New Split Expense Added 💳',
           message: `${req.user.name} added you to "${expense.title}" (${expense.groupName || 'Direct Split'}). Your share: Rs ${split.amount}.`,
           type: 'info',
           metadata: { expenseId: expense._id, amount: split.amount },
         }).catch((e) => console.error('Notification error:', e.message));
       }
     }
+
+    // Also notify payer for their persistent record
+    await Notification.create({
+      userId: req.user._id,
+      title: 'Split Expense Created 💳',
+      message: `"${expense.title}" (Rs ${expense.totalAmount}) recorded and shared with ${splits.length - 1} roommate(s).`,
+      type: 'expense-add',
+      metadata: { expenseId: expense._id, totalAmount: expense.totalAmount },
+    }).catch((e) => console.error('Notification error:', e.message));
 
     res.status(201).json(expense);
   } catch (error) {
@@ -651,6 +678,15 @@ export const submitPaymentProof = async (req, res) => {
       message: `${req.user.name} submitted payment proof of Rs ${split.amount} for "${expense.title}". Please verify to settle balance.`,
       type: 'info',
       metadata: { expenseId: expense._id, splitUserId, amount: split.amount },
+    }).catch((e) => console.error('Notification error:', e.message));
+
+    // Also notify debtor for their persistent record
+    await Notification.create({
+      userId: req.user._id,
+      title: 'Proof Submitted 🧾',
+      message: `Your payment proof of Rs ${split.amount} for "${expense.title}" has been sent for verification.`,
+      type: 'info',
+      metadata: { expenseId: expense._id, amount: split.amount },
     }).catch((e) => console.error('Notification error:', e.message));
 
     res.json({ message: 'Payment proof submitted successfully!', expense });
@@ -735,6 +771,15 @@ export const verifyPaymentProof = async (req, res) => {
         userId: split.user,
         title: 'Payment Proof Verified! ✅',
         message: `Your payment of Rs ${split.amount} for "${expense.title}" was verified and approved by ${req.user.name}. Balance settled.`,
+        type: 'success',
+        metadata: { expenseId: expense._id, amount: split.amount },
+      }).catch((e) => console.error('Notification error:', e.message));
+
+      // Also notify payer for their persistent record
+      await Notification.create({
+        userId: req.user._id,
+        title: 'Payment Verified & Settled ✅',
+        message: `You verified and approved ${split.name}'s payment of Rs ${split.amount} for "${expense.title}".`,
         type: 'success',
         metadata: { expenseId: expense._id, amount: split.amount },
       }).catch((e) => console.error('Notification error:', e.message));
