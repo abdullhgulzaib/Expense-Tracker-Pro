@@ -43,6 +43,115 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+export const ALL_EXPENSE_CATEGORIES = [
+  "Food",
+  "Shopping",
+  "Travel",
+  "Bills",
+  "Health",
+  "Education",
+  "Entertainment",
+  "Online Services",
+  "Groceries",
+  "Transportation",
+  "Transport",
+  "Housing",
+  "Utilities",
+  "Insurance",
+  "Gifts",
+  "Personal Care",
+  "Subscriptions",
+  "Charity",
+  "Taxes",
+  "Investments",
+  "Rent",
+  "Maintenance",
+  "General",
+  "Dining",
+  "Fitness",
+  "Electronics",
+  "Salary",
+  "Savings",
+  "Hostel",
+  "Medical",
+  "Personal",
+  "Family",
+  "Business",
+  "Uncategorized",
+  "Other",
+];
+
+export const ALL_PAYMENT_METHODS = [
+  "Card",
+  "Cash",
+  "Bank Transfer",
+  "Auto-debit",
+  "Cheque",
+  "Mobile Payment",
+  "Online Payment",
+  "Digital Wallet",
+  "Easypaisa",
+  "EasyPaisa",
+  "Easy Paisa",
+  "JazzCash",
+  "Jazz Cash",
+  "Raast",
+  "SadaPay",
+  "Sadapay",
+  "Sada Pay",
+  "NayaPay",
+  "Nayapay",
+  "Naya Pay",
+  "Debit Card",
+  "Credit Card",
+  "Cash / Other",
+  "Other",
+];
+
+export const ALL_EXPENSE_STATUSES = [
+  "Completed",
+  "Pending",
+  "Cancelled",
+  "Failed",
+  "Draft",
+];
+
+export const ALL_SPLIT_STATUSES = [
+  "Unpaid",
+  "UnderReview",
+  "Verified",
+  "Rejected",
+  "Paid",
+  "Pending",
+  "Settled",
+];
+
+export const ALL_SPLIT_TYPES = [
+  "Equal",
+  "Custom",
+  "Percentage",
+  "Exact",
+  "Unequal",
+  "Shares",
+];
+
+export const ALL_NOTIFICATION_TYPES = [
+  "info",
+  "success",
+  "warning",
+  "danger",
+  "tip",
+  "welcome",
+  "expense-add",
+  "expense-delete",
+  "expense-update",
+  "split-created",
+  "proof-submitted",
+  "proof-verified",
+  "proof-rejected",
+  "general",
+];
+
 const ExpenseSchema = new mongoose.Schema(
   {
     title: {
@@ -58,29 +167,8 @@ const ExpenseSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: [
-        "Food",
-        "Shopping",
-        "Travel",
-        "Bills",
-        "Health",
-        "Education",
-        "Entertainment",
-        "Online Services",
-        "Groceries",
-        "Transportation",
-        "Transport",
-        "Housing",
-        "Utilities",
-        "Insurance",
-        "Gifts",
-        "Personal Care",
-        "Subscriptions",
-        "Charity",
-        "Taxes",
-        "Investments",
-        "Other",
-      ],
+      enum: ALL_EXPENSE_CATEGORIES,
+      default: "Food",
     },
     date: {
       type: Date,
@@ -89,22 +177,7 @@ const ExpenseSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: [
-        "Card",
-        "Cash",
-        "Bank Transfer",
-        "Auto-debit",
-        "Cheque",
-        "Mobile Payment",
-        "Online Payment",
-        "Digital Wallet",
-        "Easypaisa",
-        "JazzCash",
-        "Raast",
-        "SadaPay",
-        "NayaPay",
-        "Other",
-      ],
+      enum: ALL_PAYMENT_METHODS,
       default: "Card",
     },
     notes: {
@@ -114,7 +187,7 @@ const ExpenseSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Completed", "Pending"],
+      enum: ALL_EXPENSE_STATUSES,
       default: "Completed",
     },
     userId: {
@@ -126,6 +199,52 @@ const ExpenseSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Pre-validate hook: automatically maps any case variations or unknown inputs
+// so Mongoose validation NEVER fails on category, paymentMethod or status!
+ExpenseSchema.pre("validate", function (next) {
+  if (this.category) {
+    const rawCat = String(this.category).trim();
+    const matched = ALL_EXPENSE_CATEGORIES.find(
+      (c) => c.toLowerCase() === rawCat.toLowerCase()
+    );
+    if (matched) {
+      this.category = matched;
+    } else {
+      this.category = "Other";
+    }
+  } else {
+    this.category = "Food";
+  }
+
+  if (this.paymentMethod) {
+    const rawPm = String(this.paymentMethod).trim();
+    const matched = ALL_PAYMENT_METHODS.find(
+      (p) => p.toLowerCase() === rawPm.toLowerCase()
+    );
+    if (matched) {
+      this.paymentMethod = matched;
+    } else {
+      this.paymentMethod = "Other";
+    }
+  } else {
+    this.paymentMethod = "Card";
+  }
+
+  if (this.status) {
+    const rawStatus = String(this.status).trim();
+    const matched = ALL_EXPENSE_STATUSES.find(
+      (s) => s.toLowerCase() === rawStatus.toLowerCase()
+    );
+    if (matched) {
+      this.status = matched;
+    } else {
+      this.status = "Completed";
+    }
+  }
+
+  next();
+});
 
 const GroupSchema = new mongoose.Schema(
   {
@@ -226,7 +345,7 @@ const SplitExpenseSchema = new mongoose.Schema(
     },
     splitType: {
       type: String,
-      enum: ["Equal", "Custom", "Percentage"],
+      enum: ALL_SPLIT_TYPES,
       default: "Equal",
     },
     date: {
@@ -265,24 +384,14 @@ const SplitExpenseSchema = new mongoose.Schema(
         },
         status: {
           type: String,
-          enum: ["Unpaid", "UnderReview", "Verified", "Rejected"],
+          enum: ALL_SPLIT_STATUSES,
           default: "Unpaid",
           index: true,
         },
         proof: {
           method: {
             type: String,
-            enum: [
-              "Easypaisa",
-              "JazzCash",
-              "Raast",
-              "Bank Transfer",
-              "SadaPay",
-              "NayaPay",
-              "Cash",
-              "Cash / Other",
-              "Other",
-            ],
+            enum: ALL_PAYMENT_METHODS,
             default: "Easypaisa",
           },
           imageUrl: {
@@ -327,6 +436,51 @@ const SplitExpenseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Pre-validate hook for SplitExpenseSchema: normalize splitType, split status, and payment method
+SplitExpenseSchema.pre("validate", function (next) {
+  if (this.splitType) {
+    const rawType = String(this.splitType).trim();
+    const matchedType = ALL_SPLIT_TYPES.find(
+      (t) => t.toLowerCase() === rawType.toLowerCase()
+    );
+    if (matchedType) {
+      this.splitType = matchedType;
+    } else {
+      this.splitType = "Equal";
+    }
+  }
+
+  if (Array.isArray(this.splits)) {
+    this.splits.forEach((split) => {
+      if (split.status) {
+        const rawStatus = String(split.status).trim();
+        const matched = ALL_SPLIT_STATUSES.find(
+          (s) => s.toLowerCase() === rawStatus.toLowerCase()
+        );
+        if (matched) {
+          split.status = matched;
+        } else {
+          split.status = "Unpaid";
+        }
+      }
+
+      if (split.proof && split.proof.method) {
+        const rawMethod = String(split.proof.method).trim();
+        const matched = ALL_PAYMENT_METHODS.find(
+          (p) => p.toLowerCase() === rawMethod.toLowerCase()
+        );
+        if (matched) {
+          split.proof.method = matched;
+        } else {
+          split.proof.method = "Other";
+        }
+      }
+    });
+  }
+
+  next();
+});
+
 const NotificationSchema = new mongoose.Schema(
   {
     userId: {
@@ -347,7 +501,7 @@ const NotificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["info", "success", "warning", "danger", "tip", "welcome"],
+      enum: ALL_NOTIFICATION_TYPES,
       default: "info",
     },
     unread: {
@@ -362,6 +516,22 @@ const NotificationSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Pre-validate hook for NotificationSchema
+NotificationSchema.pre("validate", function (next) {
+  if (this.type) {
+    const rawType = String(this.type).trim();
+    const matched = ALL_NOTIFICATION_TYPES.find(
+      (t) => t.toLowerCase() === rawType.toLowerCase()
+    );
+    if (matched) {
+      this.type = matched;
+    } else {
+      this.type = "info";
+    }
+  }
+  next();
+});
 
 export { UserSchema, ExpenseSchema, GroupSchema, SplitExpenseSchema, NotificationSchema };
 

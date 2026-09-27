@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import crypto from 'crypto';
 import { Group, SplitExpense, Expense, User, Notification } from '../models.js';
+import { ALL_EXPENSE_CATEGORIES, ALL_PAYMENT_METHODS } from '../schema.js';
 
 // Helper to generate a secure, 8-character cryptographic alphanumeric invite code (e.g. 8F3B9A1C)
 const generateInviteCode = () => {
@@ -10,24 +11,23 @@ const generateInviteCode = () => {
 
 // Helpers to ensure clean mapping to Expense schema
 const mapCategory = (cat) => {
-  const valid = [
-    "Food", "Shopping", "Travel", "Bills", "Health", "Education", "Entertainment",
-    "Online Services", "Groceries", "Transportation", "Transport", "Housing", "Utilities",
-    "Insurance", "Gifts", "Personal Care", "Subscriptions", "Charity", "Taxes", "Investments", "Other"
-  ];
-  if (cat === 'Transport') return 'Transportation';
-  if (valid.includes(cat)) return cat;
-  return 'Other';
+  if (!cat) return 'Food';
+  const catTrimmed = String(cat).trim();
+  if (catTrimmed.toLowerCase() === 'transport') return 'Transportation';
+  const match = ALL_EXPENSE_CATEGORIES.find(
+    (c) => c.toLowerCase() === catTrimmed.toLowerCase()
+  );
+  return match || 'Other';
 };
 
 const mapPaymentMethod = (pm) => {
-  const valid = [
-    "Card", "Cash", "Bank Transfer", "Auto-debit", "Cheque", "Mobile Payment",
-    "Online Payment", "Digital Wallet", "Easypaisa", "JazzCash", "Raast", "SadaPay", "NayaPay", "Other"
-  ];
-  if (valid.includes(pm)) return pm;
-  if (pm === 'Cash / Other') return 'Cash';
-  return 'Mobile Payment';
+  if (!pm) return 'Card';
+  const pmTrimmed = String(pm).trim();
+  if (pmTrimmed.toLowerCase() === 'cash / other') return 'Cash';
+  const match = ALL_PAYMENT_METHODS.find(
+    (p) => p.toLowerCase() === pmTrimmed.toLowerCase()
+  );
+  return match || 'Other';
 };
 
 /**

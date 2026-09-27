@@ -8,6 +8,8 @@ export const EXPENSE_CATEGORIES = [
   'Entertainment',
   'Online Services',
   'Subscriptions',
+  'Groceries',
+  'Transportation',
   'Other',
 ];
 
@@ -18,5 +20,7 @@ export const PAYMENT_METHODS = [
   'EasyPaisa',
   'JazzCash',
   'Sadapay',
+  'Raast',
+  'NayaPay',
   'Other',
 ];
