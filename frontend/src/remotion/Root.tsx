@@ -2,6 +2,7 @@ import React from 'react';
 import { Composition } from 'remotion';
 import { TutorialVideo, TutorialVideoProps } from './TutorialVideo';
 import { TutorialPart2, TutorialPart2Props } from './TutorialPart2';
+import { TutorialPart3, TutorialPart3Props } from './TutorialPart3';
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -28,7 +29,17 @@ export const RemotionRoot: React.FC = () => {
           hasAudio: true,
         }}
       />
+      <Composition<TutorialPart3Props>
+        id="TutorialPart3"
+        component={TutorialPart3}
+        durationInFrames={2805} // ~93.5 seconds at 30 fps (all 7 clips + Gemini outro)
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{
+          hasAudio: true,
+        }}
+      />
     </>
   );
 };
-
