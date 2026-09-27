@@ -1821,6 +1821,14 @@ th {
   text-align: center !important;
 }
 
+[data-theme='light'] .auth-brand-centered .app-brand-title {
+  color: #0f172a !important;
+}
+
+[data-theme='light'] .auth-brand-centered .app-brand-subtitle {
+  color: #64748b !important;
+}
+
 
 /* Pill Tabs */
 .auth-mode-pill-tabs {
@@ -1988,9 +1996,11 @@ th {
 .field-input {
   width: 100%;
   height: 100%;
-  background: transparent;
-  border: none;
-  outline: none;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
   color: #ffffff;
   font-size: 0.86rem;
 }
@@ -2161,6 +2171,146 @@ th {
 .switch-action-btn:hover {
   text-decoration: underline;
   opacity: 0.85;
+}
+
+/* ========================================================================= */
+/* LIGHT THEME STYLES FOR AUTH (LOGIN & REGISTER)                            */
+/* ========================================================================= */
+
+[data-theme='light'] .auth-page.financial-aurora-env {
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
+}
+
+[data-theme='light'] .aurora-blob-cyan {
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, rgba(14, 165, 233, 0.02) 60%, transparent 75%);
+}
+
+[data-theme='light'] .aurora-blob-blue {
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.02) 60%, transparent 75%);
+}
+
+[data-theme='light'] .aurora-blob-teal {
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.08) 0%, rgba(20, 184, 166, 0.01) 60%, transparent 75%);
+}
+
+[data-theme='light'] .orbit-ring-inner,
+[data-theme='light'] .orbit-ring-outer {
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme='light'] .auth-security-core-hud {
+  color: rgba(100, 116, 139, 0.35);
+  border-top-color: rgba(148, 163, 184, 0.15);
+  border-bottom-color: rgba(148, 163, 184, 0.15);
+}
+
+[data-theme='light'] .auth-glass-card {
+  background: #ffffff;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid #e2e8f0;
+  box-shadow: 
+    0 24px 60px rgba(15, 23, 42, 0.1),
+    0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme='light'] .auth-mode-pill-tabs {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+[data-theme='light'] .mode-pill-tab {
+  color: #64748b;
+}
+
+[data-theme='light'] .mode-pill-tab.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme='light'] .custom-google-auth-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='light'] .custom-google-auth-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.15);
+}
+
+[data-theme='light'] .auth-divider-line {
+  background: #e2e8f0;
+}
+
+[data-theme='light'] .auth-divider-text {
+  color: #94a3b8;
+}
+
+[data-theme='light'] .field-label {
+  color: #334155;
+  font-weight: 600;
+}
+
+[data-theme='light'] .field-input-box {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+}
+
+[data-theme='light'] .field-input-box:focus-within {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+[data-theme='light'] .field-input-box:focus-within .field-icon {
+  color: #2563eb;
+}
+
+[data-theme='light'] .field-input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #0f172a !important;
+  padding: 0 !important;
+}
+
+[data-theme='light'] .field-input::placeholder {
+  color: #94a3b8;
+}
+
+[data-theme='light'] .field-eye-btn {
+  color: #94a3b8;
+}
+
+[data-theme='light'] .field-eye-btn:hover {
+  color: #0f172a;
+}
+
+[data-theme='light'] .remember-checkbox-label {
+  color: #475569;
+}
+
+[data-theme='light'] .forgot-password-link {
+  color: #2563eb;
+}
+
+[data-theme='light'] .forgot-password-link:hover {
+  color: #1d4ed8;
+}
+
+[data-theme='light'] .auth-footer-switch {
+  color: #64748b;
+}
+
+[data-theme='light'] .switch-action-btn {
+  color: #2563eb;
 }
 
 /* Compact screens when height is constrained */
@@ -3323,6 +3473,89 @@ select:-webkit-autofill:focus {
 
 .notification-mark-all-btn:hover {
   background: rgba(59, 130, 246, 0.1);
+}
+
+[data-theme='light'] .notification-dropdown {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme='light'] .notification-dropdown__header {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+[data-theme='light'] .notification-dropdown__title {
+  color: #0f172a;
+}
+
+[data-theme='light'] .notification-badge {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+[data-theme='light'] .notification-action-btn {
+  color: #64748b;
+}
+
+[data-theme='light'] .notification-action-btn:hover {
+  color: #ef4444;
+}
+
+[data-theme='light'] .notification-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+[data-theme='light'] .notification-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+[data-theme='light'] .notification-item--unread {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+[data-theme='light'] .notification-item__icon {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .notification-item__title {
+  color: #0f172a;
+}
+
+[data-theme='light'] .notification-item__time {
+  color: #64748b;
+}
+
+[data-theme='light'] .notification-item__message {
+  color: #475569;
+}
+
+[data-theme='light'] .notification-item__dismiss {
+  color: #94a3b8;
+}
+
+[data-theme='light'] .notification-item__dismiss:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+
+[data-theme='light'] .notification-dropdown__footer {
+  border-top: 1px solid #e2e8f0;
+}
+
+[data-theme='light'] .notification-mark-all-btn {
+  color: #2563eb;
+}
+
+[data-theme='light'] .notification-mark-all-btn:hover {
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 @media (max-width: 640px) {
