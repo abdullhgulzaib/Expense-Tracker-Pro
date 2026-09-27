@@ -199,7 +199,7 @@ function Auth({ initialMode = 'login' }) {
 
           {/* Official Brand Identity (Using official BrandLogo with ET gradient mark) */}
           <div className="auth-card-brand-header">
-            <BrandLogo size="lg" className="auth-brand-centered" />
+            <BrandLogo size="md" className="auth-brand-centered" />
           </div>
 
           {/* Pill Segment Switcher (Sign In <-> Create Account) */}

@@ -1492,6 +1492,7 @@ th {
 
 .auth-page.financial-aurora-env {
   position: relative;
+  min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
   display: flex;
@@ -1499,8 +1500,22 @@ th {
   justify-content: center;
   background-color: #07111F;
   overflow-x: hidden;
+  overflow-y: auto;
   box-sizing: border-box;
-  padding: 32px 16px;
+  padding: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.auth-page.financial-aurora-env::-webkit-scrollbar {
+  width: 6px;
+}
+.auth-page.financial-aurora-env::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+.auth-page.financial-aurora-env::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* 1. Living Aurora Ambient Fields */
@@ -1726,10 +1741,10 @@ th {
 
 .auth-glass-card {
   width: 100%;
-  max-width: 440px;
-  margin: 0 auto;
-  padding: 38px 34px;
-  border-radius: 24px;
+  max-width: 420px;
+  margin: auto;
+  padding: 22px 28px;
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.045);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
@@ -1745,7 +1760,7 @@ th {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   text-align: center;
 }
 
@@ -1755,7 +1770,7 @@ th {
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
-  gap: 12px !important;
+  gap: 8px !important;
 }
 
 .auth-brand-centered .app-brand-text {
@@ -1771,13 +1786,13 @@ th {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 3px;
-  margin-bottom: 22px;
+  margin-bottom: 12px;
 }
 
 .mode-pill-tab {
   flex: 1;
-  padding: 8px 12px;
-  font-size: 0.82rem;
+  padding: 7px 12px;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #94a3b8;
   background: transparent;
@@ -1802,31 +1817,31 @@ th {
   background: rgba(244, 63, 94, 0.12);
   border: 1px solid rgba(244, 63, 94, 0.3);
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   color: #fecdd3;
-  font-size: 0.82rem;
-  margin-bottom: 18px;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
   animation: fadeIn 0.2s ease-out;
 }
 
 /* Custom Native Google Auth Button */
 .custom-google-auth-btn {
   width: 100%;
-  height: 48px;
+  height: 42px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.045);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #f1f5f9;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   user-select: none;
 }
 
@@ -1848,10 +1863,10 @@ th {
 }
 
 .google-icon-svg {
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
-  min-height: 20px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
   flex-shrink: 0;
 }
 
@@ -1860,7 +1875,7 @@ th {
   align-items: center;
   gap: 12px;
   width: 100%;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .auth-divider-line {
@@ -1870,7 +1885,7 @@ th {
 }
 
 .auth-divider-text {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: #64748b;
@@ -1882,17 +1897,17 @@ th {
 .auth-form-fields {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 
 .form-field-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .field-label {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #cbd5e1;
   letter-spacing: 0.02em;
@@ -1904,8 +1919,8 @@ th {
   border-radius: 12px;
   display: flex;
   align-items: center;
-  padding: 0 14px;
-  height: 46px;
+  padding: 0 12px;
+  height: 42px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1934,12 +1949,12 @@ th {
   border: none;
   outline: none;
   color: #ffffff;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
 }
 
 .field-input::placeholder {
   color: #64748b;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
 }
 
 .field-eye-btn {
@@ -1961,15 +1976,15 @@ th {
 .password-strength-container {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-top: 4px;
+  gap: 4px;
+  margin-top: 2px;
 }
 
 .strength-bars-track {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  height: 4px;
+  height: 3px;
 }
 
 .strength-bar-cell {
@@ -1980,7 +1995,7 @@ th {
 .strength-label-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #94a3b8;
 }
 
@@ -1989,8 +2004,8 @@ th {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.78rem;
-  margin-top: 2px;
+  font-size: 0.76rem;
+  margin-top: 1px;
 }
 
 .remember-checkbox-label {
@@ -2024,19 +2039,19 @@ th {
 /* Submit CTA Button */
 .auth-submit-btn {
   width: 100%;
-  height: 48px;
+  height: 44px;
   border-radius: 12px;
   border: none;
   background: linear-gradient(135deg, #00D9FF 0%, #2684FF 100%);
   color: #040913;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 6px;
+  margin-top: 4px;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 18px rgba(0, 217, 255, 0.3);
 }
@@ -2084,8 +2099,8 @@ th {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin-top: 10px;
-  font-size: 0.8rem;
+  margin-top: 8px;
+  font-size: 0.78rem;
   color: #94a3b8;
 }
 
@@ -2093,7 +2108,7 @@ th {
   background: transparent;
   border: none;
   color: var(--aurora-cyan);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -2103,6 +2118,42 @@ th {
 .switch-action-btn:hover {
   text-decoration: underline;
   opacity: 0.85;
+}
+
+/* Compact screens when height is constrained */
+@media (max-height: 720px) {
+  .auth-page.financial-aurora-env {
+    padding: 10px 14px;
+  }
+  .auth-glass-card {
+    padding: 16px 22px;
+  }
+  .auth-card-brand-header {
+    margin-bottom: 8px;
+  }
+  .auth-mode-pill-tabs {
+    margin-bottom: 8px;
+  }
+  .custom-google-auth-btn {
+    height: 38px;
+    margin-bottom: 8px;
+  }
+  .auth-divider-row {
+    margin-bottom: 8px;
+  }
+  .auth-form-fields {
+    gap: 7px;
+  }
+  .field-input-box {
+    height: 38px;
+  }
+  .auth-submit-btn {
+    height: 40px;
+    margin-top: 2px;
+  }
+  .auth-footer-switch {
+    margin-top: 6px;
+  }
 }
 
 /* ========================================================================= */
