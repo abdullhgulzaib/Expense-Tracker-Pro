@@ -16,14 +16,6 @@ export interface TutorialPart3Props {
   hasAudio?: boolean;
 }
 
-interface CursorKeyframe {
-  frame: number;
-  x: number; // percentage (0 - 100)
-  y: number; // percentage (0 - 100)
-  label?: string;
-  isClick?: boolean;
-}
-
 interface SceneConfig {
   title: string;
   description: string;
@@ -34,7 +26,6 @@ interface SceneConfig {
   durationInFrames: number;
   accentColor: string;
   accentSecondary: string;
-  cursorKeyframes: CursorKeyframe[];
 }
 
 // 7 Comprehensive SplitVault Workflow Scenes
@@ -49,12 +40,6 @@ const SCENES: SceneConfig[] = [
     durationInFrames: 375, // 12.5s
     accentColor: '#38BDF8', // Cyan
     accentSecondary: '#0284C7',
-    cursorKeyframes: [
-      { frame: 20, x: 50, y: 38, label: 'Vault Name' },
-      { frame: 120, x: 50, y: 50, label: 'Select Category' },
-      { frame: 240, x: 65, y: 76, label: 'Create Group', isClick: true },
-      { frame: 320, x: 50, y: 60, label: 'Invite Code Ready' },
-    ],
   },
   {
     title: '2. Join Group with Code',
@@ -66,11 +51,6 @@ const SCENES: SceneConfig[] = [
     durationInFrames: 330, // 11.0s
     accentColor: '#6366F1', // Indigo
     accentSecondary: '#4F46E5',
-    cursorKeyframes: [
-      { frame: 30, x: 70, y: 22, label: 'Join Group' },
-      { frame: 110, x: 50, y: 50, label: 'Enter Invite Code' },
-      { frame: 210, x: 65, y: 68, label: 'Join Vault', isClick: true },
-    ],
   },
   {
     title: '3. Add Shared Expense',
@@ -82,12 +62,6 @@ const SCENES: SceneConfig[] = [
     durationInFrames: 420, // 14.0s
     accentColor: '#10B981', // Emerald
     accentSecondary: '#059669',
-    cursorKeyframes: [
-      { frame: 30, x: 40, y: 21, label: 'Title: Muree Outing' },
-      { frame: 120, x: 58, y: 21, label: 'Amount: PKR 5,000' },
-      { frame: 220, x: 50, y: 45, label: 'Auto Equal Split' },
-      { frame: 330, x: 63, y: 92, label: 'Create & Split', isClick: true },
-    ],
   },
   {
     title: '4. Upload Proof of Transfer',
@@ -99,12 +73,6 @@ const SCENES: SceneConfig[] = [
     durationInFrames: 420, // 14.0s
     accentColor: '#F59E0B', // Amber
     accentSecondary: '#D97706',
-    cursorKeyframes: [
-      { frame: 40, x: 50, y: 47, label: 'Choose Screenshot' },
-      { frame: 160, x: 40, y: 66, label: 'Select Easypaisa' },
-      { frame: 260, x: 60, y: 66, label: 'Transaction ID / TID' },
-      { frame: 350, x: 64, y: 91, label: 'Send Proof to Payer', isClick: true },
-    ],
   },
   {
     title: '5. Dual-Sided Payment Verification',
@@ -116,12 +84,6 @@ const SCENES: SceneConfig[] = [
     durationInFrames: 390, // 13.0s
     accentColor: '#EC4899', // Pink
     accentSecondary: '#DB2777',
-    cursorKeyframes: [
-      { frame: 30, x: 91, y: 48, label: 'Review Proof', isClick: true },
-      { frame: 160, x: 50, y: 55, label: 'Inspect Banking Slip' },
-      { frame: 270, x: 65, y: 88, label: 'Approve Payment', isClick: true },
-      { frame: 340, x: 90, y: 76, label: 'Status: Settled' },
-    ],
   },
   {
     title: '6. Real-Time Dashboard Sync',
@@ -133,11 +95,6 @@ const SCENES: SceneConfig[] = [
     durationInFrames: 300, // 10.0s
     accentColor: '#8B5CF6', // Purple
     accentSecondary: '#6D28D9',
-    cursorKeyframes: [
-      { frame: 30, x: 58, y: 53, label: 'Amount You Owe: Rs 0' },
-      { frame: 120, x: 82, y: 53, label: 'Amount Owed: Rs 0' },
-      { frame: 220, x: 50, y: 77, label: 'Verified & Settled Log' },
-    ],
   },
   {
     title: '7. Manage Multi-Vault Ecosystem',
@@ -149,140 +106,8 @@ const SCENES: SceneConfig[] = [
     durationInFrames: 360, // 12.0s
     accentColor: '#06B6D4', // Cyan / Teal
     accentSecondary: '#0891B2',
-    cursorKeyframes: [
-      { frame: 30, x: 35, y: 13, label: 'Naran Trip Group' },
-      { frame: 130, x: 50, y: 48, label: 'Members Directory' },
-      { frame: 240, x: 74, y: 60, label: 'Link Roommate Email', isClick: true },
-    ],
   },
 ];
-
-// Highlight Radar Cursor Component
-const DynamicCursorSpotlight: React.FC<{
-  keyframes: CursorKeyframe[];
-  currentFrame: number;
-  accentColor: string;
-}> = ({ keyframes, currentFrame, accentColor }) => {
-  if (!keyframes || keyframes.length === 0) return null;
-
-  // Find active keyframe interval
-  let activeIndex = 0;
-  for (let i = 0; i < keyframes.length; i++) {
-    if (currentFrame >= keyframes[i].frame) {
-      activeIndex = i;
-    }
-  }
-
-  const current = keyframes[activeIndex];
-  const next = keyframes[Math.min(activeIndex + 1, keyframes.length - 1)];
-
-  // Interpolate position between current and next keyframe
-  const frameDelta = Math.max(1, next.frame - current.frame);
-  const progress = Math.min(1, Math.max(0, (currentFrame - current.frame) / frameDelta));
-  // Smooth easeInOut
-  const smoothProgress = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
-
-  const x = current.x + (next.x - current.x) * smoothProgress;
-  const y = current.y + (next.y - current.y) * smoothProgress;
-
-  // Pulse animation
-  const pulse = (Math.sin(currentFrame * 0.2) + 1) / 2;
-
-  // Click pulse trigger
-  const isClickTime = current.isClick && Math.abs(currentFrame - current.frame) < 15;
-  const clickScale = isClickTime ? 0.8 : 1;
-
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: `${x}%`,
-        top: `${y}%`,
-        transform: `translate(-50%, -50%) scale(${clickScale})`,
-        pointerEvents: 'none',
-        zIndex: 9999,
-        transition: 'transform 0.1s ease',
-      }}
-    >
-      {/* Outer Radar Pulse Ring */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 52 + pulse * 18,
-          height: 52 + pulse * 18,
-          borderRadius: '50%',
-          border: `2px solid ${accentColor}`,
-          opacity: 0.85 - pulse * 0.5,
-          boxShadow: `0 0 20px ${accentColor}`,
-        }}
-      />
-
-      {/* Inner Glowing Core */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 24,
-          height: 24,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${accentColor} 0%, rgba(255, 255, 255, 0.8) 40%, transparent 80%)`,
-          boxShadow: `0 0 15px ${accentColor}`,
-        }}
-      />
-
-      {/* SVG Custom High-Contrast Pointer Cursor */}
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 24 24"
-        fill="none"
-        style={{
-          position: 'absolute',
-          top: -2,
-          left: -2,
-          filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8))',
-        }}
-      >
-        <path
-          d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z"
-          fill="#FFFFFF"
-          stroke="#0F172A"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-      </svg>
-
-      {/* Action Tagline Badge */}
-      {current.label && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 26,
-            left: 14,
-            background: 'rgba(15, 23, 42, 0.92)',
-            border: `1px solid ${accentColor}`,
-            padding: '3px 10px',
-            borderRadius: 8,
-            color: '#FFFFFF',
-            fontSize: 12,
-            fontWeight: 700,
-            whiteSpace: 'nowrap',
-            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.6)',
-            letterSpacing: '0.02em',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-          }}
-        >
-          {current.label}
-        </div>
-      )}
-    </div>
-  );
-};
 
 // Single SplitVault Scene View with 3D Float Physics
 const SplitVaultSceneView: React.FC<{
@@ -425,13 +250,6 @@ const SplitVaultSceneView: React.FC<{
               height: '100%',
               objectFit: 'contain',
             }}
-          />
-
-          {/* Dynamic Radar Spotlight following user interaction points */}
-          <DynamicCursorSpotlight
-            keyframes={scene.cursorKeyframes}
-            currentFrame={frame}
-            accentColor={scene.accentColor}
           />
         </div>
       </div>
