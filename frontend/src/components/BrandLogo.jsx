@@ -78,7 +78,7 @@ function BrandLogo({
           style={{
             fontSize: s.titleSize,
             fontWeight: 800,
-            color: '#ffffff',
+            color: 'var(--text-primary)',
             letterSpacing: '0.04em',
             fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             textTransform: 'uppercase',
@@ -96,7 +96,7 @@ function BrandLogo({
             style={{
               fontSize: s.subSize,
               fontWeight: 600,
-              color: '#94a3b8',
+              color: 'var(--text-muted)',
               letterSpacing: '0.04em',
               marginTop: '3px',
               fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',

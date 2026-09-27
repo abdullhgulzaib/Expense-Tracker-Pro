@@ -28,21 +28,47 @@ export const formatNotificationTime = (timestamp) => {
 
 export function NotificationProvider({ children }) {
   const { user, isAuthenticated } = useAuth();
-  const [notifications, setNotifications] = useState([]);
+  const storageKey = user?._id ? `et_notifications_${user._id}` : 'et_notifications_guest';
+
+  // Load from localStorage on initialization so notifications are instantly available across reloads
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [toastAlert, setToastAlert] = useState(null); // { id, title, message, type }
   const isFetchingRef = useRef(false);
   const knownNotificationIdsRef = useRef(new Set());
   const initialLoadDoneRef = useRef(false);
-  const toastTimeoutRef = useRef(null);
 
-  // Helper to show a floating banner toast that auto-slides away after 4.5 seconds
-  // Note: Toast disappearing does NOT delete the notification from the bell/dropdown!
+  // Sync with localStorage whenever user changes
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setNotifications(parsed);
+        parsed.forEach((n) => knownNotificationIdsRef.current.add(String(n.id)));
+      } else {
+        setNotifications([]);
+      }
+    } catch {
+      setNotifications([]);
+    }
+  }, [storageKey]);
+
+  // Persistent Toast Notification Banner:
+  // Strictly remains visible until the user explicitly dismisses it (NO auto-clear timeout!)
   const showToast = useCallback((item) => {
-    clearTimeout(toastTimeoutRef.current);
     setToastAlert(item);
-    toastTimeoutRef.current = setTimeout(() => {
-      setToastAlert(null);
-    }, 4500);
+  }, []);
+
+  const dismissToast = useCallback(() => {
+    setToastAlert(null);
   }, []);
 
   // Fetch real-time notifications from MongoDB backend
@@ -62,44 +88,42 @@ export function NotificationProvider({ children }) {
           metadata: n.metadata || {},
         }));
 
-        // Check for new incoming cross-user notifications to trigger toast
+        // Detect new unread incoming notifications
         if (initialLoadDoneRef.current) {
           const newIncoming = backendFormatted.filter(
-            (b) => b.unread && !knownNotificationIdsRef.current.has(b.id)
+            (b) => b.unread && !knownNotificationIdsRef.current.has(String(b.id))
           );
           if (newIncoming.length > 0) {
-            // Trigger toast for the latest unread incoming item
-            const latest = newIncoming[0];
-            showToast({
-              id: latest.id,
-              title: latest.title,
-              message: latest.message,
-              type: latest.type,
-            });
+            // Display toast banner - remains on screen until user dismisses!
+            showToast(newIncoming[0]);
           }
         } else {
           initialLoadDoneRef.current = true;
         }
 
         // Update known IDs
-        backendFormatted.forEach((b) => knownNotificationIdsRef.current.add(b.id));
+        backendFormatted.forEach((b) => knownNotificationIdsRef.current.add(String(b.id)));
 
-        // Merge: keep any optimistic items that haven't completed POST yet
+        // Merge backend list with any local items
         setNotifications((prev) => {
           const tempPending = prev.filter((p) => String(p.id).startsWith('temp-'));
           const backendIds = new Set(backendFormatted.map((b) => String(b.id)));
           const uniqueTemps = tempPending.filter((t) => !backendIds.has(String(t.id)));
-          return [...uniqueTemps, ...backendFormatted];
+          const merged = [...uniqueTemps, ...backendFormatted];
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(merged));
+          } catch {}
+          return merged;
         });
       }
     } catch (err) {
-      // Fallback silently if offline
+      // Offline fallback: keep existing localStorage notifications intact
     } finally {
       isFetchingRef.current = false;
     }
-  }, [isAuthenticated, user?._id, showToast]);
+  }, [isAuthenticated, user?._id, showToast, storageKey]);
 
-  // Initial fetch and 3.5-second polling for responsive real-time updates across multiple accounts
+  // Polling for responsive real-time updates across multiple accounts
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotifications();
@@ -112,7 +136,7 @@ export function NotificationProvider({ children }) {
     }
   }, [isAuthenticated, fetchNotifications]);
 
-  // Add persistent notification (saves to MongoDB and updates state)
+  // Add persistent notification
   const addNotification = async ({ title, message, type = 'info', metadata = {} }) => {
     const tempId = 'temp-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
     const localItem = {
@@ -125,11 +149,17 @@ export function NotificationProvider({ children }) {
       metadata,
     };
 
-    // Show floating toast immediately
+    // Show floating toast banner immediately - stays until explicitly dismissed
     showToast(localItem);
 
-    // Optimistically update notifications list
-    setNotifications((prev) => [localItem, ...prev]);
+    // Optimistically update notifications list and save to localStorage
+    setNotifications((prev) => {
+      const updated = [localItem, ...prev];
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
 
     // Persist to MongoDB backend
     if (isAuthenticated) {
@@ -137,10 +167,14 @@ export function NotificationProvider({ children }) {
         const res = await api.post('/notifications', { title, message, type, metadata });
         if (res.data?._id) {
           const realId = res.data._id;
-          knownNotificationIdsRef.current.add(realId);
-          setNotifications((prev) =>
-            prev.map((n) => (n.id === tempId ? { ...n, id: realId } : n))
-          );
+          knownNotificationIdsRef.current.add(String(realId));
+          setNotifications((prev) => {
+            const updated = prev.map((n) => (n.id === tempId ? { ...n, id: realId } : n));
+            try {
+              localStorage.setItem(storageKey, JSON.stringify(updated));
+            } catch {}
+            return updated;
+          });
         }
       } catch (err) {
         console.error('Failed to persist notification:', err?.response?.data || err.message);
@@ -149,9 +183,13 @@ export function NotificationProvider({ children }) {
   };
 
   const markAsRead = async (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, unread: false } : n))
-    );
+    setNotifications((prev) => {
+      const updated = prev.map((n) => (n.id === id ? { ...n, unread: false } : n));
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
     try {
       if (!String(id).startsWith('temp-')) {
         await api.put(`/notifications/${id}/read`);
@@ -162,7 +200,13 @@ export function NotificationProvider({ children }) {
   };
 
   const markAllAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+    setNotifications((prev) => {
+      const updated = prev.map((n) => ({ ...n, unread: false }));
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
     try {
       await api.put('/notifications/read-all');
     } catch {
@@ -173,6 +217,10 @@ export function NotificationProvider({ children }) {
   const clearAll = async () => {
     setNotifications([]);
     knownNotificationIdsRef.current.clear();
+    setToastAlert(null);
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {}
     try {
       await api.delete('/notifications');
     } catch {
@@ -181,8 +229,17 @@ export function NotificationProvider({ children }) {
   };
 
   const removeNotification = async (id) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-    knownNotificationIdsRef.current.delete(id);
+    setNotifications((prev) => {
+      const updated = prev.filter((n) => n.id !== id);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+    knownNotificationIdsRef.current.delete(String(id));
+    if (toastAlert && toastAlert.id === id) {
+      setToastAlert(null);
+    }
     try {
       if (!String(id).startsWith('temp-')) {
         await api.delete(`/notifications/${id}`);
@@ -190,10 +247,6 @@ export function NotificationProvider({ children }) {
     } catch {
       // Ignore network errors
     }
-  };
-
-  const dismissToast = () => {
-    setToastAlert(null);
   };
 
   const unreadCount = notifications.filter((n) => n.unread).length;
@@ -218,60 +271,25 @@ export function NotificationProvider({ children }) {
       {/* Global Real-Time Notification Banner Toast */}
       {toastAlert && (
         <div
-          style={{
-            position: 'fixed',
-            top: 24,
-            right: 24,
-            zIndex: 99999,
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 12,
-            background: 'var(--color-card, #0f172a)',
-            color: 'var(--text-primary, #ffffff)',
-            border: '1px solid var(--color-border, rgba(255, 255, 255, 0.12))',
-            borderLeft: '4px solid #38bdf8',
-            borderRadius: 14,
-            padding: '14px 18px',
-            maxWidth: 420,
-            boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.15)',
-            animation: 'fadeInSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-          }}
+          className="notification-banner-toast"
+          role="alert"
+          aria-live="assertive"
         >
-          <div style={{ fontSize: 20, lineHeight: 1 }}>🔔</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontWeight: 700,
-                fontSize: 14,
-                color: 'var(--text-primary, #ffffff)',
-                marginBottom: 2,
-              }}
-            >
+          <div className="notification-banner-toast__icon">🔔</div>
+          <div className="notification-banner-toast__content">
+            <div className="notification-banner-toast__title">
               {toastAlert.title}
             </div>
-            <div
-              style={{
-                fontSize: 12.5,
-                color: 'var(--text-muted, #94a3b8)',
-                lineHeight: 1.4,
-              }}
-            >
+            <div className="notification-banner-toast__message">
               {toastAlert.message}
             </div>
           </div>
           <button
             type="button"
             onClick={dismissToast}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-muted, #94a3b8)',
-              cursor: 'pointer',
-              fontSize: 16,
-              lineHeight: 1,
-              padding: 2,
-            }}
+            className="notification-banner-toast__close"
             title="Dismiss notification"
+            aria-label="Dismiss notification"
           >
             ✕
           </button>

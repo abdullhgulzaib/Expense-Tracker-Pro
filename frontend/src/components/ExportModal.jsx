@@ -156,7 +156,7 @@ function ExportModal({
               <p className="modal__subtitle">Download your records for spreadsheets, tax, or archiving</p>
             </div>
           </div>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close export dialog">
+          <button type="button" className="icon-btn modal__close-btn" onClick={onClose} aria-label="Close export dialog" title="Close dialog">
             <X size={18} />
           </button>
         </div>
