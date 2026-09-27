@@ -32,7 +32,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition<TutorialPart3Props>
         id="TutorialPart3"
         component={TutorialPart3}
-        durationInFrames={2805} // ~93.5 seconds at 30 fps (all 7 clips + Gemini outro)
+        durationInFrames={3660} // 122 seconds at 30 fps (Gemini problem->solution intro + 7 workflow clips + Gemini outro)
         fps={30}
         width={1920}
         height={1080}

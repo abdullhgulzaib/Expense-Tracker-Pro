@@ -11,6 +11,7 @@ import {
   useVideoConfig,
 } from 'remotion';
 import { TopCenterHeader } from './TopCenterHeader';
+import { ProblemSolutionIntro } from './ProblemSolutionIntro';
 
 export interface TutorialPart3Props {
   hasAudio?: boolean;
@@ -36,8 +37,8 @@ const SCENES: SceneConfig[] = [
     badge: 'Step 01 · Group Formation',
     urlPath: 'expensetracker.pro/splitvault/create',
     videoSrc: 'video/Create Group.mp4',
-    startFrameInSource: 30, // ~1s into video
-    durationInFrames: 375, // 12.5s
+    startFrameInSource: 20,
+    durationInFrames: 420, // 14.0s
     accentColor: '#38BDF8', // Cyan
     accentSecondary: '#0284C7',
   },
@@ -47,8 +48,8 @@ const SCENES: SceneConfig[] = [
     badge: 'Step 02 · Zero-Friction Join',
     urlPath: 'expensetracker.pro/splitvault/join',
     videoSrc: 'video/JoinGroup.mp4',
-    startFrameInSource: 20,
-    durationInFrames: 330, // 11.0s
+    startFrameInSource: 15,
+    durationInFrames: 360, // 12.0s
     accentColor: '#6366F1', // Indigo
     accentSecondary: '#4F46E5',
   },
@@ -58,8 +59,8 @@ const SCENES: SceneConfig[] = [
     badge: 'Step 03 · Dynamic Split Math',
     urlPath: 'expensetracker.pro/splitvault/expense',
     videoSrc: 'video/CreateExpense.mp4',
-    startFrameInSource: 40,
-    durationInFrames: 420, // 14.0s
+    startFrameInSource: 30,
+    durationInFrames: 540, // 18.0s
     accentColor: '#10B981', // Emerald
     accentSecondary: '#059669',
   },
@@ -69,8 +70,8 @@ const SCENES: SceneConfig[] = [
     badge: 'Step 04 · Proof Verification',
     urlPath: 'expensetracker.pro/splitvault/proof',
     videoSrc: 'video/AddProof.mp4',
-    startFrameInSource: 30,
-    durationInFrames: 420, // 14.0s
+    startFrameInSource: 10,
+    durationInFrames: 690, // 23.0s (Full new recording: gallery receipt, TID 101, submission & toast)
     accentColor: '#F59E0B', // Amber
     accentSecondary: '#D97706',
   },
@@ -81,7 +82,7 @@ const SCENES: SceneConfig[] = [
     urlPath: 'expensetracker.pro/splitvault/review',
     videoSrc: 'video/AprovePayment.mp4',
     startFrameInSource: 20,
-    durationInFrames: 390, // 13.0s
+    durationInFrames: 480, // 16.0s
     accentColor: '#EC4899', // Pink
     accentSecondary: '#DB2777',
   },
@@ -91,8 +92,8 @@ const SCENES: SceneConfig[] = [
     badge: 'Step 06 · Instant Dashboard Sync',
     urlPath: 'expensetracker.pro/dashboard/splitvault',
     videoSrc: 'video/ExpenseAddedToDashboared.mp4',
-    startFrameInSource: 20,
-    durationInFrames: 300, // 10.0s
+    startFrameInSource: 10,
+    durationInFrames: 330, // 11.0s
     accentColor: '#8B5CF6', // Purple
     accentSecondary: '#6D28D9',
   },
@@ -102,14 +103,14 @@ const SCENES: SceneConfig[] = [
     badge: 'Step 07 · Multi-Vault Ecosystem',
     urlPath: 'expensetracker.pro/splitvault/manage',
     videoSrc: 'video/ManageDifferentGroups.mp4',
-    startFrameInSource: 20,
+    startFrameInSource: 15,
     durationInFrames: 360, // 12.0s
     accentColor: '#06B6D4', // Cyan / Teal
     accentSecondary: '#0891B2',
   },
 ];
 
-// Single SplitVault Scene View with 3D Float Physics
+// Single SplitVault Scene View with Gemini-Inspired 3D Float & Screen Shifting Physics
 const SplitVaultSceneView: React.FC<{
   scene: SceneConfig;
   sceneIndex: number;
@@ -128,18 +129,33 @@ const SplitVaultSceneView: React.FC<{
     },
   });
 
-  // Exit interpolation during last 12 frames
+  // Exit interpolation during last 18 frames (smooth screen shift)
   const exitProgress = interpolate(
     frame,
-    [scene.durationInFrames - 12, scene.durationInFrames],
+    [scene.durationInFrames - 18, scene.durationInFrames],
     [0, 1],
     { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
   );
 
-  const scale = interpolate(enterSpring, [0, 1], [0.94, 1.0]) - exitProgress * 0.05;
+  // Gemini-style floating drift
+  const floatY = Math.sin(frame * 0.05) * 5;
+  const floatRotate = Math.cos(frame * 0.04) * 0.6;
+
+  // Alternating 3D perspective shift across scenes for dynamic screen shifting
+  const dir = sceneIndex % 2 === 0 ? 1 : -1;
+  const enterRotateY = interpolate(enterSpring, [0, 1], [dir * 4, 0]);
+  const exitRotateY = exitProgress * (dir * -5);
+  const rotateY = enterRotateY + exitRotateY + floatRotate;
+
+  const enterRotateX = interpolate(enterSpring, [0, 1], [6, 0]);
+  const exitRotateX = exitProgress * -4;
+  const rotateX = enterRotateX + exitRotateX;
+
+  const translateY =
+    interpolate(enterSpring, [0, 1], [50, 0]) + floatY - exitProgress * 35;
+  const scale =
+    interpolate(enterSpring, [0, 1], [0.93, 1.0]) - exitProgress * 0.06;
   const opacity = interpolate(enterSpring, [0, 1], [0, 1]) * (1 - exitProgress);
-  const translateY = interpolate(enterSpring, [0, 1], [30, 0]) + exitProgress * -20;
-  const rotateX = interpolate(enterSpring, [0, 1], [4, 0]) + exitProgress * -3;
 
   return (
     <AbsoluteFill
@@ -149,6 +165,20 @@ const SplitVaultSceneView: React.FC<{
         padding: '0 80px',
       }}
     >
+      {/* Dynamic Background Colored Aurora Glow */}
+      <div
+        style={{
+          position: 'absolute',
+          width: 1000,
+          height: 550,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${scene.accentColor}25 0%, ${scene.accentSecondary}08 55%, transparent 75%)`,
+          filter: 'blur(90px)',
+          pointerEvents: 'none',
+          transform: `translateY(${floatY * 0.6}px)`,
+        }}
+      />
+
       {/* Top Center Kinetic Header */}
       <TopCenterHeader
         title={scene.title}
@@ -158,14 +188,14 @@ const SplitVaultSceneView: React.FC<{
         durationInFrames={scene.durationInFrames}
       />
 
-      {/* 3D Floating SaaS Window Container */}
+      {/* 3D Floating SaaS Window Container (Shifting of Screens) */}
       <div
         style={{
           width: '100%',
           maxWidth: 1420,
           marginTop: 110,
           opacity,
-          transform: `translateY(${translateY}px) scale(${scale}) perspective(1200px) rotateX(${rotateX}deg)`,
+          transform: `perspective(1400px) translateY(${translateY}px) scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
           borderRadius: 22,
           overflow: 'hidden',
           background: 'rgba(15, 23, 42, 0.94)',
@@ -232,7 +262,7 @@ const SplitVaultSceneView: React.FC<{
           </div>
         </div>
 
-        {/* Video Player Display Container */}
+        {/* Video Player Display Container (100% Clean Native View) */}
         <div
           style={{
             position: 'relative',
@@ -419,7 +449,10 @@ const GeminiStyleOutro: React.FC<{ durationInFrames: number }> = ({ durationInFr
 export const TutorialPart3: React.FC<TutorialPart3Props> = ({ hasAudio = true }) => {
   const frame = useCurrentFrame();
 
-  // Calculate cumulative scene timing offsets
+  const INTRO_DURATION = 270; // 9.0s Gemini-Inspired Problem->Solution Sequence
+  const OUTRO_DURATION = 210; // 7.0s Gemini Kinetic Tagline Outro
+
+  // Calculate cumulative scene timing offsets for the 7 workflow clips
   const sceneOffsets = SCENES.reduce<number[]>((acc, scene, index) => {
     if (index === 0) return [0];
     return [...acc, acc[index - 1] + SCENES[index - 1].durationInFrames];
@@ -427,8 +460,8 @@ export const TutorialPart3: React.FC<TutorialPart3Props> = ({ hasAudio = true })
 
   const totalWorkflowFrames =
     sceneOffsets[sceneOffsets.length - 1] + SCENES[SCENES.length - 1].durationInFrames;
-  const outroDuration = 210; // 7.0s
-  const totalFrames = totalWorkflowFrames + outroDuration;
+
+  const totalFrames = INTRO_DURATION + totalWorkflowFrames + OUTRO_DURATION;
 
   // Background subtle organic breathing
   const bgPulse = Math.sin(frame * 0.02) * 10;
@@ -513,20 +546,28 @@ export const TutorialPart3: React.FC<TutorialPart3Props> = ({ hasAudio = true })
         }}
       />
 
-      {/* 3. Render 7 Workflow Scenes sequentially */}
+      {/* 3. SCENE 0: Gemini-Inspired Problem -> Solution Hook Opening */}
+      <Sequence from={0} durationInFrames={INTRO_DURATION}>
+        <ProblemSolutionIntro durationInFrames={INTRO_DURATION} />
+      </Sequence>
+
+      {/* 4. Render 7 Workflow Scenes sequentially with 3D shifting transitions */}
       {SCENES.map((scene, index) => (
         <Sequence
           key={scene.badge}
-          from={sceneOffsets[index]}
+          from={INTRO_DURATION + sceneOffsets[index]}
           durationInFrames={scene.durationInFrames}
         >
           <SplitVaultSceneView scene={scene} sceneIndex={index} />
         </Sequence>
       ))}
 
-      {/* 4. Render Gemini-Style Outro */}
-      <Sequence from={totalWorkflowFrames} durationInFrames={outroDuration}>
-        <GeminiStyleOutro durationInFrames={outroDuration} />
+      {/* 5. Render Gemini-Style Outro */}
+      <Sequence
+        from={INTRO_DURATION + totalWorkflowFrames}
+        durationInFrames={OUTRO_DURATION}
+      >
+        <GeminiStyleOutro durationInFrames={OUTRO_DURATION} />
       </Sequence>
     </AbsoluteFill>
   );
