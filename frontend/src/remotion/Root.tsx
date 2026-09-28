@@ -3,6 +3,7 @@ import { Composition } from 'remotion';
 import { TutorialVideo, TutorialVideoProps } from './TutorialVideo';
 import { TutorialPart2, TutorialPart2Props } from './TutorialPart2';
 import { TutorialPart3, TutorialPart3Props } from './TutorialPart3';
+import { LinkedInTeaser, LinkedInTeaserProps } from './LinkedInTeaser';
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -35,6 +36,17 @@ export const RemotionRoot: React.FC = () => {
         durationInFrames={3660} // 122 seconds at 30 fps (Gemini problem->solution intro + 7 workflow clips + Gemini outro)
         fps={30}
         width={1920}
+        height={1080}
+        defaultProps={{
+          hasAudio: true,
+        }}
+      />
+      <Composition<LinkedInTeaserProps>
+        id="LinkedInTeaser"
+        component={LinkedInTeaser}
+        durationInFrames={1080} // 36 seconds at 30 fps (1080x1080 1:1 LinkedIn Square)
+        fps={30}
+        width={1080}
         height={1080}
         defaultProps={{
           hasAudio: true,
