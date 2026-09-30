@@ -52,6 +52,7 @@ export const ALL_EXPENSE_CATEGORIES = [
   "Education",
   "Entertainment",
   "Online Services",
+  "GYM",
   "Groceries",
   "Transportation",
   "Transport",
