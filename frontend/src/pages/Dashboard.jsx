@@ -34,7 +34,6 @@ function Dashboard() {
 
     let todayTotal = 0;
     let todayTxnCount = 0;
-    let monthTotal = 0;
 
     expenses.forEach((item) => {
       const d = new Date(item.date);
@@ -48,16 +47,34 @@ function Dashboard() {
         todayTotal += amount;
         todayTxnCount += 1;
       }
-
-      if (
-        d.getFullYear() === currentYear &&
-        d.getMonth() === currentMonth
-      ) {
-        monthTotal += amount;
-      }
     });
 
-    const avgPerDay = currentDayOfMonth > 0 ? (monthTotal / currentDayOfMonth) : 0;
+    const currentMonthExpenses = expenses.filter((item) => {
+      const d = new Date(item.date);
+      return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+    });
+
+    let avgPerDay = 0;
+
+    if (currentMonthExpenses.length > 0) {
+      const currentMonthTotal = currentMonthExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+      const daysElapsed = Math.max(1, currentDayOfMonth);
+      avgPerDay = currentMonthTotal / daysElapsed;
+    } else if (expenses.length > 0) {
+      const sortedByDate = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const latestDate = new Date(sortedByDate[0].date);
+      const targetYear = latestDate.getFullYear();
+      const targetMonth = latestDate.getMonth();
+
+      const targetMonthExpenses = expenses.filter((item) => {
+        const d = new Date(item.date);
+        return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
+      });
+
+      const targetMonthTotal = targetMonthExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+      const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+      avgPerDay = daysInTargetMonth > 0 ? targetMonthTotal / daysInTargetMonth : 0;
+    }
 
     return {
       totalExpenses: total,
