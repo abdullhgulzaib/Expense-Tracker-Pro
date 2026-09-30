@@ -164,7 +164,7 @@ function Dashboard() {
         <StatCard icon={ArrowDownCircle} title="Total Expenses" value={formatCurrency(totalExpenses)} change="This month" trend="down" />
         <StatCard icon={TrendingUp} title="Highest Expense" value={formatCurrency(highestExpense)} change="Peak" trend="up" />
         <StatCard icon={PiggyBank} title="Average Expense" value={formatCurrency(averageExpensePerDay)} change="Per day" trend="day" />
-        <StatCard icon={Calendar} title="Spent Today" value={formatCurrency(todaySpent)} change={todayCount === 1 ? '1 txn today' : `${todayCount} txns today`} trend="today" />
+        <StatCard icon={Wallet} title="Transactions" value={`${transactionCount}`} change="All time" trend="up" />
       </div>
 
       <div className="content-grid content-grid--two-cols">

@@ -53,48 +53,31 @@ function CategoryPieChart({ data = [] }) {
       <div className="panel__header">
         <h3>Category Distribution</h3>
       </div>
-      <div className="chart-box pie-box" style={{ display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={44}
-                outerRadius={80}
-                paddingAngle={3}
-                labelLine={false}
-                label={renderCustomizedLabel}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value, name) => {
-                  const pct = totalValue > 0 ? ((value / totalValue) * 100).toFixed(1) : 0;
-                  return [`${formatCurrency(value)} (${pct}%)`, name];
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="category-pie-legend">
-          {chartData.map((entry, index) => {
-            const pct = totalValue > 0 ? Math.round((entry.value / totalValue) * 100) : 0;
-            return (
-              <div key={entry.name} className="category-pie-legend__item">
-                <span
-                  className="category-pie-legend__dot"
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                />
-                <span className="category-pie-legend__name">{entry.name}</span>
-                <span className="category-pie-legend__pct">{pct}%</span>
-              </div>
-            );
-          })}
-        </div>
+      <div className="chart-box pie-box">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={chartData}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={45}
+              outerRadius={88}
+              paddingAngle={3}
+              labelLine={false}
+              label={renderCustomizedLabel}
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value, name) => {
+                const pct = totalValue > 0 ? ((value / totalValue) * 100).toFixed(1) : 0;
+                return [`${formatCurrency(value)} (${pct}%)`, name];
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
