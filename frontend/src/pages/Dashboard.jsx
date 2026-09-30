@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Wallet, ArrowDownCircle, PiggyBank, TrendingUp } from 'lucide-react';
+import { Wallet, ArrowDownCircle, PiggyBank, TrendingUp, Calendar } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import SpendingLineChart from '../components/charts/SpendingLineChart';
 import CategoryPieChart from '../components/charts/CategoryPieChart';
@@ -18,19 +18,53 @@ function Dashboard() {
 
   const { expenses, summary, loading, error } = state;
   const [isModalOpen, setIsModalOpen] = useState(false);
-    const [toast, setToast] = useState('');
+  const [toast, setToast] = useState('');
   const [toastType, setToastType] = useState('success');
   const [submitting, setSubmitting] = useState(false);
 
- const { totalExpenses, highestExpense, averageExpense, transactionCount } = useMemo(() => {
+  const { totalExpenses, highestExpense, averageExpensePerDay, todaySpent, todayCount, transactionCount } = useMemo(() => {
     const amounts = expenses.map((item) => Number(item.amount || 0));
     const count = amounts.length;
     const total = amounts.reduce((sum, amount) => sum + amount, 0);
 
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDayOfMonth = now.getDate();
+
+    let todayTotal = 0;
+    let todayTxnCount = 0;
+    let monthTotal = 0;
+
+    expenses.forEach((item) => {
+      const d = new Date(item.date);
+      const amount = Number(item.amount || 0);
+
+      if (
+        d.getFullYear() === currentYear &&
+        d.getMonth() === currentMonth &&
+        d.getDate() === currentDayOfMonth
+      ) {
+        todayTotal += amount;
+        todayTxnCount += 1;
+      }
+
+      if (
+        d.getFullYear() === currentYear &&
+        d.getMonth() === currentMonth
+      ) {
+        monthTotal += amount;
+      }
+    });
+
+    const avgPerDay = currentDayOfMonth > 0 ? (monthTotal / currentDayOfMonth) : 0;
+
     return {
       totalExpenses: total,
       highestExpense: count ? Math.max(...amounts) : 0,
-      averageExpense: count ? total / count : 0,
+      averageExpensePerDay: avgPerDay,
+      todaySpent: todayTotal,
+      todayCount: todayTxnCount,
       transactionCount: count,
     };
   }, [expenses]);
@@ -117,14 +151,20 @@ function Dashboard() {
           <p className="eyebrow">Good evening</p>
           <h1>Dashboard</h1>
         </div>
-        <button className="btn btn--primary" onClick={() => setIsModalOpen(true)}>+ Add Expense</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="daily-spend-badge" title="Total expenses recorded today">
+            <Calendar size={15} />
+            <span>Spent Today: <strong>{formatCurrency(todaySpent)}</strong></span>
+          </div>
+          <button className="btn btn--primary" onClick={() => setIsModalOpen(true)}>+ Add Expense</button>
+        </div>
       </div>
 
-        <div className="stats-grid">
+      <div className="stats-grid">
         <StatCard icon={ArrowDownCircle} title="Total Expenses" value={formatCurrency(totalExpenses)} change="This month" trend="down" />
         <StatCard icon={TrendingUp} title="Highest Expense" value={formatCurrency(highestExpense)} change="Peak" trend="up" />
-        <StatCard icon={PiggyBank} title="Average Expense" value={formatCurrency(averageExpense)} change="Per transaction" trend="up" />
-        <StatCard icon={Wallet} title="Transactions" value={`${transactionCount}`} change="All time" trend="up" />
+        <StatCard icon={PiggyBank} title="Average Expense" value={formatCurrency(averageExpensePerDay)} change="Per day" trend="day" />
+        <StatCard icon={Calendar} title="Spent Today" value={formatCurrency(todaySpent)} change={todayCount === 1 ? '1 txn today' : `${todayCount} txns today`} trend="today" />
       </div>
 
       <div className="content-grid content-grid--two-cols">
