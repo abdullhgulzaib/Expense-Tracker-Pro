@@ -534,5 +534,19 @@ NotificationSchema.pre("validate", function (next) {
   next();
 });
 
+export const MonthlyArchiveSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    periodName: { type: String, required: true },
+    startDate: { type: Date, required: true },
+    endDate: { type: Date, required: true },
+    totalAmount: { type: Number, required: true },
+    transactionCount: { type: Number, required: true },
+    categoryBreakdown: { type: Map, of: Number, default: {} },
+    archivedAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
 export { UserSchema, ExpenseSchema, GroupSchema, SplitExpenseSchema, NotificationSchema };
 

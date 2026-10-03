@@ -23,6 +23,11 @@ import {
   searchExpense,
 } from './controllers/expenseController.js';
 import {
+  getCleanupStatus,
+  sendStatementEmail,
+  executeBatchCleanup,
+} from './controllers/statementCleanupController.js';
+import {
   getSummary,
   getByCategory,
   getMonthlyTrend,
@@ -37,6 +42,7 @@ import {
   removeMemberFromGroup,
   getGroupDetails,
   createSplitExpense,
+  deleteSplitExpense,
   submitPaymentProof,
   verifyPaymentProof,
 } from './controllers/splitVaultController.js';
@@ -110,6 +116,11 @@ app.get(['/expenses/:id', '/api/expenses/:id'], protect, getExpenseById);
 app.put(['/expenses/:id', '/api/expenses/:id'], protect, updateExpense);
 app.delete(['/expenses/:id', '/api/expenses/:id'], protect, delExpense);
 
+// Bi-Monthly Statement & Data Retention Routes (Protected)
+app.get(['/expenses/cleanup-status', '/api/expenses/cleanup-status'], protect, getCleanupStatus);
+app.post(['/expenses/send-statement-email', '/api/expenses/send-statement-email'], protect, sendStatementEmail);
+app.post(['/expenses/execute-cleanup', '/api/expenses/execute-cleanup'], protect, executeBatchCleanup);
+
 // Analytics Routes (Protected)
 app.get(['/analytics/summary', '/api/analytics/summary'], protect, getSummary);
 app.get(['/analytics/by-category', '/api/analytics/by-category'], protect, getByCategory);
@@ -125,6 +136,7 @@ app.post(['/splitvault/groups/:groupId/members', '/api/splitvault/groups/:groupI
 app.delete(['/splitvault/groups/:groupId/members/:memberId', '/api/splitvault/groups/:groupId/members/:memberId'], protect, removeMemberFromGroup);
 app.get(['/splitvault/groups/:groupId', '/api/splitvault/groups/:groupId'], protect, getGroupDetails);
 app.post(['/splitvault/expenses', '/api/splitvault/expenses'], protect, createSplitExpense);
+app.delete(['/splitvault/expenses/:id', '/api/splitvault/expenses/:id'], protect, deleteSplitExpense);
 app.post(['/splitvault/expenses/:expenseId/splits/:splitUserId/proof', '/api/splitvault/expenses/:expenseId/splits/:splitUserId/proof'], protect, submitPaymentProof);
 app.post(['/splitvault/expenses/:expenseId/splits/:splitUserId/verify', '/api/splitvault/expenses/:expenseId/splits/:splitUserId/verify'], protect, verifyPaymentProof);
 

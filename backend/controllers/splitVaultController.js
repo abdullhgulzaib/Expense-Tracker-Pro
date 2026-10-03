@@ -835,3 +835,55 @@ export const verifyPaymentProof = async (req, res) => {
   }
 };
 
+/**
+ * @desc Delete a Split Expense (Only creator/payer has permission)
+ * @route DELETE /api/splitvault/expenses/:id
+ */
+export const deleteSplitExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const expense = await SplitExpense.findById(id);
+
+    if (!expense) {
+      return res.status(404).json({ error: 'Split expense not found.' });
+    }
+
+    // Permission check: only the member who created / paid for the expense can delete it
+    if (expense.paidBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: 'Permission denied. Only the member who created and paid for this expense can delete it.',
+      });
+    }
+
+    // Remove associated auto-logged personal expense for the payer if it exists
+    await Expense.deleteMany({
+      userId: req.user._id,
+      notes: { $regex: new RegExp(`Total bill: Rs ${expense.totalAmount}`, 'i') },
+      title: `${expense.title} (My Share)`,
+    }).catch((e) => console.error('Error removing payer personal expense share:', e.message));
+
+    // Notify other participants that this shared expense was removed
+    if (Array.isArray(expense.splits)) {
+      for (const split of expense.splits) {
+        if (split.user && split.user.toString() !== req.user._id.toString()) {
+          await Notification.create({
+            userId: split.user,
+            title: 'Split Expense Deleted 🗑️',
+            message: `${req.user.name} removed the shared expense "${expense.title}" (${expense.groupName || 'Direct Split'}).`,
+            type: 'info',
+            metadata: { groupId: expense.groupId },
+          }).catch((e) => console.error('Notification error:', e.message));
+        }
+      }
+    }
+
+    await SplitExpense.findByIdAndDelete(id);
+
+    res.json({ message: 'Split expense deleted successfully.' });
+  } catch (error) {
+    console.error('deleteSplitExpense error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+

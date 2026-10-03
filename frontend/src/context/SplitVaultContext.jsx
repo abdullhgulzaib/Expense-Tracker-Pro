@@ -153,6 +153,28 @@ export function SplitVaultProvider({ children }) {
     }
   };
 
+  // Delete a split expense (Creator/Payer only)
+  const deleteSplitExpense = async (expenseId, groupId = null) => {
+    try {
+      const { data } = await api.delete(`/splitvault/expenses/${expenseId}`);
+      addNotification({
+        title: 'Expense Deleted',
+        message: 'Shared expense removed and balances recalculated.',
+        type: 'alert',
+      });
+      await fetchSummary();
+      if (typeof fetchExpenses === 'function') {
+        fetchExpenses();
+      }
+      if (groupId) {
+        await fetchGroupDetails(groupId);
+      }
+      return { success: true, message: data.message };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || err.message };
+    }
+  };
+
   // Delete a group
   const deleteGroup = async (groupId) => {
     try {
@@ -230,6 +252,7 @@ export function SplitVaultProvider({ children }) {
         addMemberToGroup,
         removeMemberFromGroup,
         createSplitExpense,
+        deleteSplitExpense,
         submitProof,
         verifyProof,
       }}

@@ -29,14 +29,14 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   );
 };
 
-function CategoryPieChart({ data = [] }) {
+function CategoryPieChart({ data = [], title = 'Category Distribution' }) {
   const { formatCurrency } = useSettings();
 
   if (data.length === 0) {
     return (
       <div className="panel chart-panel">
         <div className="panel__header">
-          <h3>Category Distribution</h3>
+          <h3>{title}</h3>
         </div>
         <div className="chart-box chart-box--empty">
           <p>No expenses yet — add your first one to see this chart.</p>
@@ -51,7 +51,7 @@ function CategoryPieChart({ data = [] }) {
   return (
     <div className="panel chart-panel">
       <div className="panel__header">
-        <h3>Category Distribution</h3>
+        <h3>{title}</h3>
       </div>
       <div className="chart-box pie-box">
         <ResponsiveContainer width="100%" height="100%">

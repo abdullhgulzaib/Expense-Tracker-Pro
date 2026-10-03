@@ -5,6 +5,7 @@ import SpendingLineChart from '../components/charts/SpendingLineChart';
 import CategoryPieChart from '../components/charts/CategoryPieChart';
 import TransactionsTable from '../components/TransactionsTable';
 import AddExpenseModal from '../components/AddExpenseModal';
+import StorageCleanupNotice from '../components/StorageCleanupNotice';
 import Toast from '../components/Toast';
 import { useExpenses as useExpenseContext } from '../context/ExpenseContext';
 import { useSettings } from '../context/SettingsContext';
@@ -22,7 +23,17 @@ function Dashboard() {
   const [toastType, setToastType] = useState('success');
   const [submitting, setSubmitting] = useState(false);
 
-  const { totalExpenses, highestExpense, averageExpensePerDay, todaySpent, todayCount, transactionCount } = useMemo(() => {
+  const {
+    totalExpenses,
+    highestExpense,
+    transactionCount,
+    monthTotalExpenses,
+    monthHighestExpense,
+    monthTransactionCount,
+    averageExpensePerDay,
+    todaySpent,
+    todayCount,
+  } = useMemo(() => {
     const amounts = expenses.map((item) => Number(item.amount || 0));
     const count = amounts.length;
     const total = amounts.reduce((sum, amount) => sum + amount, 0);
@@ -54,12 +65,16 @@ function Dashboard() {
       return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
     });
 
+    const monthAmounts = currentMonthExpenses.map((item) => Number(item.amount || 0));
+    const monthCount = monthAmounts.length;
+    const monthTotal = monthAmounts.reduce((sum, amount) => sum + amount, 0);
+    const monthHighest = monthCount ? Math.max(...monthAmounts) : 0;
+
     let avgPerDay = 0;
 
     if (currentMonthExpenses.length > 0) {
-      const currentMonthTotal = currentMonthExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
       const daysElapsed = Math.max(1, currentDayOfMonth);
-      avgPerDay = currentMonthTotal / daysElapsed;
+      avgPerDay = monthTotal / daysElapsed;
     } else if (expenses.length > 0) {
       const sortedByDate = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
       const latestDate = new Date(sortedByDate[0].date);
@@ -79,10 +94,13 @@ function Dashboard() {
     return {
       totalExpenses: total,
       highestExpense: count ? Math.max(...amounts) : 0,
+      transactionCount: count,
+      monthTotalExpenses: monthTotal,
+      monthHighestExpense: monthHighest,
+      monthTransactionCount: monthCount,
       averageExpensePerDay: avgPerDay,
       todaySpent: todayTotal,
       todayCount: todayTxnCount,
-      transactionCount: count,
     };
   }, [expenses]);
 
@@ -100,13 +118,34 @@ function Dashboard() {
     return acc;
   }, []).slice(-6);
 
-  const categoryChartData = Object.entries(
-    expenses.reduce((acc, item) => {
-      const category = item.category || 'Other';
-      acc[category] = (acc[category] || 0) + Number(item.amount || 0);
-      return acc;
-    }, {})
-  ).map(([name, value]) => ({ name, value }));
+  // Monthly category pie chart distribution for Dashboard
+  const categoryChartData = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    let monthExpenses = expenses.filter((item) => {
+      const d = new Date(item.date);
+      return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+    });
+
+    if (monthExpenses.length === 0 && expenses.length > 0) {
+      const sortedByDate = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const latestDate = new Date(sortedByDate[0].date);
+      monthExpenses = expenses.filter((item) => {
+        const d = new Date(item.date);
+        return d.getFullYear() === latestDate.getFullYear() && d.getMonth() === latestDate.getMonth();
+      });
+    }
+
+    return Object.entries(
+      monthExpenses.reduce((acc, item) => {
+        const category = item.category || 'Other';
+        acc[category] = (acc[category] || 0) + Number(item.amount || 0);
+        return acc;
+      }, {})
+    ).map(([name, value]) => ({ name, value }));
+  }, [expenses]);
 
   const recentTransactions = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
@@ -177,16 +216,51 @@ function Dashboard() {
         </div>
       </div>
 
+      <StorageCleanupNotice
+        onToast={(msg, type) => {
+          setToast(msg);
+          setToastType(type || 'success');
+          setTimeout(() => setToast(''), 3500);
+        }}
+      />
+
       <div className="stats-grid">
-        <StatCard icon={ArrowDownCircle} title="Total Expenses" value={formatCurrency(totalExpenses)} change="This month" trend="down" />
-        <StatCard icon={TrendingUp} title="Highest Expense" value={formatCurrency(highestExpense)} change="Peak" trend="up" />
-        <StatCard icon={PiggyBank} title="Average Expense" value={formatCurrency(averageExpensePerDay)} change="Per day" trend="day" />
-        <StatCard icon={Wallet} title="Transactions" value={`${transactionCount}`} change="All time" trend="up" />
+        <StatCard
+          icon={ArrowDownCircle}
+          title="Total Expenses"
+          value={formatCurrency(monthTotalExpenses)}
+          change="This month"
+          trend="down"
+          footer={<span>All-Time: <strong>{formatCurrency(totalExpenses)}</strong></span>}
+        />
+        <StatCard
+          icon={TrendingUp}
+          title="Highest Expense"
+          value={formatCurrency(monthHighestExpense)}
+          change="Peak"
+          trend="up"
+          footer={<span>All-Time Peak: <strong>{formatCurrency(highestExpense)}</strong></span>}
+        />
+        <StatCard
+          icon={PiggyBank}
+          title="Average Expense"
+          value={formatCurrency(averageExpensePerDay)}
+          change="Per day"
+          trend="day"
+        />
+        <StatCard
+          icon={Wallet}
+          title="Transactions"
+          value={`${monthTransactionCount} txns`}
+          change="This month"
+          trend="up"
+          footer={<span>All-Time: <strong>{transactionCount} txns</strong></span>}
+        />
       </div>
 
       <div className="content-grid content-grid--two-cols">
         <SpendingLineChart data={monthlyChartData} />
-        <CategoryPieChart data={categoryChartData} />
+        <CategoryPieChart data={categoryChartData} title="Monthly Category Distribution" />
       </div>
 
       <TransactionsTable rows={recentTransactions} onAdd={() => setIsModalOpen(true)} />

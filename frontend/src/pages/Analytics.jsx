@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Download } from 'lucide-react';
 import CategoryBarChart from '../components/charts/CategoryBarChart';
 import SpendingLineChart from '../components/charts/SpendingLineChart';
+import CategoryPieChart from '../components/charts/CategoryPieChart';
 import ExportModal from '../components/ExportModal';
 import Toast from '../components/Toast';
 import useAnalytics from '../hooks/useAnalytics';
@@ -12,6 +13,16 @@ function Analytics() {
   const { state } = useExpenses();
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [toast, setToast] = useState('');
+
+  const allTimePieData = useMemo(() => {
+    return Object.entries(
+      state.expenses.reduce((acc, item) => {
+        const category = item.category || 'Other';
+        acc[category] = (acc[category] || 0) + Number(item.amount || 0);
+        return acc;
+      }, {})
+    ).map(([name, value]) => ({ name, value }));
+  }, [state.expenses]);
 
   if (loading) {
     return (
@@ -52,6 +63,10 @@ function Analytics() {
 
       <div className="content-grid content-grid--two-cols">
         <SpendingLineChart data={monthlyData} />
+        <CategoryPieChart data={allTimePieData} title="All-Time Category Distribution" />
+      </div>
+
+      <div style={{ marginTop: '18px' }}>
         <CategoryBarChart data={categoryData} />
       </div>
 

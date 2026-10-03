@@ -29,6 +29,7 @@ export default function GroupDetailsModal({
     activeGroupDetails,
     groupLoading,
     deleteGroup,
+    deleteSplitExpense,
     addMemberToGroup,
     removeMemberFromGroup,
   } = useSplitVault();
@@ -104,6 +105,15 @@ export default function GroupDetailsModal({
     setIsDeleting(false);
     if (res.success) {
       onClose();
+    }
+  };
+
+  const handleDeleteExpense = async (expenseId, title) => {
+    if (window.confirm(`Are you sure you want to delete "${title}"? This will update group balances for all members.`)) {
+      const res = await deleteSplitExpense(expenseId, groupId);
+      if (!res.success) {
+        alert(res.error || 'Failed to delete expense.');
+      }
     }
   };
 
@@ -348,13 +358,25 @@ export default function GroupDetailsModal({
                               <span className="splitvault-expense-item__amount">
                                 Rs {Number(exp.totalAmount).toLocaleString()}
                               </span>
-                              <span
-                                className={`sv-status-pill ${
-                                  exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
-                                }`}
-                              >
-                                {exp.isFullySettled ? '✓ Fully Settled' : 'Pending Splits'}
-                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span
+                                  className={`sv-status-pill ${
+                                    exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
+                                  }`}
+                                >
+                                  {exp.isFullySettled ? '✓ Fully Settled' : 'Pending Splits'}
+                                </span>
+                                {isExpensePayer && (
+                                  <button
+                                    type="button"
+                                    className="splitvault-expense-delete-btn"
+                                    title="Delete this shared expense"
+                                    onClick={() => handleDeleteExpense(exp._id, exp.title)}
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
 

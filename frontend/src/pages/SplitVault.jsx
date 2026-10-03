@@ -28,7 +28,7 @@ import JoinGroupModal from '../components/splitvault/JoinGroupModal';
 
 export default function SplitVault() {
   const { user } = useAuth();
-  const { summary, deleteGroup } = useSplitVault();
+  const { summary, deleteGroup, deleteSplitExpense } = useSplitVault();
 
   // 3 Primary Sections: 'balance' | 'groups' | 'activity'
   const [activeTab, setActiveTab] = useState('balance');
@@ -89,6 +89,16 @@ export default function SplitVault() {
     e.stopPropagation();
     if (window.confirm(`Are you sure you want to delete "${grp.name}" and all its shared expenses?`)) {
       await deleteGroup(grp._id);
+    }
+  };
+
+  // Handle Delete Shared Expense (Creator / Payer only)
+  const handleDeleteExpense = async (expenseId, title) => {
+    if (window.confirm(`Are you sure you want to delete "${title}"? This will remove it from all roommates and adjust group balances.`)) {
+      const res = await deleteSplitExpense(expenseId);
+      if (!res.success) {
+        alert(res.error || 'Failed to delete expense.');
+      }
     }
   };
 
@@ -687,13 +697,28 @@ export default function SplitVault() {
                             <span className="splitvault-expense-item__amount">
                               Rs {Number(exp.totalAmount).toLocaleString()}
                             </span>
-                            <span
-                              className={`sv-status-pill ${
-                                exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
-                              }`}
-                            >
-                              {exp.isFullySettled ? '✓ Fully Settled' : 'Pending Splits'}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span
+                                className={`sv-status-pill ${
+                                  exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
+                                }`}
+                              >
+                                {exp.isFullySettled ? '✓ Fully Settled' : 'Pending Splits'}
+                              </span>
+                              {isExpensePayer && (
+                                <button
+                                  type="button"
+                                  className="splitvault-expense-delete-btn"
+                                  title="Delete this shared expense"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteExpense(exp._id, exp.title);
+                                  }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
 

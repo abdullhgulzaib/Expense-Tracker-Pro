@@ -1,6 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, Calendar, Clock } from 'lucide-react';
 
-function StatCard({ icon: Icon, title, value, change, trend = 'up' }) {
+function StatCard({ icon: Icon, title, value, change, trend = 'up', footer }) {
   const isPositive = trend === 'up';
   const isDown = trend === 'down';
   const isDay = trend === 'day';
@@ -39,6 +39,7 @@ function StatCard({ icon: Icon, title, value, change, trend = 'up' }) {
       <div className="stat-card__body">
         <h3>{value}</h3>
         <p>{title}</p>
+        {footer && <div className="stat-card__footer">{footer}</div>}
       </div>
     </div>
   );
