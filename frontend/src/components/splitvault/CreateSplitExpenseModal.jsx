@@ -61,6 +61,18 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
       });
     }
 
+    if (type === 'Custom') {
+      const payerIdx = list.findIndex((p) => p.isCurrentUser);
+      if (payerIdx !== -1 && total > 0) {
+        const othersSum = list.reduce(
+          (sum, p, idx) => (idx !== payerIdx && p.selected ? sum + (parseFloat(p.amount) || 0) : sum),
+          0
+        );
+        const payerRemaining = Math.max(0, Math.round((total - othersSum) * 100) / 100);
+        return list.map((p, idx) => (idx === payerIdx ? { ...p, amount: payerRemaining } : p));
+      }
+    }
+
     return list;
   }, []);
 
@@ -221,10 +233,25 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
   };
 
   // Manual amount change (for Custom Amount mode)
+  // When roommate amounts are modified, payer's share is auto-calculated as (total - othersSum)
   const handleCustomAmountChange = (index, value) => {
+    const total = parseFloat(totalAmount) || 0;
+    const parsedVal = value === '' ? 0 : parseFloat(value) || 0;
+
     setParticipants((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], amount: parseFloat(value) || 0 };
+      const next = prev.map((p, idx) => (idx === index ? { ...p, amount: parsedVal } : p));
+      const payerIdx = next.findIndex((p) => p.isCurrentUser);
+
+      // If user modified a roommate's share and payer exists
+      if (payerIdx !== -1 && index !== payerIdx && total > 0) {
+        const othersSum = next.reduce(
+          (sum, p, idx) => (idx !== payerIdx && p.selected ? sum + (parseFloat(p.amount) || 0) : sum),
+          0
+        );
+        const payerRemaining = Math.max(0, Math.round((total - othersSum) * 100) / 100);
+        next[payerIdx] = { ...next[payerIdx], amount: payerRemaining };
+      }
+
       return next;
     });
   };
@@ -470,7 +497,23 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                       )}
 
                       {splitType === 'Custom' && p.selected && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {p.isCurrentUser && (
+                            <span
+                              style={{
+                                fontSize: '0.68rem',
+                                color: '#10b981',
+                                background: 'rgba(16, 185, 129, 0.12)',
+                                border: '1px solid rgba(16, 185, 129, 0.25)',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              Auto-calculated
+                            </span>
+                          )}
                           <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>Rs</span>
                           <input
                             type="number"

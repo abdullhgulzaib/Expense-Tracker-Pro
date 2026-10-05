@@ -11,6 +11,7 @@ import {
   Trash2,
   UserPlus,
   ShieldAlert,
+  Scale,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSplitVault } from '../../context/SplitVaultContext';
@@ -34,7 +35,7 @@ export default function GroupDetailsModal({
     removeMemberFromGroup,
   } = useSplitVault();
 
-  const [activeTab, setActiveTab] = useState('expenses'); // 'expenses' | 'members' | 'invite'
+  const [activeTab, setActiveTab] = useState('expenses'); // 'expenses' | 'balances' | 'members' | 'invite'
   const [copied, setCopied] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberEmail, setNewMemberEmail] = useState('');
@@ -57,6 +58,7 @@ export default function GroupDetailsModal({
 
   const group = activeGroupDetails?.group;
   const expenses = activeGroupDetails?.expenses || [];
+  const netSettlements = activeGroupDetails?.netSettlements || [];
   const stats = activeGroupDetails?.stats || {
     totalAmount: 0,
     remainingAmount: 0,
@@ -291,13 +293,20 @@ export default function GroupDetailsModal({
               </div>
 
               {/* Tabs Switcher */}
-              <div className="sv-tabs-nav" style={{ maxWidth: '420px', margin: '0 auto' }}>
+              <div className="sv-tabs-nav" style={{ maxWidth: '520px', margin: '0 auto' }}>
                 <button
                   type="button"
                   className={`sv-tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
                   onClick={() => setActiveTab('expenses')}
                 >
                   Expenses ({expenses.length})
+                </button>
+                <button
+                  type="button"
+                  className={`sv-tab-btn ${activeTab === 'balances' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('balances')}
+                >
+                  Net Balances ({netSettlements.length})
                 </button>
                 <button
                   type="button"
@@ -461,7 +470,132 @@ export default function GroupDetailsModal({
                 </div>
               )}
 
-              {/* TAB 2: Members List */}
+              {/* TAB 2: Net Balances / Who Owes Whom */}
+              {activeTab === 'balances' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: '12px',
+                      background: 'rgba(99, 102, 241, 0.08)',
+                      border: '1px solid rgba(99, 102, 241, 0.22)',
+                      fontSize: '0.82rem',
+                      color: '#cbd5e1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <Scale size={18} color="#818cf8" style={{ flexShrink: 0 }} />
+                    <span>
+                      <strong>Automatic Debt Simplification Active:</strong> Roommate debts are automatically netted. Mutual expenses cancel each other out, leaving only the exact remaining balance.
+                    </span>
+                  </div>
+
+                  {netSettlements.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '36px 20px', color: '#10b981' }}>
+                      <CheckCircle2 size={42} style={{ margin: '0 auto 10px', display: 'block', opacity: 0.9 }} />
+                      <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#fff' }}>All Group Balances Settled!</h4>
+                      <p style={{ margin: '6px 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                        No outstanding debts between roommates in this group right now.
+                      </p>
+                    </div>
+                  ) : (
+                    netSettlements.map((s, idx) => {
+                      const isDebtor = s.fromUserId === user?._id?.toString();
+                      const isCreditor = s.toUserId === user?._id?.toString();
+                      const fromName = isDebtor ? 'You' : s.fromUser;
+                      const toName = isCreditor ? 'You' : s.toUser;
+
+                      return (
+                        <div
+                          key={idx}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '14px 16px',
+                            borderRadius: '14px',
+                            background: isDebtor
+                              ? 'rgba(245, 158, 11, 0.08)'
+                              : isCreditor
+                              ? 'rgba(16, 185, 129, 0.08)'
+                              : 'rgba(255, 255, 255, 0.03)',
+                            border: `1px solid ${
+                              isDebtor
+                                ? 'rgba(245, 158, 11, 0.3)'
+                                : isCreditor
+                                ? 'rgba(16, 185, 129, 0.3)'
+                                : 'rgba(255, 255, 255, 0.08)'
+                            }`,
+                            gap: '12px',
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div
+                              style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: isDebtor
+                                  ? 'rgba(245, 158, 11, 0.2)'
+                                  : isCreditor
+                                  ? 'rgba(16, 185, 129, 0.2)'
+                                  : 'rgba(255, 255, 255, 0.08)',
+                                color: isDebtor ? '#f59e0b' : isCreditor ? '#10b981' : '#cbd5e1',
+                                fontWeight: 700,
+                                fontSize: '0.95rem',
+                              }}
+                            >
+                              {fromName.charAt(0)}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '0.94rem', fontWeight: 600, color: '#fff' }}>
+                                <span style={{ color: isDebtor ? '#f59e0b' : '#fff' }}>{fromName}</span>
+                                <span style={{ color: '#94a3b8', margin: '0 6px', fontWeight: 400 }}>owes</span>
+                                <span style={{ color: isCreditor ? '#10b981' : '#fff' }}>{toName}</span>
+                              </div>
+                              <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                                {isDebtor
+                                  ? 'Your pending net share to pay'
+                                  : isCreditor
+                                  ? 'Pending reimbursement to you'
+                                  : 'Mutual roommate balance'}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ textAlign: 'right' }}>
+                            <div
+                              style={{
+                                fontSize: '1.15rem',
+                                fontWeight: 800,
+                                color: isDebtor ? '#f59e0b' : isCreditor ? '#10b981' : '#fff',
+                              }}
+                            >
+                              Rs {Number(s.amount).toLocaleString()}
+                            </div>
+                            <span
+                              className={`sv-status-pill ${
+                                isCreditor ? 'sv-status-pill--verified' : 'sv-status-pill--review'
+                              }`}
+                              style={{ fontSize: '0.72rem', marginTop: '2px', display: 'inline-block' }}
+                            >
+                              {isDebtor ? 'You Owe' : isCreditor ? 'Owed to You' : 'Pending'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {/* TAB 3: Members List */}
               {activeTab === 'members' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   {/* Add Member Box - Precaution Enforced: Registered Email Only */}

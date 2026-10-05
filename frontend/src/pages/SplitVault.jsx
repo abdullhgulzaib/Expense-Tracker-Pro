@@ -14,6 +14,7 @@ import {
   Calendar,
   Key,
   Copy,
+  Scale,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSplitVault } from '../context/SplitVaultContext';
@@ -257,6 +258,109 @@ export default function SplitVault() {
               </div>
             </div>
           </div>
+
+          {/* Simplified Net Balances / Who Owes Whom */}
+          {summary.netSettlements && summary.netSettlements.length > 0 && (
+            <div className="splitvault-recent-box">
+              <div className="splitvault-recent-header">
+                <h2 className="splitvault-recent-title">
+                  <Scale size={18} color="#10b981" />
+                  <span>Simplified Net Balances</span>
+                </h2>
+                <span className="splitvault-pill splitvault-pill--live" style={{ fontSize: '0.74rem' }}>
+                  Auto-Netted Debts
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+                {summary.netSettlements.map((s, idx) => {
+                  const isDebtor = s.fromUserId === user?._id?.toString();
+                  const isCreditor = s.toUserId === user?._id?.toString();
+                  const fromName = isDebtor ? 'You' : s.fromUser;
+                  const toName = isCreditor ? 'You' : s.toUser;
+
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        background: isDebtor
+                          ? 'rgba(245, 158, 11, 0.08)'
+                          : isCreditor
+                          ? 'rgba(16, 185, 129, 0.08)'
+                          : 'rgba(255, 255, 255, 0.02)',
+                        border: `1px solid ${
+                          isDebtor
+                            ? 'rgba(245, 158, 11, 0.28)'
+                            : isCreditor
+                            ? 'rgba(16, 185, 129, 0.28)'
+                            : 'var(--sv-card-border)'
+                        }`,
+                        gap: '10px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div
+                          style={{
+                            width: '34px',
+                            height: '34px',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: isDebtor
+                              ? 'rgba(245, 158, 11, 0.2)'
+                              : isCreditor
+                              ? 'rgba(16, 185, 129, 0.2)'
+                              : 'rgba(255, 255, 255, 0.08)',
+                            color: isDebtor ? '#f59e0b' : isCreditor ? '#10b981' : '#cbd5e1',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                          }}
+                        >
+                          {fromName.charAt(0)}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>
+                            <span style={{ color: isDebtor ? '#f59e0b' : '#fff' }}>{fromName}</span>
+                            <span style={{ color: '#94a3b8', margin: '0 5px', fontWeight: 400, fontSize: '0.82rem' }}>owes</span>
+                            <span style={{ color: isCreditor ? '#10b981' : '#fff' }}>{toName}</span>
+                          </div>
+                          <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                            {isDebtor ? 'You need to pay' : isCreditor ? 'To be received' : 'Mutual balance'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: 'right' }}>
+                        <div
+                          style={{
+                            fontSize: '1rem',
+                            fontWeight: 800,
+                            color: isDebtor ? '#f59e0b' : isCreditor ? '#10b981' : '#fff',
+                          }}
+                        >
+                          Rs {Number(s.amount).toLocaleString()}
+                        </div>
+                        <span
+                          className={`sv-status-pill ${
+                            isCreditor ? 'sv-status-pill--verified' : 'sv-status-pill--review'
+                          }`}
+                          style={{ fontSize: '0.68rem', padding: '2px 6px' }}
+                        >
+                          {isDebtor ? 'You Owe' : isCreditor ? 'Owed to You' : 'Pending'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* 3-4 Recent Activities */}
           <div className="splitvault-recent-box">

@@ -31,6 +31,85 @@ const mapPaymentMethod = (pm) => {
 };
 
 /**
+ * Helper to compute pairwise net balances across expenses
+ * If User B owes User A 150, and User A owes User B 100,
+ * the netted result is: User B owes User A 50 (and User A owes User B 0).
+ */
+export const computePairwiseNetSettlements = (expensesList = [], members = []) => {
+  const directDebts = new Map();
+  const userNameMap = new Map();
+
+  if (Array.isArray(members)) {
+    members.forEach((m) => {
+      const uid = m.user ? m.user.toString() : m._id?.toString();
+      if (uid && m.name) userNameMap.set(uid, m.name);
+    });
+  }
+
+  expensesList.forEach((exp) => {
+    const creditorId = exp.paidBy ? exp.paidBy.toString() : null;
+    if (!creditorId) return;
+    if (exp.paidByName && !userNameMap.has(creditorId)) {
+      userNameMap.set(creditorId, exp.paidByName);
+    }
+
+    if (Array.isArray(exp.splits)) {
+      exp.splits.forEach((s) => {
+        const debtorId = s.user ? s.user.toString() : null;
+        if (!debtorId || debtorId === creditorId) return;
+
+        if (s.name && !userNameMap.has(debtorId)) {
+          userNameMap.set(debtorId, s.name);
+        }
+
+        if (s.status !== 'Verified') {
+          const amt = Number(s.amount) || 0;
+          if (amt > 0) {
+            const pairKey = `${debtorId}->${creditorId}`;
+            directDebts.set(pairKey, (directDebts.get(pairKey) || 0) + amt);
+          }
+        }
+      });
+    }
+  });
+
+  const netSettlements = [];
+  const allUserIds = Array.from(userNameMap.keys());
+
+  for (let i = 0; i < allUserIds.length; i++) {
+    for (let j = i + 1; j < allUserIds.length; j++) {
+      const u1 = allUserIds[i];
+      const u2 = allUserIds[j];
+
+      const u1OwesU2 = directDebts.get(`${u1}->${u2}`) || 0;
+      const u2OwesU1 = directDebts.get(`${u2}->${u1}`) || 0;
+
+      const net = u1OwesU2 - u2OwesU1;
+
+      if (net > 0) {
+        netSettlements.push({
+          fromUserId: u1,
+          fromUser: userNameMap.get(u1) || 'Roommate',
+          toUserId: u2,
+          toUser: userNameMap.get(u2) || 'Roommate',
+          amount: Math.round(net * 100) / 100,
+        });
+      } else if (net < 0) {
+        netSettlements.push({
+          fromUserId: u2,
+          fromUser: userNameMap.get(u2) || 'Roommate',
+          toUserId: u1,
+          toUser: userNameMap.get(u1) || 'Roommate',
+          amount: Math.round(Math.abs(net) * 100) / 100,
+        });
+      }
+    }
+  }
+
+  return netSettlements;
+};
+
+/**
  * @desc Get SplitVault dashboard summary (Cards, groups, recent activity)
  * @route GET /api/splitvault/summary
  */
@@ -49,7 +128,9 @@ export const getSplitVaultSummary = async (req, res) => {
       ],
     }).sort({ date: -1 });
 
-    // 3. Compute balances
+    // 3. Compute pairwise net settlements
+    const netSettlements = computePairwiseNetSettlements(allExpenses);
+
     let amountYouOwe = 0;
     let pendingYouOweCount = 0;
     let amountYoureOwed = 0;
@@ -65,24 +146,16 @@ export const getSplitVaultSummary = async (req, res) => {
       if (new Date(exp.date) >= startOfMonth) {
         totalSharedMonth += exp.totalAmount;
       }
+    });
 
-      // Check what user owes to others
-      if (exp.paidBy.toString() !== user._id.toString()) {
-        const mySplit = exp.splits.find((s) => s.user?.toString() === user._id.toString());
-        if (mySplit && mySplit.status !== 'Verified') {
-          amountYouOwe += mySplit.amount;
-          pendingYouOweCount++;
-        }
+    netSettlements.forEach((s) => {
+      if (s.fromUserId === user._id.toString()) {
+        amountYouOwe += s.amount;
+        pendingYouOweCount++;
       }
-
-      // Check what others owe to user
-      if (exp.paidBy.toString() === user._id.toString()) {
-        exp.splits.forEach((s) => {
-          if (s.user?.toString() !== user._id.toString() && s.status !== 'Verified') {
-            amountYoureOwed += s.amount;
-            pendingYoureOwedCount++;
-          }
-        });
+      if (s.toUserId === user._id.toString()) {
+        amountYoureOwed += s.amount;
+        pendingYoureOwedCount++;
       }
     });
 
@@ -93,18 +166,18 @@ export const getSplitVaultSummary = async (req, res) => {
         const total = grpExpenses.reduce((acc, curr) => acc + curr.totalAmount, 0);
         let settledSplits = 0;
         let totalSplits = 0;
-        let remaining = 0;
 
         grpExpenses.forEach((e) => {
           e.splits.forEach((s) => {
             totalSplits++;
             if (s.status === 'Verified') {
               settledSplits++;
-            } else {
-              remaining += s.amount;
             }
           });
         });
+
+        const grpNetSettlements = computePairwiseNetSettlements(grpExpenses, grp.members);
+        const remaining = grpNetSettlements.reduce((acc, s) => acc + s.amount, 0);
 
         return {
           _id: grp._id,
@@ -115,6 +188,7 @@ export const getSplitVaultSummary = async (req, res) => {
           createdBy: grp.createdBy,
           memberCount: grp.members?.length || 1,
           members: grp.members || [],
+          netSettlements: grpNetSettlements,
           stats: {
             totalAmount: total,
             remainingAmount: remaining,
@@ -209,6 +283,7 @@ export const getSplitVaultSummary = async (req, res) => {
       recentActivity,
       pendingVerifications,
       allExpenses,
+      netSettlements,
     });
   } catch (error) {
     console.error('getSplitVaultSummary error:', error);
@@ -486,7 +561,6 @@ export const getGroupDetails = async (req, res) => {
 
     let settledCount = 0;
     let totalCount = 0;
-    let remainingAmount = 0;
     let totalAmount = 0;
 
     expenses.forEach((e) => {
@@ -495,15 +569,17 @@ export const getGroupDetails = async (req, res) => {
         totalCount++;
         if (s.status === 'Verified') {
           settledCount++;
-        } else {
-          remainingAmount += s.amount;
         }
       });
     });
 
+    const netSettlements = computePairwiseNetSettlements(expenses, group.members);
+    const remainingAmount = netSettlements.reduce((acc, s) => acc + s.amount, 0);
+
     res.json({
       group,
       expenses,
+      netSettlements,
       stats: {
         totalAmount,
         remainingAmount,
