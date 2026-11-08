@@ -81,7 +81,7 @@ export default function StorageCleanupNotice({ onToast }) {
   // 3. Execute Cleanup
   const handleExecuteCleanup = async () => {
     const confirmed = window.confirm(
-      `⚠️ Confirm Data Storage Cleanup:\n\nAre you sure you want to clean up transactions from ${cleanupData.periodName} (${cleanupData.count} transactions totaling ${formatCurrency(cleanupData.totalAmount)})?\n\nA summary will be safely archived, and individual rows deleted to maintain free database limits. Make sure you have downloaded or emailed your statement!`
+      `Confirm Data Storage Cleanup:\n\nAre you sure you want to clean up transactions from ${cleanupData.periodName} (${cleanupData.count} transactions totaling ${formatCurrency(cleanupData.totalAmount)})?\n\nA summary will be safely archived, and individual rows deleted to maintain free database limits. Make sure you have downloaded or emailed your statement!`
     );
 
     if (!confirmed) return;

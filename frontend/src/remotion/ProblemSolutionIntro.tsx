@@ -13,21 +13,146 @@ interface ProblemSolutionIntroProps {
 
 // Pain points ticker items
 const PAIN_POINTS = [
-  { icon: '💬', title: 'Awkward WhatsApp Reminders', desc: '"Bhai mera hissa kab bhej rahe ho?"', color: '#EF4444' },
-  { icon: '🧾', title: 'Lost Receipts & Screenshots', desc: 'Buried in gallery or deleted by mistake', color: '#F97316' },
-  { icon: '📑', title: 'Messy Spreadsheets & Roommate Math', desc: 'Broken formulas and forgotten cash advances', color: '#EAB308' },
-  { icon: '❓', title: 'Endless "Who Owes Who?" Arguments', desc: 'Friction between closest friends and flatmates', color: '#EC4899' },
-  { icon: '💸', title: 'Unsettled Balances & Financial Stress', desc: 'Never knowing the exact settled amount', color: '#8B5CF6' },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+      </svg>
+    ),
+    title: 'Awkward WhatsApp Reminders',
+    desc: '"Bhai mera hissa kab bhej rahe ho?"',
+    color: '#EF4444',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+        <path d="M8 7h8" />
+        <path d="M8 11h8" />
+        <path d="M8 15h5" />
+      </svg>
+    ),
+    title: 'Lost Receipts & Screenshots',
+    desc: 'Buried in gallery or deleted by mistake',
+    color: '#F97316',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EAB308" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M3 15h18" />
+        <path d="M9 3v18" />
+        <path d="M15 3v18" />
+      </svg>
+    ),
+    title: 'Messy Spreadsheets & Roommate Math',
+    desc: 'Broken formulas and forgotten cash advances',
+    color: '#EAB308',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EC4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    ),
+    title: 'Endless "Who Owes Who?" Arguments',
+    desc: 'Friction between closest friends and flatmates',
+    color: '#EC4899',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
+        <path d="M12 6v2m0 8v2" />
+      </svg>
+    ),
+    title: 'Unsettled Balances & Financial Stress',
+    desc: 'Never knowing the exact settled amount',
+    color: '#8B5CF6',
+  },
 ];
 
 // Orbiting solution cards (Gemini launch style)
 const SOLUTION_FEATURES = [
-  { icon: '🔑', title: '6-Digit Sync Code', desc: 'Zero-friction group connection', angle: 0, color: '#38BDF8' },
-  { icon: '⚡', title: 'Auto 50/50 Split', desc: 'Dynamic real-time calculations', angle: 60, color: '#818CF8' },
-  { icon: '📸', title: 'Direct Proof Upload', desc: 'Easypaisa / Raast screenshot attached', angle: 120, color: '#F59E0B' },
-  { icon: '🛡️', title: 'Dual-Sided Verification', desc: 'Payer verifies & approves in 1 tap', angle: 180, color: '#10B981' },
-  { icon: '📊', title: 'Zero-Balance Sync', desc: 'Real-time ledger audit trail', angle: 240, color: '#EC4899' },
-  { icon: '🤝', title: 'Multi-Vault Ecosystem', desc: 'Flats, Trips, and Tours separated', angle: 300, color: '#06B6D4' },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="7.5" cy="15.5" r="5.5" />
+        <path d="m21 2-9.6 9.6" />
+        <path d="m15.5 7.5 3 3L22 7l-3-3" />
+      </svg>
+    ),
+    title: '6-Digit Sync Code',
+    desc: 'Zero-friction group connection',
+    angle: 0,
+    color: '#38BDF8',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+    ),
+    title: 'Auto 50/50 Split',
+    desc: 'Dynamic real-time calculations',
+    angle: 60,
+    color: '#818CF8',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+        <circle cx="12" cy="13" r="3" />
+      </svg>
+    ),
+    title: 'Direct Proof Upload',
+    desc: 'Easypaisa / Raast screenshot attached',
+    angle: 120,
+    color: '#F59E0B',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    ),
+    title: 'Dual-Sided Verification',
+    desc: 'Payer verifies & approves in 1 tap',
+    angle: 180,
+    color: '#10B981',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EC4899" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+    ),
+    title: 'Zero-Balance Sync',
+    desc: 'Real-time ledger audit trail',
+    angle: 240,
+    color: '#EC4899',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+    title: 'Multi-Vault Ecosystem',
+    desc: 'Flats, Trips, and Tours separated',
+    angle: 300,
+    color: '#06B6D4',
+  },
 ];
 
 export const ProblemSolutionIntro: React.FC<ProblemSolutionIntroProps> = ({
@@ -322,7 +447,9 @@ export const ProblemSolutionIntro: React.FC<ProblemSolutionIntroProps> = ({
             gap: 12,
           }}
         >
-          <span style={{ fontSize: 20 }}>💬</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+          </svg>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#F87171' }}>
               "Bhai Murree trip ka hissa mila?"
@@ -348,7 +475,12 @@ export const ProblemSolutionIntro: React.FC<ProblemSolutionIntroProps> = ({
             gap: 12,
           }}
         >
-          <span style={{ fontSize: 20 }}>🧾</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+            <path d="M8 7h8" />
+            <path d="M8 11h8" />
+            <path d="M8 15h5" />
+          </svg>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: '#FBBF24' }}>
               "Lost Easypaisa screenshot"

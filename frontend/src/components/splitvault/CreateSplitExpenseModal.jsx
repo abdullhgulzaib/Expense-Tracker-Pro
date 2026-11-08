@@ -413,7 +413,7 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Sparkles size={14} color="#818cf8" />
-                {isScanning ? 'AI Scanning Receipt...' : '⚡ Auto-Fill from Receipt (AI)'}
+                {isScanning ? 'AI Scanning Receipt...' : 'Auto-Fill from Receipt (AI)'}
               </button>
             </div>
 

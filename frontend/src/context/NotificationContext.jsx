@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { Bell, X } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import api from '../services/api';
 
@@ -275,7 +276,9 @@ export function NotificationProvider({ children }) {
           role="alert"
           aria-live="assertive"
         >
-          <div className="notification-banner-toast__icon">🔔</div>
+          <div className="notification-banner-toast__icon">
+            <Bell size={18} color="#38bdf8" />
+          </div>
           <div className="notification-banner-toast__content">
             <div className="notification-banner-toast__title">
               {toastAlert.title}
@@ -291,7 +294,7 @@ export function NotificationProvider({ children }) {
             title="Dismiss notification"
             aria-label="Dismiss notification"
           >
-            ✕
+            <X size={14} />
           </button>
         </div>
       )}

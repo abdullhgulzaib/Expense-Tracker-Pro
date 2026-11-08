@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, Clock } from 'lucide-react';
 import { useVault } from '../../context/VaultContext';
 import { useAuth } from '../../context/AuthContext';
 import BrandLogo from '../BrandLogo';
@@ -114,7 +115,7 @@ function SecureVault() {
                 <VaultProgress progress={progressPct} label="SECURITY PIPELINE" />
                 <div style={{ marginTop: '14px', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>✓</span> <span>Session token authenticated</span>
+                    <CheckCircle2 size={13} color="#10b981" /> <span>Session token authenticated</span>
                   </div>
                   <div style={{ color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ display: 'inline-block', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#38bdf8' }}></span>
@@ -156,8 +157,8 @@ function SecureVault() {
               Welcome back, <span style={{ color: '#10b981', fontWeight: 800 }}>{displayName}</span>
             </p>
 
-            <p style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace', marginTop: '12px' }}>
-              ✓ Financial vault verified. Opening workspace...
+            <p style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace', marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <CheckCircle2 size={13} color="#10b981" /> <span>Financial vault verified. Opening workspace...</span>
             </p>
           </div>
         )}
@@ -189,8 +190,8 @@ function SecureVault() {
               <span>Unlock Vault</span>
             </button>
 
-            <p style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace', margin: '6px 0 0' }}>
-              ⏱️ Auto-lock threshold: {autoLockMinutes} minutes
+            <p style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace', margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock size={13} color="#94a3b8" /> <span>Auto-lock threshold: {autoLockMinutes} minutes</span>
             </p>
           </div>
         )}

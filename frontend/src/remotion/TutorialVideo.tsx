@@ -311,7 +311,12 @@ const SignUpScene: React.FC = () => {
         stepNumber="Onboarding"
         title="Zero-Knowledge Sign Up"
         subtitle="End-to-end encrypted workspace with instant Google & Email auth"
-        icon="🔒"
+        icon={(
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        )}
       />
     </AbsoluteFill>
   );
@@ -379,7 +384,11 @@ const DashboardEmptyScene: React.FC = () => {
         stepNumber="Workspace"
         title="Dashboard & PKR Setup"
         subtitle="Default currency set to Rs with live tracking ready"
-        icon="⚡"
+        icon={(
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+        )}
       />
     </AbsoluteFill>
   );
@@ -437,7 +446,12 @@ const AddExpenseScene: React.FC = () => {
         stepNumber="Tracking"
         title="Smart Categorization"
         subtitle="Select Category (Bills), Payment Method & Notes with 1-click Save"
-        icon="✍️"
+        icon={(
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+          </svg>
+        )}
       />
     </AbsoluteFill>
   );
@@ -507,7 +521,13 @@ const DashboardUpdatedScene: React.FC = () => {
         stepNumber="Analytics"
         title="Real-Time Visual Charts"
         subtitle="Auto-calculated totals, monthly trends & instant Donut distribution"
-        icon="📊"
+        icon={(
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+        )}
       />
     </AbsoluteFill>
   );
@@ -576,9 +596,16 @@ const OutroScene: React.FC = () => {
           fontWeight: 800,
           letterSpacing: '0.02em',
           boxShadow: '0 8px 30px rgba(0, 217, 255, 0.35)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 10,
         }}
       >
-        Start Tracking Free 🚀
+        <span>Start Tracking Free</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#040913" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
       </div>
     </AbsoluteFill>
   );

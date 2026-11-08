@@ -12,6 +12,8 @@ import {
   UserPlus,
   ShieldAlert,
   Scale,
+  Zap,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSplitVault } from '../../context/SplitVaultContext';
@@ -276,7 +278,7 @@ export default function GroupDetailsModal({
                   </div>
                   <div style={{ fontSize: '0.8rem', color: stats.totalCount > 0 ? '#10b981' : '#94a3b8' }}>
                     {stats.totalCount > 0
-                      ? `✓ ${stats.settledCount} of ${stats.totalCount} splits completely settled`
+                      ? `${stats.settledCount} of ${stats.totalCount} splits completely settled`
                       : '0 expenses recorded yet'}
                   </div>
                 </div>
@@ -374,7 +376,7 @@ export default function GroupDetailsModal({
                                     exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
                                   }`}
                                 >
-                                  {exp.isFullySettled ? '✓ Fully Settled' : 'Pending Splits'}
+                                  {exp.isFullySettled ? 'Fully Settled' : 'Pending Splits'}
                                 </span>
                                 {isExpensePayer && (
                                   <button
@@ -412,7 +414,7 @@ export default function GroupDetailsModal({
 
                                     {s.status === 'Verified' && (
                                       <span className="sv-status-pill sv-status-pill--verified">
-                                        ✓ Settled
+                                        Settled
                                       </span>
                                     )}
 
@@ -594,13 +596,13 @@ export default function GroupDetailsModal({
                                 <button
                                   type="button"
                                   className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
-                                  style={{ padding: '3px 8px', fontSize: '0.74rem' }}
+                                  style={{ padding: '3px 8px', fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                   onClick={() => {
                                     onClose();
                                     onOpenSettleModal(s);
                                   }}
                                 >
-                                  ⚡ Settle
+                                  <Zap size={12} /> Settle
                                 </button>
                               )}
                             </div>
@@ -647,8 +649,8 @@ export default function GroupDetailsModal({
                         {isAddingMember ? 'Linking...' : 'Link Roommate'}
                       </button>
                     </div>
-                    <span style={{ fontSize: '0.76rem', color: '#94a3b8' }}>
-                      🔒 Precaution: Your roommate must already have an Expense Tracker Pro account with this email to link them.
+                    <span style={{ fontSize: '0.76rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <ShieldAlert size={14} color="#f59e0b" /> Precaution: Your roommate must already have an Expense Tracker Pro account with this email to link them.
                     </span>
                   </form>
 

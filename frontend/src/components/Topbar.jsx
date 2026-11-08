@@ -1,4 +1,21 @@
-import { Bell, Menu, Search, LogOut, User, ChevronDown, CheckCheck, Trash2, X, Lock } from "lucide-react";
+import {
+  Bell,
+  Menu,
+  Search,
+  LogOut,
+  User,
+  ChevronDown,
+  CheckCheck,
+  Trash2,
+  X,
+  Lock,
+  CreditCard,
+  Edit2,
+  BarChart3,
+  UserCheck,
+  AlertTriangle,
+  Lightbulb,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
@@ -62,22 +79,22 @@ function Topbar({ onMenuClick }) {
     switch (type) {
       case 'expense':
       case 'expense-add':
-        return '💳';
+        return <CreditCard size={15} color="#38bdf8" />;
       case 'expense-edit':
-        return '✏️';
+        return <Edit2 size={15} color="#f59e0b" />;
       case 'expense-delete':
-        return '🗑️';
+        return <Trash2 size={15} color="#ef4444" />;
       case 'export':
-        return '📊';
+        return <BarChart3 size={15} color="#818cf8" />;
       case 'welcome':
-        return '👋';
+        return <UserCheck size={15} color="#10b981" />;
       case 'alert':
       case 'spike':
-        return '⚠️';
+        return <AlertTriangle size={15} color="#f59e0b" />;
       case 'tip':
-        return '💡';
+        return <Lightbulb size={15} color="#eab308" />;
       default:
-        return '🔔';
+        return <Bell size={15} color="#60a5fa" />;
     }
   };
 

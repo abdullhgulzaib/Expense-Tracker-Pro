@@ -204,7 +204,7 @@ export const sendStatementEmail = async (req, res) => {
     const info = await transporter.sendMail({
       from: `"Expense Tracker Pro" <${process.env.EMAIL_USER || 'no-reply@expensetrackerpro.com'}>`,
       to: userEmail,
-      subject: `📄 Your ${periodName} Expense Statement — Expense Tracker Pro`,
+      subject: `Your ${periodName} Expense Statement — Expense Tracker Pro`,
       html: htmlContent,
     });
 
@@ -277,7 +277,7 @@ export const executeBatchCleanup = async (req, res) => {
     // 3. Create persistent Notification
     await Notification.create({
       userId,
-      title: 'Database Cleaned & Space Cleared 🧹',
+      title: 'Database Cleaned & Space Cleared',
       message: `${deleteResult.deletedCount} transactions from ${periodName} were safely archived and removed from active storage.`,
       type: 'info',
     }).catch((e) => console.error('Notification error:', e.message));

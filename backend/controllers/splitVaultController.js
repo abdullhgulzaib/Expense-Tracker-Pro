@@ -434,7 +434,7 @@ export const createGroup = async (req, res) => {
     // Persistent notification for group creator
     await Notification.create({
       userId: req.user._id,
-      title: 'Group Created 👥',
+      title: 'Group Created',
       message: `SplitVault group "${group.name}" created successfully. Invite code: ${group.inviteCode}.`,
       type: 'info',
       metadata: { groupId: group._id },
@@ -484,7 +484,7 @@ export const joinGroupByInviteCode = async (req, res) => {
     if (group.createdBy.toString() !== req.user._id.toString()) {
       await Notification.create({
         userId: group.createdBy,
-        title: 'New Member Joined Group 👥',
+        title: 'New Member Joined Group',
         message: `${req.user.name} joined "${group.name}" using invite code ${group.inviteCode}.`,
         type: 'info',
         metadata: { groupId: group._id, joinedUserId: req.user._id },
@@ -494,7 +494,7 @@ export const joinGroupByInviteCode = async (req, res) => {
     // Notify joining user as well for their persistent record
     await Notification.create({
       userId: req.user._id,
-      title: 'Joined Group 👥',
+      title: 'Joined Group',
       message: `You successfully joined "${group.name}" via invite code ${group.inviteCode}.`,
       type: 'info',
       metadata: { groupId: group._id },
@@ -583,7 +583,7 @@ export const addMemberToGroup = async (req, res) => {
     // Notify added user
     await Notification.create({
       userId: existingUser._id,
-      title: 'Added to Group 👥',
+      title: 'Added to Group',
       message: `${req.user.name} added you to "${group.name}".`,
       type: 'info',
       metadata: { groupId: group._id },
@@ -780,7 +780,7 @@ export const createSplitExpense = async (req, res) => {
       if (split.user && split.user.toString() !== req.user._id.toString()) {
         await Notification.create({
           userId: split.user,
-          title: 'New Split Expense Added 💳',
+          title: 'New Split Expense Added',
           message: `${req.user.name} added you to "${expense.title}" (${expense.groupName || 'Direct Split'}). Your share: Rs ${split.amount}.`,
           type: 'info',
           metadata: { expenseId: expense._id, amount: split.amount },
@@ -791,7 +791,7 @@ export const createSplitExpense = async (req, res) => {
     // Also notify payer for their persistent record
     await Notification.create({
       userId: req.user._id,
-      title: 'Split Expense Created 💳',
+      title: 'Split Expense Created',
       message: `"${expense.title}" (Rs ${expense.totalAmount}) recorded and shared with ${splits.length - 1} roommate(s).`,
       type: 'expense-add',
       metadata: { expenseId: expense._id, totalAmount: expense.totalAmount },
@@ -848,7 +848,7 @@ export const submitPaymentProof = async (req, res) => {
     // Create persistent notification for the payer
     await Notification.create({
       userId: expense.paidBy,
-      title: 'Payment Proof Submitted 📄',
+      title: 'Payment Proof Submitted',
       message: `${req.user.name} submitted payment proof of Rs ${split.amount} for "${expense.title}". Please verify to settle balance.`,
       type: 'info',
       metadata: { expenseId: expense._id, splitUserId, amount: split.amount },
@@ -857,7 +857,7 @@ export const submitPaymentProof = async (req, res) => {
     // Also notify debtor for their persistent record
     await Notification.create({
       userId: req.user._id,
-      title: 'Proof Submitted 🧾',
+      title: 'Proof Submitted',
       message: `Your payment proof of Rs ${split.amount} for "${expense.title}" has been sent for verification.`,
       type: 'info',
       metadata: { expenseId: expense._id, amount: split.amount },
@@ -943,7 +943,7 @@ export const verifyPaymentProof = async (req, res) => {
       // Notify debtor of approval
       await Notification.create({
         userId: split.user,
-        title: 'Payment Proof Verified! ✅',
+        title: 'Payment Proof Verified',
         message: `Your payment of Rs ${split.amount} for "${expense.title}" was verified and approved by ${req.user.name}. Balance settled.`,
         type: 'success',
         metadata: { expenseId: expense._id, amount: split.amount },
@@ -952,7 +952,7 @@ export const verifyPaymentProof = async (req, res) => {
       // Also notify payer for their persistent record
       await Notification.create({
         userId: req.user._id,
-        title: 'Payment Verified & Settled ✅',
+        title: 'Payment Verified & Settled',
         message: `You verified and approved ${split.name}'s payment of Rs ${split.amount} for "${expense.title}".`,
         type: 'success',
         metadata: { expenseId: expense._id, amount: split.amount },
@@ -973,7 +973,7 @@ export const verifyPaymentProof = async (req, res) => {
       // Notify debtor of rejection WITH payer's reason
       await Notification.create({
         userId: split.user,
-        title: 'Payment Proof Rejected ❌',
+        title: 'Payment Proof Rejected',
         message: `Your payment proof of Rs ${split.amount} for "${expense.title}" was rejected by ${req.user.name}. Reason: "${reason || 'Proof could not be verified'}". Please re-submit valid proof.`,
         type: 'danger',
         metadata: { expenseId: expense._id, amount: split.amount, reason },
@@ -992,7 +992,7 @@ export const verifyPaymentProof = async (req, res) => {
       // Notify debtor
       await Notification.create({
         userId: split.user,
-        title: 'Information Requested ⚠️',
+        title: 'Information Requested',
         message: `${req.user.name} requested updated details for "${expense.title}": "${reason}".`,
         type: 'warning',
         metadata: { expenseId: expense._id, amount: split.amount, reason },
@@ -1042,7 +1042,7 @@ export const deleteSplitExpense = async (req, res) => {
         if (split.user && split.user.toString() !== req.user._id.toString()) {
           await Notification.create({
             userId: split.user,
-            title: 'Split Expense Deleted 🗑️',
+            title: 'Split Expense Deleted',
             message: `${req.user.name} removed the shared expense "${expense.title}" (${expense.groupName || 'Direct Split'}).`,
             type: 'info',
             metadata: { groupId: expense.groupId },
@@ -1153,7 +1153,7 @@ export const createSettlement = async (req, res) => {
     // Notify Creditor
     await Notification.create({
       userId: toUserId,
-      title: 'Net Settlement Proof Submitted 📄',
+      title: 'Net Settlement Proof Submitted',
       message: `${req.user.name} submitted a one-shot payment proof of Rs ${numAmount} to settle ${coveredExpenses.length} shared expense(s). Please review and approve.`,
       type: 'info',
       metadata: { settlementId: settlement._id, amount: numAmount },
@@ -1162,7 +1162,7 @@ export const createSettlement = async (req, res) => {
     // Notify Debtor
     await Notification.create({
       userId: req.user._id,
-      title: 'Settlement Submitted 🧾',
+      title: 'Settlement Submitted',
       message: `Your payment proof of Rs ${numAmount} to ${recipient.name} is now pending approval.`,
       type: 'info',
       metadata: { settlementId: settlement._id, amount: numAmount },
@@ -1246,7 +1246,7 @@ export const verifySettlement = async (req, res) => {
       // Notify Debtor of 1-tap clearance
       await Notification.create({
         userId: settlement.fromUser,
-        title: 'Settlement Approved & Cleared! ✅',
+        title: 'Settlement Approved & Cleared',
         message: `Your payment of Rs ${settlement.amount} to ${req.user.name} was approved! All ${settlement.coveredExpenses.length} shared expenses are now settled.`,
         type: 'success',
         metadata: { settlementId: settlement._id, amount: settlement.amount },
@@ -1282,7 +1282,7 @@ export const verifySettlement = async (req, res) => {
       // Notify Debtor of rejection
       await Notification.create({
         userId: settlement.fromUser,
-        title: 'Settlement Proof Rejected ❌',
+        title: 'Settlement Proof Rejected',
         message: `Your payment proof of Rs ${settlement.amount} was rejected by ${req.user.name}. Reason: "${reason || 'Invalid TID/screenshot'}". Please re-submit.`,
         type: 'danger',
         metadata: { settlementId: settlement._id, amount: settlement.amount, reason },
@@ -1330,7 +1330,7 @@ export const sendNudgeReminder = async (req, res) => {
 
     await Notification.create({
       userId: debtorId,
-      title: 'Friendly Balance Reminder 🔔',
+      title: 'Friendly Balance Reminder',
       message: `Hey! Just a polite reminder from ${req.user.name} for your pending shared balance of Rs ${amount} (${groupName || 'SplitVault'}). You can easily settle it via One-Shot Net Payment.`,
       type: 'info',
       metadata: { creditorId: req.user._id, amount },

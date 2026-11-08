@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSplitVault } from '../../context/SplitVaultContext';
+import PaymentMethodIcon from '../PaymentMethodIcon';
 
 export default function VerifySettlementModal({ isOpen, onClose, settlement, onVerificationComplete }) {
   const { user } = useAuth();
@@ -129,8 +130,9 @@ export default function VerifySettlementModal({ isOpen, onClose, settlement, onV
               <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>
                 {settlement.fromUserName || 'Roommate'}
               </div>
-              <div style={{ fontSize: '0.76rem', color: '#94a3b8' }}>
-                via {proof.method || 'Transfer'} {proof.transactionId ? `(TID: ${proof.transactionId})` : ''}
+              <div style={{ fontSize: '0.76rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
+                <PaymentMethodIcon method={proof.method} size={15} />
+                <span>via <strong>{proof.method || 'Transfer'}</strong> {proof.transactionId ? `(TID: ${proof.transactionId})` : ''}</span>
               </div>
             </div>
 

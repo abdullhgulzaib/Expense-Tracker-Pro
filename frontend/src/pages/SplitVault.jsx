@@ -35,6 +35,7 @@ import NewGroupModal from '../components/splitvault/NewGroupModal';
 import JoinGroupModal from '../components/splitvault/JoinGroupModal';
 import SettleNetBalanceModal from '../components/splitvault/SettleNetBalanceModal';
 import VerifySettlementModal from '../components/splitvault/VerifySettlementModal';
+import PaymentMethodIcon from '../components/PaymentMethodIcon';
 
 export default function SplitVault() {
   const { user } = useAuth();
@@ -81,7 +82,7 @@ export default function SplitVault() {
     });
     setNudging((prev) => ({ ...prev, [targetId]: false }));
     if (res.success) {
-      alert(`Friendly reminder sent to ${netSettlement.fromUser}! 🔔`);
+      alert(`Friendly reminder sent to ${netSettlement.fromUser}!`);
     } else {
       alert(res.error || 'Failed to send reminder.');
     }
@@ -664,8 +665,8 @@ export default function SplitVault() {
 
                     {/* Row 2: Badges (Member Count + Invite Code) */}
                     <div className="splitvault-group-card__badges-row">
-                      <span className="splitvault-pill splitvault-pill--live" style={{ fontSize: '0.75rem' }}>
-                        👥 {group.memberCount || 1} {group.memberCount === 1 ? 'member' : 'members'}
+                      <span className="splitvault-pill splitvault-pill--live" style={{ fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <Users size={13} /> {group.memberCount || 1} {group.memberCount === 1 ? 'member' : 'members'}
                       </span>
                       <span style={{ fontSize: '0.75rem', color: '#818cf8', fontFamily: 'monospace', fontWeight: 600 }}>
                         Code: {group.inviteCode}
@@ -797,8 +798,9 @@ export default function SplitVault() {
                           <div className="sv-action-card__sender">
                             <strong>{st.fromUserName || 'Roommate'}</strong> sent a <strong>Net Settlement</strong>
                           </div>
-                          <div className="sv-action-card__meta">
-                            via {st.proof?.method || 'Easypaisa'} • TID: {st.proof?.transactionId || 'Slip attached'} • Covering {st.coveredExpenses?.length || 0} expenses
+                          <div className="sv-action-card__meta" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                            <PaymentMethodIcon method={st.proof?.method} size={15} />
+                            <span>via {st.proof?.method || 'Easypaisa'} • TID: {st.proof?.transactionId || 'Slip attached'} • Covering {st.coveredExpenses?.length || 0} expenses</span>
                           </div>
                           {st.proof?.senderNote && (
                             <div className="sv-action-card__note">"{st.proof.senderNote}"</div>
@@ -893,8 +895,9 @@ export default function SplitVault() {
                           <div className="sv-action-card__sender">
                             Paid to <strong>{st.toUserName || 'Roommate'}</strong>
                           </div>
-                          <div className="sv-action-card__meta">
-                            via {st.proof?.method || 'Easypaisa'} • TID: {st.proof?.transactionId || 'Attached'} • Covering {st.coveredExpenses?.length || 0} expenses
+                          <div className="sv-action-card__meta" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                            <PaymentMethodIcon method={st.proof?.method} size={15} />
+                            <span>via {st.proof?.method || 'Easypaisa'} • TID: {st.proof?.transactionId || 'Attached'} • Covering {st.coveredExpenses?.length || 0} expenses</span>
                           </div>
                           <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>
                             All covered expenses will be marked as settled once {st.toUserName || 'roommate'} approves.
@@ -906,8 +909,8 @@ export default function SplitVault() {
                         <div className="sv-action-card__amount" style={{ color: '#f59e0b' }}>
                           Rs {Number(st.amount).toLocaleString()}
                         </div>
-                        <span className="sv-status-pill sv-status-pill--review" style={{ fontSize: '0.74rem' }}>
-                          ⏳ Under Review
+                        <span className="sv-status-pill sv-status-pill--review" style={{ fontSize: '0.74rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={12} /> Under Review
                         </span>
                       </div>
                     </div>
@@ -947,8 +950,8 @@ export default function SplitVault() {
                             <div className="sv-action-card__meta">
                               Total net debt consolidated across {s.breakdown?.length || 1} shared expenses
                             </div>
-                            <div style={{ fontSize: '0.74rem', color: '#10b981', marginTop: '2px' }}>
-                              ⚡ Pay once via Easypaisa/JazzCash and submit 1 proof to clear all!
+                            <div style={{ fontSize: '0.74rem', color: '#10b981', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Zap size={12} /> Pay once via Easypaisa/JazzCash and submit 1 proof to clear all!
                             </div>
                           </div>
                         </div>
@@ -1084,8 +1087,15 @@ export default function SplitVault() {
                                   className={`sv-status-pill ${
                                     exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
                                   }`}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                 >
-                                  {exp.isFullySettled ? '✓ Settled via Net Settlement' : 'Auto-Netted in Net Debt'}
+                                  {exp.isFullySettled ? (
+                                    <>
+                                      <CheckCircle2 size={12} /> Settled via Net Settlement
+                                    </>
+                                  ) : (
+                                    'Auto-Netted in Net Debt'
+                                  )}
                                 </span>
 
                                 <button
@@ -1176,14 +1186,14 @@ export default function SplitVault() {
                                       </span>
 
                                       {s.status === 'Verified' && (
-                                        <span className="sv-status-pill sv-status-pill--verified">
-                                          ✓ Settled
+                                        <span className="sv-status-pill sv-status-pill--verified" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                          <CheckCircle2 size={11} /> Settled
                                         </span>
                                       )}
 
                                       {s.status === 'UnderReview' && (
-                                        <span className="sv-status-pill sv-status-pill--review">
-                                          ⏳ Under Review
+                                        <span className="sv-status-pill sv-status-pill--review" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                          <Clock size={11} /> Under Review
                                         </span>
                                       )}
 

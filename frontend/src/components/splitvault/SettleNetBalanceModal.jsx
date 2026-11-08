@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSplitVault } from '../../context/SplitVaultContext';
+import PaymentMethodIcon from '../PaymentMethodIcon';
 
 const PAYMENT_METHODS = [
   'Easypaisa',
@@ -247,10 +248,11 @@ export default function SettleNetBalanceModal({ isOpen, onClose, netSettlement, 
                       type="button"
                       onClick={() => handleCopy(recipientPayment.easypaisa, 'easypaisa')}
                       className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
-                      style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                      style={{ fontSize: '0.75rem', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     >
+                      <PaymentMethodIcon method="easypaisa" size={16} />
+                      <span>Easypaisa: <strong>{recipientPayment.easypaisa}</strong></span>
                       {copiedType === 'easypaisa' ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
-                      Easypaisa: {recipientPayment.easypaisa}
                     </button>
                   )}
                   {recipientPayment.jazzcash && (
@@ -258,10 +260,11 @@ export default function SettleNetBalanceModal({ isOpen, onClose, netSettlement, 
                       type="button"
                       onClick={() => handleCopy(recipientPayment.jazzcash, 'jazzcash')}
                       className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
-                      style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                      style={{ fontSize: '0.75rem', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     >
+                      <PaymentMethodIcon method="jazzcash" size={16} />
+                      <span>JazzCash: <strong>{recipientPayment.jazzcash}</strong></span>
                       {copiedType === 'jazzcash' ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
-                      JazzCash: {recipientPayment.jazzcash}
                     </button>
                   )}
                   {recipientPayment.phone && !recipientPayment.easypaisa && !recipientPayment.jazzcash && (
@@ -269,10 +272,11 @@ export default function SettleNetBalanceModal({ isOpen, onClose, netSettlement, 
                       type="button"
                       onClick={() => handleCopy(recipientPayment.phone, 'phone')}
                       className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
-                      style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                      style={{ fontSize: '0.75rem', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     >
+                      <PaymentMethodIcon method="phone" size={16} />
+                      <span>Mobile: <strong>{recipientPayment.phone}</strong></span>
                       {copiedType === 'phone' ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
-                      Mobile: {recipientPayment.phone}
                     </button>
                   )}
                 </div>
@@ -369,8 +373,9 @@ export default function SettleNetBalanceModal({ isOpen, onClose, netSettlement, 
 
             {/* Payment Method Selector */}
             <div className="sv-form-group">
-              <label className="sv-form-label" style={{ marginBottom: '4px' }}>
-                Payment Method Used
+              <label className="sv-form-label" style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <PaymentMethodIcon method={method} size={15} />
+                <span>Payment Method Used</span>
               </label>
               <select
                 className="sv-form-select"

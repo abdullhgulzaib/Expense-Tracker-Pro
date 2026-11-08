@@ -234,8 +234,11 @@ export default function ProofVerificationModal({ isOpen, onClose, expense, split
                     )}
                   </div>
 
-                  <div className="sv-payer-notice">
-                    🛡️ <strong>Verification Protection:</strong> Please check your {method} account to confirm that Rs {Number(amount).toLocaleString()} was received before approving. Once approved, {debtorName}'s debt is settled.
+                  <div className="sv-payer-notice" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <ShieldCheck size={18} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div>
+                      <strong>Verification Protection:</strong> Please check your {method} account to confirm that Rs {Number(amount).toLocaleString()} was received before approving. Once approved, {debtorName}'s debt is settled.
+                    </div>
                   </div>
 
                   {showRejectInput && (

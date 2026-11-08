@@ -128,7 +128,7 @@ export function SplitVaultProvider({ children }) {
     try {
       const { data } = await api.post('/splitvault/settlements', settlementData);
       addNotification({
-        title: 'Net Settlement Submitted 🧾',
+        title: 'Net Settlement Submitted',
         message: 'One-shot payment proof sent to roommate for approval.',
         type: 'welcome',
       });
@@ -148,13 +148,13 @@ export function SplitVaultProvider({ children }) {
       });
       if (action === 'APPROVE') {
         addNotification({
-          title: 'Settlement Cleared! ✅',
+          title: 'Settlement Cleared',
           message: 'All covered shared expenses have been marked as settled.',
           type: 'expense',
         });
       } else {
         addNotification({
-          title: 'Settlement Proof Rejected ❌',
+          title: 'Settlement Proof Rejected',
           message: 'Roommate notified to re-submit proof.',
           type: 'alert',
         });
@@ -174,7 +174,7 @@ export function SplitVaultProvider({ children }) {
     try {
       const { data } = await api.post('/splitvault/nudge', { debtorId, amount, groupName });
       addNotification({
-        title: 'Reminder Sent 🔔',
+        title: 'Reminder Sent',
         message: 'Friendly balance reminder sent to roommate.',
         type: 'info',
       });
