@@ -123,6 +123,77 @@ export function SplitVaultProvider({ children }) {
     }
   };
 
+  // Debtor submits One-Shot Net Balance Settlement covering multiple expenses
+  const createSettlement = async (settlementData) => {
+    try {
+      const { data } = await api.post('/splitvault/settlements', settlementData);
+      addNotification({
+        title: 'Net Settlement Submitted 🧾',
+        message: 'One-shot payment proof sent to roommate for approval.',
+        type: 'welcome',
+      });
+      await fetchSummary();
+      return { success: true, data: data.settlement };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || err.message };
+    }
+  };
+
+  // Creditor 1-Tap verifies or rejects Net Balance Settlement
+  const verifySettlement = async (settlementId, { action, reason }) => {
+    try {
+      const { data } = await api.post(`/splitvault/settlements/${settlementId}/verify`, {
+        action,
+        reason,
+      });
+      if (action === 'APPROVE') {
+        addNotification({
+          title: 'Settlement Cleared! ✅',
+          message: 'All covered shared expenses have been marked as settled.',
+          type: 'expense',
+        });
+      } else {
+        addNotification({
+          title: 'Settlement Proof Rejected ❌',
+          message: 'Roommate notified to re-submit proof.',
+          type: 'alert',
+        });
+      }
+      await fetchSummary();
+      if (typeof fetchExpenses === 'function') {
+        fetchExpenses();
+      }
+      return { success: true, data: data.settlement };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || err.message };
+    }
+  };
+
+  // Send a polite in-app reminder / nudge to a debtor
+  const sendNudgeReminder = async ({ debtorId, amount, groupName }) => {
+    try {
+      const { data } = await api.post('/splitvault/nudge', { debtorId, amount, groupName });
+      addNotification({
+        title: 'Reminder Sent 🔔',
+        message: 'Friendly balance reminder sent to roommate.',
+        type: 'info',
+      });
+      return { success: true, message: data.message };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || err.message };
+    }
+  };
+
+  // AI Smart Receipt Scanner helper
+  const scanReceiptAI = async (scanData) => {
+    try {
+      const { data } = await api.post('/splitvault/scan-receipt', scanData);
+      return { success: true, data: data.data };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || err.message };
+    }
+  };
+
   // Payer verifies or rejects proof (Strict Payer Only!)
   const verifyProof = async (expenseId, splitUserId, { action, reason }) => {
     try {
@@ -255,6 +326,10 @@ export function SplitVaultProvider({ children }) {
         deleteSplitExpense,
         submitProof,
         verifyProof,
+        createSettlement,
+        verifySettlement,
+        sendNudgeReminder,
+        scanReceiptAI,
       }}
     >
       {children}

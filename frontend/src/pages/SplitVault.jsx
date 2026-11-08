@@ -10,11 +10,18 @@ import {
   FileCheck,
   Sparkles,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Trash2,
   Calendar,
   Key,
   Copy,
   Scale,
+  Zap,
+  Bell,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSplitVault } from '../context/SplitVaultContext';
@@ -26,10 +33,18 @@ import ProofVerificationModal from '../components/splitvault/ProofVerificationMo
 import GroupDetailsModal from '../components/splitvault/GroupDetailsModal';
 import NewGroupModal from '../components/splitvault/NewGroupModal';
 import JoinGroupModal from '../components/splitvault/JoinGroupModal';
+import SettleNetBalanceModal from '../components/splitvault/SettleNetBalanceModal';
+import VerifySettlementModal from '../components/splitvault/VerifySettlementModal';
 
 export default function SplitVault() {
   const { user } = useAuth();
-  const { summary, deleteGroup, deleteSplitExpense } = useSplitVault();
+  const {
+    summary,
+    refreshSummary,
+    deleteGroup,
+    deleteSplitExpense,
+    sendNudgeReminder,
+  } = useSplitVault();
 
   // 3 Primary Sections: 'balance' | 'groups' | 'activity'
   const [activeTab, setActiveTab] = useState('balance');
@@ -43,6 +58,59 @@ export default function SplitVault() {
   const [activeGroupModalId, setActiveGroupModalId] = useState(null);
   const [proofSubmitState, setProofSubmitState] = useState({ isOpen: false, expense: null, splitData: null });
   const [verificationState, setVerificationState] = useState({ isOpen: false, expense: null, splitData: null });
+
+  // One-Shot Net Settlement Modals State
+  const [settleModalState, setSettleModalState] = useState({ isOpen: false, netSettlement: null });
+  const [verifySettlementState, setVerifySettlementState] = useState({ isOpen: false, settlement: null });
+
+  // Progressive Disclosure for Activity expenses
+  const [expandedExpenses, setExpandedExpenses] = useState({});
+  const toggleExpenseExpand = (id) => {
+    setExpandedExpenses((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Nudge loading state
+  const [nudging, setNudging] = useState({});
+  const handleSendNudge = async (netSettlement) => {
+    const targetId = netSettlement.fromUserId;
+    setNudging((prev) => ({ ...prev, [targetId]: true }));
+    const res = await sendNudgeReminder({
+      toUserId: targetId,
+      amount: netSettlement.amount,
+      recipientName: netSettlement.fromUser,
+    });
+    setNudging((prev) => ({ ...prev, [targetId]: false }));
+    if (res.success) {
+      alert(`Friendly reminder sent to ${netSettlement.fromUser}! 🔔`);
+    } else {
+      alert(res.error || 'Failed to send reminder.');
+    }
+  };
+
+  const handleOpenSettleModal = (netSettlement) => {
+    setSettleModalState({ isOpen: true, netSettlement });
+  };
+
+  const handleOpenVerifySettlement = (settlementOrNet) => {
+    if (settlementOrNet?.coveredExpenses || settlementOrNet?.status) {
+      setVerifySettlementState({ isOpen: true, settlement: settlementOrNet });
+    } else {
+      const match =
+        summary.pendingSettlementsToVerify?.find(
+          (st) =>
+            st._id === settlementOrNet.pendingSettlementId ||
+            (st.fromUser?.toString() === settlementOrNet.fromUserId &&
+              st.toUser?.toString() === user?._id?.toString())
+        ) ||
+        summary.settlements?.find((st) => st._id === settlementOrNet.pendingSettlementId);
+
+      if (match) {
+        setVerifySettlementState({ isOpen: true, settlement: match });
+      } else {
+        alert('Settlement record not found or already verified.');
+      }
+    }
+  };
 
   const allExpenses = summary.allExpenses || [];
   const groups = summary.groups || [];
@@ -336,7 +404,7 @@ export default function SplitVault() {
                         </div>
                       </div>
 
-                      <div style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
                         <div
                           style={{
                             fontSize: '1rem',
@@ -346,14 +414,62 @@ export default function SplitVault() {
                         >
                           Rs {Number(s.amount).toLocaleString()}
                         </div>
-                        <span
-                          className={`sv-status-pill ${
-                            isCreditor ? 'sv-status-pill--verified' : 'sv-status-pill--review'
-                          }`}
-                          style={{ fontSize: '0.68rem', padding: '2px 6px' }}
-                        >
-                          {isDebtor ? 'You Owe' : isCreditor ? 'Owed to You' : 'Pending'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                          <span
+                            className={`sv-status-pill ${
+                              isCreditor ? 'sv-status-pill--verified' : 'sv-status-pill--review'
+                            }`}
+                            style={{ fontSize: '0.68rem', padding: '2px 6px' }}
+                          >
+                            {isDebtor ? 'You Owe' : isCreditor ? 'Owed to You' : 'Pending'}
+                          </span>
+
+                          {/* Debtor: One-shot settle button or under review indicator */}
+                          {isDebtor && (
+                            s.hasPendingSettlement ? (
+                              <span
+                                className="sv-status-pill sv-status-pill--review"
+                                style={{ fontSize: '0.68rem', padding: '2px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              >
+                                <Clock size={11} /> Proof Submitted
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
+                                style={{ padding: '3px 9px', fontSize: '0.74rem' }}
+                                onClick={() => handleOpenSettleModal(s)}
+                              >
+                                <Zap size={12} /> Settle
+                              </button>
+                            )
+                          )}
+
+                          {/* Creditor: Review pending proof or send polite nudge */}
+                          {isCreditor && (
+                            s.hasPendingSettlement ? (
+                              <button
+                                type="button"
+                                className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
+                                style={{ padding: '3px 9px', fontSize: '0.74rem' }}
+                                onClick={() => handleOpenVerifySettlement(s)}
+                              >
+                                <ShieldCheck size={12} /> Review Proof
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
+                                style={{ padding: '3px 8px', fontSize: '0.74rem' }}
+                                disabled={nudging[s.fromUserId]}
+                                onClick={() => handleSendNudge(s)}
+                                title="Send gentle payment reminder"
+                              >
+                                <Bell size={12} /> {nudging[s.fromUserId] ? 'Sending...' : 'Remind'}
+                              </button>
+                            )
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -630,281 +746,518 @@ export default function SplitVault() {
       )}
 
       {/* =====================================================================
-          SECTION 3: ACTIVITY AND PROOF (Month-Wise Grouping)
+          SECTION 3: ACTIVITY AND PROOF (Two-Tier Clean Architecture)
+          Tier 1: Action Center (Settlements & Verifications Hub)
+          Tier 2: Itemized Shared Expenses Ledger (Progressive Disclosure)
           ===================================================================== */}
       {activeTab === 'activity' && (
-        <div className="splitvault-activity-section">
-          {/* Payer Verification Alert Banner */}
-          {summary.pendingVerifications && summary.pendingVerifications.length > 0 && (
-            <div
-              style={{
-                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05))',
-                border: '1px solid rgba(245, 158, 11, 0.4)',
-                borderRadius: 'var(--sv-radius)',
-                padding: '16px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '12px',
-                boxShadow: 'var(--sv-amber-glow)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '10px',
-                    background: 'var(--sv-amber-light)',
-                    color: '#f59e0b',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <ShieldCheck size={22} />
+        <div className="splitvault-activity-section" style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+          {/* TIER 1: ACTION CENTER */}
+          <div className="sv-action-center">
+            <div className="sv-action-center__header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="sv-action-center__badge-icon">
+                  <Zap size={18} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, color: '#fbbf24', fontSize: '0.98rem' }}>
-                    Action Required: {summary.pendingVerifications.length} Payment Proof(s) Submitted
-                  </div>
-                  <div style={{ fontSize: '0.82rem', color: '#e5e7eb' }}>
-                    Roommates uploaded transfer receipts for expenses you paid upfront. Verify each to settle their balance.
-                  </div>
+                  <h2 className="sv-action-center__title">Settlement Action Center</h2>
+                  <p className="sv-action-center__subtitle">
+                    Batch payment approvals, submitted proofs, and 1-tap net debt clearances
+                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* Multiple Pending Proofs List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-                {summary.pendingVerifications.map((item, idx) => {
-                  const exp = allExpenses.find((e) => e._id === item.expenseId);
-                  const matchingSplit = exp?.splits?.find(
-                    (s) =>
-                      s.user?.toString() === item.splitUserId?.toString() ||
-                      s._id?.toString() === item.splitUserId?.toString()
-                  );
+            {/* Case A: Proofs Awaiting Your Verification (Creditor View) */}
+            {((summary.pendingSettlementsToVerify && summary.pendingSettlementsToVerify.length > 0) ||
+              (summary.pendingVerifications && summary.pendingVerifications.length > 0)) && (
+              <div className="sv-action-block sv-action-block--verify">
+                <div className="sv-action-block__title">
+                  <ShieldCheck size={18} color="#10b981" />
+                  <span>
+                    Awaiting Your Approval (
+                    {(summary.pendingSettlementsToVerify?.length || 0) +
+                      (summary.pendingVerifications?.length || 0)}
+                    )
+                  </span>
+                </div>
 
-                  return (
-                    <div
-                      key={item.expenseId + '-' + (item.splitUserId || idx)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '10px 14px',
-                        background: 'rgba(15, 23, 42, 0.75)',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        flexWrap: 'wrap',
-                        gap: '8px',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="sv-action-card-grid">
+                  {/* Batch Settlements */}
+                  {summary.pendingSettlementsToVerify?.map((st) => (
+                    <div key={st._id} className="sv-action-card sv-action-card--creditor">
+                      <div className="sv-action-card__main">
                         <div
-                          style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
-                            background: 'rgba(59, 130, 246, 0.2)',
-                            color: '#60a5fa',
-                            display: 'grid',
-                            placeItems: 'center',
-                            fontSize: '0.8rem',
-                            fontWeight: 700,
-                          }}
+                          className="sv-participant-avatar sv-participant-avatar--lg"
+                          style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981' }}
                         >
-                          {item.debtorName?.charAt(0) || 'R'}
+                          {st.fromUserName?.charAt(0) || 'R'}
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.88rem' }}>
-                            {item.debtorName} • <span style={{ color: '#10b981' }}>Rs {Number(item.amount).toLocaleString()}</span>
+                        <div className="sv-action-card__info">
+                          <div className="sv-action-card__sender">
+                            <strong>{st.fromUserName || 'Roommate'}</strong> sent a <strong>Net Settlement</strong>
                           </div>
-                          <div style={{ fontSize: '0.76rem', color: '#94a3b8' }}>
-                            {item.expenseTitle} • via {item.method} ({item.transactionId || 'Screenshot'})
+                          <div className="sv-action-card__meta">
+                            via {st.proof?.method || 'Easypaisa'} • TID: {st.proof?.transactionId || 'Slip attached'} • Covering {st.coveredExpenses?.length || 0} expenses
                           </div>
+                          {st.proof?.senderNote && (
+                            <div className="sv-action-card__note">"{st.proof.senderNote}"</div>
+                          )}
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
-                        onClick={() => {
-                          if (exp) {
-                            handleOpenVerification(exp, matchingSplit || item);
-                          }
-                        }}
-                      >
-                        Review Proof →
-                      </button>
+                      <div className="sv-action-card__right">
+                        <div className="sv-action-card__amount" style={{ color: '#10b981' }}>
+                          Rs {Number(st.amount).toLocaleString()}
+                        </div>
+                        <button
+                          type="button"
+                          className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
+                          onClick={() => handleOpenVerifySettlement(st)}
+                        >
+                          <ShieldCheck size={14} /> Review Proof →
+                        </button>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                  ))}
 
-          {allExpenses.length === 0 ? (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '50px 20px',
-                background: 'var(--sv-surface)',
-                borderRadius: 'var(--sv-radius)',
-                border: '1px solid var(--sv-card-border)',
-                color: '#94a3b8',
-              }}
-            >
-              <Receipt size={32} style={{ margin: '0 auto 12px', color: '#6366f1' }} />
-              <h3 style={{ margin: '0 0 6px', color: '#fff', fontSize: '1.1rem' }}>No Shared Expenses Yet</h3>
-              <p style={{ margin: 0, fontSize: '0.88rem' }}>
-                When you or your roommates add shared expenses, all records will appear here grouped by month.
-              </p>
-            </div>
-          ) : (
-            Object.keys(monthWiseExpenses).map((monthKey) => (
-              <div key={monthKey} className="splitvault-month-group">
-                <div className="splitvault-month-header">
-                  <Calendar size={16} />
-                  <span>{monthKey}</span>
-                </div>
-
-                <div className="splitvault-expenses-list">
-                  {monthWiseExpenses[monthKey].map((exp) => {
-                    const isExpensePayer = exp.paidBy?.toString() === user?._id?.toString();
-
+                  {/* Legacy Single Verifications if any */}
+                  {summary.pendingVerifications?.map((item, idx) => {
+                    const exp = allExpenses.find((e) => e._id === item.expenseId);
+                    const matchingSplit = exp?.splits?.find(
+                      (s) =>
+                        s.user?.toString() === item.splitUserId?.toString() ||
+                        s._id?.toString() === item.splitUserId?.toString()
+                    );
                     return (
-                      <div key={exp._id} className="splitvault-expense-item">
-                        <div className="splitvault-expense-item__header">
-                          <div className="splitvault-expense-item__title-box">
-                            <div className="splitvault-expense-item__category-icon">
-                              <Receipt size={18} />
-                            </div>
-                            <div>
-                              <h4 className="splitvault-expense-item__title">{exp.title}</h4>
-                              <div className="splitvault-expense-item__meta">
-                                <span>Paid upfront by {isExpensePayer ? 'You' : exp.paidByName}</span>
-                                {exp.groupName && (
-                                  <>
-                                    <span>•</span>
-                                    <span style={{ color: '#818cf8' }}>{exp.groupName}</span>
-                                  </>
-                                )}
-                                <span>•</span>
-                                <span>{new Date(exp.date).toLocaleDateString()}</span>
-                              </div>
-                            </div>
+                      <div key={item.expenseId + '-' + idx} className="sv-action-card sv-action-card--creditor">
+                        <div className="sv-action-card__main">
+                          <div
+                            className="sv-participant-avatar sv-participant-avatar--lg"
+                            style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981' }}
+                          >
+                            {item.debtorName?.charAt(0) || 'R'}
                           </div>
-
-                          <div className="splitvault-expense-item__amount-box">
-                            <span className="splitvault-expense-item__amount">
-                              Rs {Number(exp.totalAmount).toLocaleString()}
-                            </span>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span
-                                className={`sv-status-pill ${
-                                  exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
-                                }`}
-                              >
-                                {exp.isFullySettled ? '✓ Fully Settled' : 'Pending Splits'}
-                              </span>
-                              {isExpensePayer && (
-                                <button
-                                  type="button"
-                                  className="splitvault-expense-delete-btn"
-                                  title="Delete this shared expense"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteExpense(exp._id, exp.title);
-                                  }}
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              )}
+                          <div className="sv-action-card__info">
+                            <div className="sv-action-card__sender">
+                              <strong>{item.debtorName}</strong> paid for <em>"{item.expenseTitle}"</em>
+                            </div>
+                            <div className="sv-action-card__meta">
+                              via {item.method} • TID: {item.transactionId || 'Slip attached'}
                             </div>
                           </div>
                         </div>
 
-                        {/* Splits */}
-                        <div className="splitvault-expense-item__splits">
-                          {exp.splits.map((s, idx) => {
-                            const isMySplit = s.user?.toString() === user?._id?.toString();
-                            const canVerify = isExpensePayer && s.status === 'UnderReview';
-                            const canDebtorUpload = isMySplit && !isExpensePayer && (s.status === 'Unpaid' || s.status === 'Rejected');
-
-                            return (
-                              <div key={idx} className="splitvault-split-row">
-                                <div className="splitvault-split-user">
-                                  <div
-                                    className="sv-participant-avatar"
-                                    style={{ width: '26px', height: '26px', fontSize: '0.75rem' }}
-                                  >
-                                    {s.name?.charAt(0) || 'U'}
-                                  </div>
-                                  <span>{s.name}</span>
-                                </div>
-
-                                <div className="splitvault-split-status">
-                                  <span style={{ fontWeight: 700, color: '#e5e7eb' }}>
-                                    Rs {Number(s.amount).toLocaleString()}
-                                  </span>
-
-                                  {s.status === 'Verified' && (
-                                    <span className="sv-status-pill sv-status-pill--verified">
-                                      ✓ Settled
-                                    </span>
-                                  )}
-
-                                  {s.status === 'UnderReview' && (
-                                    <span className="sv-status-pill sv-status-pill--review">
-                                      Proof Under Review
-                                    </span>
-                                  )}
-
-                                  {s.status === 'Unpaid' && (
-                                    <span className="sv-status-pill sv-status-pill--unpaid">
-                                      Unpaid
-                                    </span>
-                                  )}
-
-                                  {s.status === 'Rejected' && (
-                                    <span className="sv-status-pill sv-status-pill--rejected">
-                                      Rejected
-                                    </span>
-                                  )}
-
-                                  {canVerify && (
-                                    <button
-                                      type="button"
-                                      className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
-                                      onClick={() => handleOpenVerification(exp, s)}
-                                    >
-                                      <ShieldCheck size={14} /> Review Proof
-                                    </button>
-                                  )}
-
-                                  {canDebtorUpload && (
-                                    <button
-                                      type="button"
-                                      className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
-                                      onClick={() => handleOpenProofSubmit(exp, s)}
-                                    >
-                                      <FileCheck size={14} /> Upload Proof
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
+                        <div className="sv-action-card__right">
+                          <div className="sv-action-card__amount" style={{ color: '#10b981' }}>
+                            Rs {Number(item.amount).toLocaleString()}
+                          </div>
+                          <button
+                            type="button"
+                            className="splitvault-btn splitvault-btn--emerald splitvault-btn--sm"
+                            onClick={() => {
+                              if (exp) {
+                                handleOpenVerification(exp, matchingSplit || item);
+                              }
+                            }}
+                          >
+                            <ShieldCheck size={14} /> Review Proof →
+                          </button>
                         </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
-            ))
-          )}
+            )}
+
+            {/* Case B: Your Submitted Settlements (Debtor View - Waiting for Roommate to Approve) */}
+            {summary.pendingSettlementsSubmitted && summary.pendingSettlementsSubmitted.length > 0 && (
+              <div className="sv-action-block sv-action-block--pending">
+                <div className="sv-action-block__title">
+                  <Clock size={18} color="#f59e0b" />
+                  <span>Your Submitted Proofs Under Review ({summary.pendingSettlementsSubmitted.length})</span>
+                </div>
+
+                <div className="sv-action-card-grid">
+                  {summary.pendingSettlementsSubmitted.map((st) => (
+                    <div key={st._id} className="sv-action-card sv-action-card--debtor">
+                      <div className="sv-action-card__main">
+                        <div
+                          className="sv-participant-avatar sv-participant-avatar--lg"
+                          style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b' }}
+                        >
+                          <FileCheck size={20} />
+                        </div>
+                        <div className="sv-action-card__info">
+                          <div className="sv-action-card__sender">
+                            Paid to <strong>{st.toUserName || 'Roommate'}</strong>
+                          </div>
+                          <div className="sv-action-card__meta">
+                            via {st.proof?.method || 'Easypaisa'} • TID: {st.proof?.transactionId || 'Attached'} • Covering {st.coveredExpenses?.length || 0} expenses
+                          </div>
+                          <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '2px' }}>
+                            All covered expenses will be marked as settled once {st.toUserName || 'roommate'} approves.
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="sv-action-card__right">
+                        <div className="sv-action-card__amount" style={{ color: '#f59e0b' }}>
+                          Rs {Number(st.amount).toLocaleString()}
+                        </div>
+                        <span className="sv-status-pill sv-status-pill--review" style={{ fontSize: '0.74rem' }}>
+                          ⏳ Under Review
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Case C: Active Net Debts (Debtor View - Need to Settle) */}
+            {summary.netSettlements?.some(
+              (s) => s.fromUserId === user?._id?.toString() && !s.hasPendingSettlement && s.amount > 0
+            ) && (
+              <div className="sv-action-block sv-action-block--pay">
+                <div className="sv-action-block__title">
+                  <Zap size={18} color="#f59e0b" />
+                  <span>Pending Balances to Settle</span>
+                </div>
+
+                <div className="sv-action-card-grid">
+                  {summary.netSettlements
+                    .filter(
+                      (s) => s.fromUserId === user?._id?.toString() && !s.hasPendingSettlement && s.amount > 0
+                    )
+                    .map((s, idx) => (
+                      <div key={idx} className="sv-action-card sv-action-card--debtor">
+                        <div className="sv-action-card__main">
+                          <div
+                            className="sv-participant-avatar sv-participant-avatar--lg"
+                            style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b' }}
+                          >
+                            {s.toUser?.charAt(0) || 'R'}
+                          </div>
+                          <div className="sv-action-card__info">
+                            <div className="sv-action-card__sender">
+                              You owe <strong>{s.toUser}</strong>
+                            </div>
+                            <div className="sv-action-card__meta">
+                              Total net debt consolidated across {s.breakdown?.length || 1} shared expenses
+                            </div>
+                            <div style={{ fontSize: '0.74rem', color: '#10b981', marginTop: '2px' }}>
+                              ⚡ Pay once via Easypaisa/JazzCash and submit 1 proof to clear all!
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="sv-action-card__right">
+                          <div className="sv-action-card__amount" style={{ color: '#f59e0b' }}>
+                            Rs {Number(s.amount).toLocaleString()}
+                          </div>
+                          <button
+                            type="button"
+                            className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
+                            onClick={() => handleOpenSettleModal(s)}
+                          >
+                            <Zap size={14} /> Settle Total Balance
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty Action Center: Everything is clean */}
+            {!(
+              (summary.pendingSettlementsToVerify && summary.pendingSettlementsToVerify.length > 0) ||
+              (summary.pendingVerifications && summary.pendingVerifications.length > 0) ||
+              (summary.pendingSettlementsSubmitted && summary.pendingSettlementsSubmitted.length > 0) ||
+              summary.netSettlements?.some(
+                (s) => s.fromUserId === user?._id?.toString() && !s.hasPendingSettlement && s.amount > 0
+              )
+            ) && (
+              <div className="sv-action-center__empty">
+                <CheckCircle2 size={28} color="#10b981" />
+                <div>
+                  <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>
+                    All Balances & Settlements Up to Date!
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                    No pending payment proofs to review or outstanding net debts to settle.
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* TIER 2: SHARED EXPENSES HISTORY (PROGRESSIVE DISCLOSURE) */}
+          <div className="sv-history-feed">
+            <div className="sv-history-feed__header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Receipt size={20} color="#6366f1" />
+                <h3 className="sv-history-feed__title">Itemized Shared Expenses</h3>
+                <span className="splitvault-pill splitvault-pill--live" style={{ fontSize: '0.72rem' }}>
+                  {allExpenses.length} Records
+                </span>
+              </div>
+              <span className="sv-history-feed__hint">
+                Tap any expense to view participant splits
+              </span>
+            </div>
+
+            {allExpenses.length === 0 ? (
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '50px 20px',
+                  background: 'var(--sv-surface)',
+                  borderRadius: 'var(--sv-radius)',
+                  border: '1px solid var(--sv-card-border)',
+                  color: '#94a3b8',
+                }}
+              >
+                <Receipt size={32} style={{ margin: '0 auto 12px', color: '#6366f1' }} />
+                <h3 style={{ margin: '0 0 6px', color: '#fff', fontSize: '1.1rem' }}>No Shared Expenses Yet</h3>
+                <p style={{ margin: 0, fontSize: '0.88rem' }}>
+                  When you or your roommates add shared expenses, all records will appear here grouped by month.
+                </p>
+              </div>
+            ) : (
+              Object.keys(monthWiseExpenses).map((monthKey) => (
+                <div key={monthKey} className="splitvault-month-group">
+                  <div className="splitvault-month-header">
+                    <Calendar size={16} />
+                    <span>{monthKey}</span>
+                  </div>
+
+                  <div className="splitvault-expenses-list">
+                    {monthWiseExpenses[monthKey].map((exp) => {
+                      const isExpanded = !!expandedExpenses[exp._id];
+                      const isExpensePayer = exp.paidBy?.toString() === user?._id?.toString();
+                      const mySplit = exp.splits?.find(
+                        (s) => s.user?.toString() === user?._id?.toString()
+                      );
+
+                      return (
+                        <div
+                          key={exp._id}
+                          className={`splitvault-expense-item ${
+                            isExpanded ? 'splitvault-expense-item--expanded' : ''
+                          }`}
+                        >
+                          {/* Row Header (Clickable to toggle progressive disclosure) */}
+                          <div
+                            className="splitvault-expense-item__header"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => toggleExpenseExpand(exp._id)}
+                          >
+                            <div className="splitvault-expense-item__title-box">
+                              <div className="splitvault-expense-item__category-icon">
+                                <Receipt size={18} />
+                              </div>
+                              <div>
+                                <h4 className="splitvault-expense-item__title">{exp.title}</h4>
+                                <div className="splitvault-expense-item__meta">
+                                  <span>Paid upfront by {isExpensePayer ? 'You' : exp.paidByName}</span>
+                                  {exp.groupName && (
+                                    <>
+                                      <span>•</span>
+                                      <span style={{ color: '#818cf8' }}>{exp.groupName}</span>
+                                    </>
+                                  )}
+                                  <span>•</span>
+                                  <span>{new Date(exp.date).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="splitvault-expense-item__amount-box">
+                              <span className="splitvault-expense-item__amount">
+                                Rs {Number(exp.totalAmount).toLocaleString()}
+                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span
+                                  className={`sv-status-pill ${
+                                    exp.isFullySettled ? 'sv-status-pill--verified' : 'sv-status-pill--review'
+                                  }`}
+                                >
+                                  {exp.isFullySettled ? '✓ Settled via Net Settlement' : 'Auto-Netted in Net Debt'}
+                                </span>
+
+                                <button
+                                  type="button"
+                                  className="splitvault-expense-toggle-btn"
+                                  title={isExpanded ? 'Collapse breakdown' : 'Expand breakdown'}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleExpenseExpand(exp._id);
+                                  }}
+                                >
+                                  {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                </button>
+
+                                {isExpensePayer && (
+                                  <button
+                                    type="button"
+                                    className="splitvault-expense-delete-btn"
+                                    title="Delete this shared expense"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteExpense(exp._id, exp.title);
+                                    }}
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Progressive Disclosure: Participant Breakdown */}
+                          {isExpanded && (
+                            <div className="splitvault-expense-item__splits">
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  fontSize: '0.74rem',
+                                  color: '#94a3b8',
+                                  padding: '0 4px',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.04em',
+                                }}
+                              >
+                                <span>Roommate</span>
+                                <span>Share & Status</span>
+                              </div>
+
+                              {exp.splits.map((s, idx) => {
+                                const isMySplit = s.user?.toString() === user?._id?.toString();
+                                const isPayerSplit = s.user?.toString() === exp.paidBy?.toString();
+
+                                return (
+                                  <div key={idx} className="splitvault-split-row">
+                                    <div className="splitvault-split-user">
+                                      <div
+                                        className="sv-participant-avatar"
+                                        style={{ width: '26px', height: '26px', fontSize: '0.75rem' }}
+                                      >
+                                        {s.name?.charAt(0) || 'U'}
+                                      </div>
+                                      <span
+                                        style={{
+                                          fontWeight: isMySplit ? 700 : 500,
+                                          color: isMySplit ? '#38bdf8' : '#e2e8f0',
+                                        }}
+                                      >
+                                        {s.name} {isMySplit && '(You)'}
+                                        {isPayerSplit && (
+                                          <span
+                                            style={{
+                                              fontSize: '0.7rem',
+                                              color: '#10b981',
+                                              marginLeft: '6px',
+                                              fontWeight: 600,
+                                            }}
+                                          >
+                                            • Paid upfront
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+
+                                    <div className="splitvault-split-status">
+                                      <span style={{ fontWeight: 700, color: '#e5e7eb' }}>
+                                        Rs {Number(s.amount).toLocaleString()}
+                                      </span>
+
+                                      {s.status === 'Verified' && (
+                                        <span className="sv-status-pill sv-status-pill--verified">
+                                          ✓ Settled
+                                        </span>
+                                      )}
+
+                                      {s.status === 'UnderReview' && (
+                                        <span className="sv-status-pill sv-status-pill--review">
+                                          ⏳ Under Review
+                                        </span>
+                                      )}
+
+                                      {s.status === 'Unpaid' && (
+                                        <span className="sv-status-pill sv-status-pill--unpaid">
+                                          Auto-Netted
+                                        </span>
+                                      )}
+
+                                      {s.status === 'Rejected' && (
+                                        <span className="sv-status-pill sv-status-pill--rejected">
+                                          Rejected
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+
+                              {/* Helpful Footer inside expanded card */}
+                              <div
+                                style={{
+                                  marginTop: '8px',
+                                  padding: '8px 12px',
+                                  borderRadius: '8px',
+                                  background: 'rgba(255, 255, 255, 0.02)',
+                                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                                  fontSize: '0.76rem',
+                                  color: '#94a3b8',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  flexWrap: 'wrap',
+                                  gap: '8px',
+                                }}
+                              >
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <Scale size={13} color="#10b981" />
+                                  <span>
+                                    Debts are auto-netted into your total balance. No need for separate slips per expense!
+                                  </span>
+                                </span>
+
+                                {mySplit && (mySplit.status === 'Unpaid' || mySplit.status === 'Rejected') && !isExpensePayer && (
+                                  <button
+                                    type="button"
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      color: '#818cf8',
+                                      cursor: 'pointer',
+                                      fontSize: '0.74rem',
+                                      textDecoration: 'underline',
+                                      padding: 0,
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenProofSubmit(exp, mySplit);
+                                    }}
+                                  >
+                                    Upload single receipt instead
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 
@@ -943,6 +1296,8 @@ export default function SplitVault() {
         }}
         onOpenVerification={handleOpenVerification}
         onOpenProofSubmit={handleOpenProofSubmit}
+        onOpenSettleModal={handleOpenSettleModal}
+        onOpenVerifySettlement={handleOpenVerifySettlement}
       />
 
       {/* 5. New Group Modal */}
@@ -955,6 +1310,22 @@ export default function SplitVault() {
       <JoinGroupModal
         isOpen={isJoinGroupOpen}
         onClose={() => setIsJoinGroupOpen(false)}
+      />
+
+      {/* 7. Settle Net Balance Modal (One-Shot Batch Repayment) */}
+      <SettleNetBalanceModal
+        isOpen={settleModalState.isOpen}
+        onClose={() => setSettleModalState({ isOpen: false, netSettlement: null })}
+        netSettlement={settleModalState.netSettlement}
+        onSettlementComplete={() => refreshSummary()}
+      />
+
+      {/* 8. Verify Settlement Modal (1-Tap Batch Approval) */}
+      <VerifySettlementModal
+        isOpen={verifySettlementState.isOpen}
+        onClose={() => setVerifySettlementState({ isOpen: false, settlement: null })}
+        settlement={verifySettlementState.settlement}
+        onVerificationComplete={() => refreshSummary()}
       />
     </div>
   );

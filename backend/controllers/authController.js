@@ -152,11 +152,26 @@ export const updateProfile = async (req, res) => {
       user.email = cleanEmail;
     }
 
+    if (req.body.phone !== undefined) {
+      user.phone = req.body.phone.trim();
+    }
+
+    if (req.body.paymentDetails) {
+      user.paymentDetails = {
+        easypaisa: req.body.paymentDetails.easypaisa || user.paymentDetails?.easypaisa || '',
+        jazzcash: req.body.paymentDetails.jazzcash || user.paymentDetails?.jazzcash || '',
+        bankName: req.body.paymentDetails.bankName || user.paymentDetails?.bankName || '',
+        accountNumber: req.body.paymentDetails.accountNumber || user.paymentDetails?.accountNumber || '',
+      };
+    }
+
     const updatedUser = await user.save();
     return res.json({
       _id: updatedUser._id,
       name: updatedUser.name,
       email: updatedUser.email,
+      phone: updatedUser.phone,
+      paymentDetails: updatedUser.paymentDetails,
     });
   } catch (error) {
     console.error('Update profile error:', error);

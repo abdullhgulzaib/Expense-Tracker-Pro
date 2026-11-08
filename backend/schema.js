@@ -39,6 +39,17 @@ const UserSchema = new mongoose.Schema(
       enum: ["local", "google"],
       default: "local",
     },
+    phone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    paymentDetails: {
+      easypaisa: { type: String, default: "", trim: true },
+      jazzcash: { type: String, default: "", trim: true },
+      bankName: { type: String, default: "", trim: true },
+      accountNumber: { type: String, default: "", trim: true },
+    },
   },
   { timestamps: true }
 );
@@ -544,6 +555,107 @@ export const MonthlyArchiveSchema = new mongoose.Schema(
     transactionCount: { type: Number, required: true },
     categoryBreakdown: { type: Map, of: Number, default: {} },
     archivedAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+export const SettlementSchema = new mongoose.Schema(
+  {
+    fromUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    fromUserName: {
+      type: String,
+      default: "",
+    },
+    toUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    toUserName: {
+      type: String,
+      default: "",
+    },
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+      index: true,
+    },
+    groupName: {
+      type: String,
+      default: "",
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    coveredExpenses: [
+      {
+        expenseId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "SplitExpense",
+        },
+        title: {
+          type: String,
+          default: "",
+        },
+        shareAmount: {
+          type: Number,
+          default: 0,
+        },
+      },
+    ],
+    proof: {
+      method: {
+        type: String,
+        default: "Easypaisa",
+      },
+      imageUrl: {
+        type: String,
+        default: "",
+      },
+      transactionId: {
+        type: String,
+        trim: true,
+        default: "",
+      },
+      senderNote: {
+        type: String,
+        default: "",
+      },
+      paymentDate: {
+        type: String,
+        default: "",
+      },
+      submittedAt: {
+        type: Date,
+        default: Date.now,
+      },
+      verifiedAt: {
+        type: Date,
+      },
+      verifiedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      rejectionReason: {
+        type: String,
+        default: "",
+      },
+    },
+    status: {
+      type: String,
+      enum: ["UnderReview", "Verified", "Rejected"],
+      default: "UnderReview",
+      index: true,
+    },
   },
   { timestamps: true }
 );

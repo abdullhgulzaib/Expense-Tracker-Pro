@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { X, Users, DollarSign, Plus, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Users, DollarSign, Plus, Trash2, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSplitVault } from '../../context/SplitVaultContext';
 
@@ -7,7 +7,7 @@ const DEFAULT_CATEGORIES = ['Food', 'Housing', 'Utilities', 'Transport', 'Entert
 
 export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGroupId = null }) {
   const { user } = useAuth();
-  const { summary, activeGroupDetails, createSplitExpense } = useSplitVault();
+  const { summary, activeGroupDetails, createSplitExpense, scanReceiptAI } = useSplitVault();
 
   const [title, setTitle] = useState('');
   const [totalAmount, setTotalAmount] = useState('');
@@ -17,10 +17,43 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const fileInputRef = useRef(null);
 
   const [participants, setParticipants] = useState([]);
   const [newParticipantName, setNewParticipantName] = useState('');
   const prevIsOpenRef = useRef(false);
+
+  const handleScanReceiptFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        setIsScanning(true);
+        setError('');
+        const base64 = reader.result;
+        const res = await scanReceiptAI(base64);
+        setIsScanning(false);
+        if (res.success && res.data) {
+          if (res.data.title) setTitle(res.data.title);
+          if (res.data.amount) {
+            setTotalAmount(String(res.data.amount));
+            setParticipants((prev) => recalculateSplits(prev, String(res.data.amount), splitType));
+          }
+          if (res.data.category) setCategory(res.data.category);
+          if (res.data.notes) setNotes(res.data.notes);
+        } else {
+          setError(res.error || 'Failed to scan receipt. Please enter details manually.');
+        }
+      } catch (err) {
+        setIsScanning(false);
+        setError('Error scanning receipt.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
 
   // Helper to recalculate splits automatically across all selected members
@@ -362,6 +395,27 @@ export default function CreateSplitExpenseModal({ isOpen, onClose, preselectedGr
                 <span>{error}</span>
               </div>
             )}
+
+            {/* Scan Receipt AI Helper */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-4px' }}>
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept="image/*"
+                onChange={handleScanReceiptFile}
+              />
+              <button
+                type="button"
+                className="splitvault-btn splitvault-btn--secondary splitvault-btn--sm"
+                style={{ fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                disabled={isScanning}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Sparkles size={14} color="#818cf8" />
+                {isScanning ? 'AI Scanning Receipt...' : '⚡ Auto-Fill from Receipt (AI)'}
+              </button>
+            </div>
 
             {/* Title & Total Amount */}
             <div className="sv-form-row">

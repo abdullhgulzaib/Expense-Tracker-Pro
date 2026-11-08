@@ -45,6 +45,11 @@ import {
   deleteSplitExpense,
   submitPaymentProof,
   verifyPaymentProof,
+  createSettlement,
+  verifySettlement,
+  getSettlements,
+  sendNudgeReminder,
+  scanReceiptAI,
 } from './controllers/splitVaultController.js';
 import {
   createNotification,
@@ -139,6 +144,11 @@ app.post(['/splitvault/expenses', '/api/splitvault/expenses'], protect, createSp
 app.delete(['/splitvault/expenses/:id', '/api/splitvault/expenses/:id'], protect, deleteSplitExpense);
 app.post(['/splitvault/expenses/:expenseId/splits/:splitUserId/proof', '/api/splitvault/expenses/:expenseId/splits/:splitUserId/proof'], protect, submitPaymentProof);
 app.post(['/splitvault/expenses/:expenseId/splits/:splitUserId/verify', '/api/splitvault/expenses/:expenseId/splits/:splitUserId/verify'], protect, verifyPaymentProof);
+app.post(['/splitvault/settlements', '/api/splitvault/settlements'], protect, createSettlement);
+app.post(['/splitvault/settlements/:settlementId/verify', '/api/splitvault/settlements/:settlementId/verify'], protect, verifySettlement);
+app.get(['/splitvault/settlements', '/api/splitvault/settlements'], protect, getSettlements);
+app.post(['/splitvault/nudge', '/api/splitvault/nudge'], protect, sendNudgeReminder);
+app.post(['/splitvault/scan-receipt', '/api/splitvault/scan-receipt'], protect, scanReceiptAI);
 
 // Notification Routes (Protected)
 app.post(['/notifications', '/api/notifications'], protect, createNotification);

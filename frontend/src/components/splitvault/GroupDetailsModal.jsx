@@ -23,6 +23,7 @@ export default function GroupDetailsModal({
   onOpenAddExpense,
   onOpenVerification,
   onOpenProofSubmit,
+  onOpenSettleModal,
 }) {
   const { user } = useAuth();
   const {
@@ -569,7 +570,7 @@ export default function GroupDetailsModal({
                             </div>
                           </div>
 
-                          <div style={{ textAlign: 'right' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
                             <div
                               style={{
                                 fontSize: '1.15rem',
@@ -579,14 +580,30 @@ export default function GroupDetailsModal({
                             >
                               Rs {Number(s.amount).toLocaleString()}
                             </div>
-                            <span
-                              className={`sv-status-pill ${
-                                isCreditor ? 'sv-status-pill--verified' : 'sv-status-pill--review'
-                              }`}
-                              style={{ fontSize: '0.72rem', marginTop: '2px', display: 'inline-block' }}
-                            >
-                              {isDebtor ? 'You Owe' : isCreditor ? 'Owed to You' : 'Pending'}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                              <span
+                                className={`sv-status-pill ${
+                                  isCreditor ? 'sv-status-pill--verified' : 'sv-status-pill--review'
+                                }`}
+                                style={{ fontSize: '0.72rem' }}
+                              >
+                                {isDebtor ? 'You Owe' : isCreditor ? 'Owed to You' : 'Pending'}
+                              </span>
+
+                              {isDebtor && typeof onOpenSettleModal === 'function' && (
+                                <button
+                                  type="button"
+                                  className="splitvault-btn splitvault-btn--primary splitvault-btn--sm"
+                                  style={{ padding: '3px 8px', fontSize: '0.74rem' }}
+                                  onClick={() => {
+                                    onClose();
+                                    onOpenSettleModal(s);
+                                  }}
+                                >
+                                  ⚡ Settle
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );

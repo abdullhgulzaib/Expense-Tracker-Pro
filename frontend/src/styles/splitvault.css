@@ -1466,3 +1466,209 @@ body:has(.sidebar-backdrop) .global-mobile-nav {
   }
 }
 
+/* ==========================================================================
+   Settlement Action Center & Progressive Disclosure History
+   ========================================================================== */
+.sv-action-center {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-card-border);
+  border-radius: var(--sv-radius);
+  padding: 20px;
+}
+
+.sv-action-center__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--sv-card-border);
+}
+
+.sv-action-center__badge-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+}
+
+.sv-action-center__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.sv-action-center__subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.sv-action-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sv-action-block__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.sv-action-card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sv-action-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--sv-card-border);
+  gap: 14px;
+  flex-wrap: wrap;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.sv-action-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.sv-action-card--creditor {
+  border-left: 4px solid #10b981;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
+}
+
+.sv-action-card--debtor {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
+}
+
+.sv-action-card__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.sv-action-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sv-action-card__sender {
+  font-size: 0.92rem;
+  color: #fff;
+}
+
+.sv-action-card__sender strong {
+  color: #38bdf8;
+}
+
+.sv-action-card__meta {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.sv-action-card__note {
+  font-size: 0.76rem;
+  color: #fbbf24;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.sv-action-card__right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.sv-action-card__amount {
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: right;
+}
+
+.sv-action-center__empty {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.sv-history-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sv-history-feed__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.sv-history-feed__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.sv-history-feed__hint {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.splitvault-expense-item--expanded {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+}
+
+.splitvault-expense-toggle-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.splitvault-expense-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+
