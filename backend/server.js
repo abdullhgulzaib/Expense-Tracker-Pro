@@ -88,10 +88,34 @@ const connectToDatabase = () => {
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
-app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
+// Dynamic CORS configuration allowing localhost on all development ports (Vite 5173, Flutter Web 3050, etc.)
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, postman, curl)
+    if (!origin) return callback(null, true);
+    if (
+      origin.startsWith('http://localhost') ||
+      origin.startsWith('http://127.0.0.1') ||
+      origin === process.env.CLIENT_URL
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+}));
 
 // Health check route
-app.get('/health', (req, res) => {
+app.get(['/', '/api'], (req, res) => {
+  res.json({
+    status: 'Raqmify Backend API is running on Vercel',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+app.get(['/health', '/api/health'], (req, res) => {
   res.json({ status: 'Backend is running' });
 });
 
@@ -164,9 +188,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: err.message });
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+if (process.env.NODE_ENV !== 'production' || (!process.env.VERCEL && process.env.PORT)) {
+  const port = process.env.PORT || 5000;
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
   });
 }
 
