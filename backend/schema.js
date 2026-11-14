@@ -614,9 +614,22 @@ export const SettlementSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "SplitExpense",
         },
+        splitUserId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        direction: {
+          type: String,
+          enum: ["forward", "reverse"],
+          default: "forward",
+        },
         title: {
           type: String,
           default: "",
+        },
+        amount: {
+          type: Number,
+          default: 0,
         },
         shareAmount: {
           type: Number,

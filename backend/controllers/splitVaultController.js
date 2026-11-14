@@ -529,12 +529,11 @@ export const deleteGroup = async (req, res) => {
     const groupSplitExpenses = await SplitExpense.find({ groupId });
     const splitExpenseIds = groupSplitExpenses.map((e) => e._id);
 
-    // 2. Cascade delete all auto-logged personal expenses (by groupId, splitExpenseId, or group name reference in notes)
+    // 2. Cascade delete all auto-logged personal expenses (strictly by groupId or splitExpenseId)
     await Expense.deleteMany({
       $or: [
         { groupId: group._id },
         { splitExpenseId: { $in: splitExpenseIds } },
-        { notes: { $regex: new RegExp(`"${group.name}"`, 'i') } },
       ],
     }).catch((e) => console.error('Error cascading personal expenses on group delete:', e.message));
 
@@ -810,7 +809,7 @@ export const createSplitExpense = async (req, res) => {
           title: 'New Split Expense Added',
           message: `${req.user.name} added you to "${expense.title}" (${expense.groupName || 'Direct Split'}). Your share: Rs ${split.amount}.`,
           type: 'info',
-          metadata: { expenseId: expense._id, amount: split.amount },
+          metadata: { expenseId: expense._id, splitExpenseId: expense._id, groupId: expense.groupId || null, amount: split.amount },
         }).catch((e) => console.error('Notification error:', e.message));
       }
     }
@@ -821,7 +820,7 @@ export const createSplitExpense = async (req, res) => {
       title: 'Split Expense Created',
       message: `"${expense.title}" (Rs ${expense.totalAmount}) recorded and shared with ${splits.length - 1} roommate(s).`,
       type: 'expense-add',
-      metadata: { expenseId: expense._id, totalAmount: expense.totalAmount },
+      metadata: { expenseId: expense._id, splitExpenseId: expense._id, groupId: expense.groupId || null, totalAmount: expense.totalAmount },
     }).catch((e) => console.error('Notification error:', e.message));
 
     res.status(201).json(expense);
@@ -838,7 +837,9 @@ export const createSplitExpense = async (req, res) => {
 export const submitPaymentProof = async (req, res) => {
   try {
     const { expenseId, splitUserId } = req.params;
-    const { method, imageUrl, transactionId, senderNote, paymentDate } = req.body;
+    const method = req.body.method || req.body.paymentMethod;
+    const transactionId = req.body.transactionId || req.body.proofTid;
+    const { imageUrl, senderNote, paymentDate } = req.body;
 
     const expense = await SplitExpense.findById(expenseId);
     if (!expense) {
@@ -856,15 +857,40 @@ export const submitPaymentProof = async (req, res) => {
       return res.status(404).json({ error: 'Participant split not found in this expense' });
     }
 
+    // STRICT DEBTOR-ONLY AUTHORIZATION CHECK
+    if (split.user && split.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Only the debtor participant can submit payment proof for their share.' });
+    }
+
     if (split.status === 'Verified') {
       return res.status(400).json({ error: 'This payment has already been verified and settled.' });
+    }
+
+    // Validate: transactionId non-empty OR imageUrl present (400 otherwise)
+    const cleanTid = transactionId ? String(transactionId).trim() : '';
+    const cleanImg = imageUrl ? String(imageUrl).trim() : '';
+    if (!cleanTid && !cleanImg) {
+      return res.status(400).json({ error: 'Either transactionId or imageUrl is required.' });
+    }
+
+    // Validate imageUrl: empty or data:image/(jpeg|png|webp);base64, string whose decoded size <= 1.5 MB
+    if (cleanImg) {
+      const match = cleanImg.match(/^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/i);
+      if (!match) {
+        return res.status(400).json({ error: 'Image must be a valid base64 data URL (JPEG, PNG, or WEBP).' });
+      }
+      const base64Data = match[2];
+      const decodedLength = Math.floor((base64Data.length * 3) / 4);
+      if (decodedLength > 1.5 * 1024 * 1024) {
+        return res.status(400).json({ error: 'Receipt image size must not exceed 1.5 MB.' });
+      }
     }
 
     split.status = 'UnderReview';
     split.proof = {
       method: method || 'Easypaisa',
-      imageUrl: imageUrl || '',
-      transactionId: transactionId || '',
+      imageUrl: cleanImg,
+      transactionId: cleanTid,
       senderNote: senderNote || '',
       paymentDate: paymentDate || new Date().toLocaleString(),
       submittedAt: new Date(),
@@ -878,7 +904,7 @@ export const submitPaymentProof = async (req, res) => {
       title: 'Payment Proof Submitted',
       message: `${req.user.name} submitted payment proof of Rs ${split.amount} for "${expense.title}". Please verify to settle balance.`,
       type: 'info',
-      metadata: { expenseId: expense._id, splitUserId, amount: split.amount },
+      metadata: { expenseId: expense._id, splitExpenseId: expense._id, groupId: expense.groupId || null, splitUserId, amount: split.amount },
     }).catch((e) => console.error('Notification error:', e.message));
 
     // Also notify debtor for their persistent record
@@ -887,10 +913,10 @@ export const submitPaymentProof = async (req, res) => {
       title: 'Proof Submitted',
       message: `Your payment proof of Rs ${split.amount} for "${expense.title}" has been sent for verification.`,
       type: 'info',
-      metadata: { expenseId: expense._id, amount: split.amount },
+      metadata: { expenseId: expense._id, splitExpenseId: expense._id, groupId: expense.groupId || null, amount: split.amount },
     }).catch((e) => console.error('Notification error:', e.message));
 
-    res.json({ message: 'Payment proof submitted successfully!', expense });
+    res.json({ message: 'Payment proof submitted successfully!', expense, split });
   } catch (error) {
     console.error('submitPaymentProof error:', error);
     res.status(500).json({ error: error.message });
@@ -905,7 +931,18 @@ export const submitPaymentProof = async (req, res) => {
 export const verifyPaymentProof = async (req, res) => {
   try {
     const { expenseId, splitUserId } = req.params;
-    const { action, reason = '' } = req.body;
+    const { action: rawAction, approve, approved, reason = '' } = req.body;
+    let action = rawAction ? String(rawAction).toUpperCase() : undefined;
+    if (!action) {
+      if (approve === true || approved === true) action = 'APPROVE';
+      else if (approve === false || approved === false) action = 'REJECT';
+    }
+
+    if (action !== 'APPROVE' && action !== 'REJECT' && action !== 'REQUEST_INFO') {
+      return res.status(400).json({
+        error: 'Valid action (APPROVE, REJECT or REQUEST_INFO) is required.',
+      });
+    }
 
     const expense = await SplitExpense.findById(expenseId);
     if (!expense) {
@@ -940,7 +977,7 @@ export const verifyPaymentProof = async (req, res) => {
 
       await expense.save();
 
-      // AUTOMATICALLY LOG EXPENSE in Debtor's personal account
+      // AUTOMATICALLY LOG EXPENSE in Debtor's personal account (1250 rule)
       try {
         const debtorUserId = split.user;
         let debtorUser = null;
@@ -949,19 +986,26 @@ export const verifyPaymentProof = async (req, res) => {
         }
 
         if (debtorUser) {
-          const autoExpense = await Expense.create({
-            title: `${expense.title} (Split Paid to ${req.user.name})`,
-            amount: Number(split.amount),
-            category: mapCategory(expense.category),
-            paymentMethod: mapPaymentMethod(split.proof?.method),
-            date: split.proof?.paymentDate ? new Date(split.proof.paymentDate) : new Date(),
-            notes: `SplitVault settlement for "${expense.title}" (${expense.groupName || 'Direct'}). Reference TID: ${split.proof?.transactionId || 'Verified Proof'}`,
-            status: 'Completed',
+          const existing = await Expense.findOne({
             userId: debtorUser._id,
-            groupId: expense.groupId || null,
             splitExpenseId: expense._id,
           });
-          console.log(`Auto-created personal expense ${autoExpense._id} for debtor ${debtorUser.name}`);
+
+          if (!existing) {
+            const autoExpense = await Expense.create({
+              title: `${expense.title} (My Share)`,
+              amount: Number(split.amount),
+              category: mapCategory(expense.category),
+              paymentMethod: mapPaymentMethod(split.proof?.method),
+              date: expense.date || new Date(),
+              notes: `SplitVault settlement for "${expense.title}" (${expense.groupName || 'Direct'}). Reference TID: ${split.proof?.transactionId || 'Verified Proof'}`,
+              status: 'Completed',
+              userId: debtorUser._id,
+              groupId: expense.groupId || null,
+              splitExpenseId: expense._id,
+            });
+            console.log(`Auto-created personal expense ${autoExpense._id} for debtor ${debtorUser.name}`);
+          }
         } else {
           console.warn('Note: Debtor user ID is not registered in User collection:', debtorUserId);
         }
@@ -975,7 +1019,7 @@ export const verifyPaymentProof = async (req, res) => {
         title: 'Payment Proof Verified',
         message: `Your payment of Rs ${split.amount} for "${expense.title}" was verified and approved by ${req.user.name}. Balance settled.`,
         type: 'success',
-        metadata: { expenseId: expense._id, amount: split.amount },
+        metadata: { expenseId: expense._id, splitExpenseId: expense._id, groupId: expense.groupId || null, amount: split.amount },
       }).catch((e) => console.error('Notification error:', e.message));
 
       // Also notify payer for their persistent record
@@ -984,12 +1028,13 @@ export const verifyPaymentProof = async (req, res) => {
         title: 'Payment Verified & Settled',
         message: `You verified and approved ${split.name}'s payment of Rs ${split.amount} for "${expense.title}".`,
         type: 'success',
-        metadata: { expenseId: expense._id, amount: split.amount },
+        metadata: { expenseId: expense._id, splitExpenseId: expense._id, groupId: expense.groupId || null, amount: split.amount },
       }).catch((e) => console.error('Notification error:', e.message));
 
       return res.json({
         message: 'Payment verified and balance settled successfully!',
         expense,
+        split,
         status: 'Verified',
       });
     } else if (action === 'REJECT') {
@@ -1005,15 +1050,16 @@ export const verifyPaymentProof = async (req, res) => {
         title: 'Payment Proof Rejected',
         message: `Your payment proof of Rs ${split.amount} for "${expense.title}" was rejected by ${req.user.name}. Reason: "${reason || 'Proof could not be verified'}". Please re-submit valid proof.`,
         type: 'danger',
-        metadata: { expenseId: expense._id, amount: split.amount, reason },
+        metadata: { expenseId: expense._id, splitExpenseId: expense._id, groupId: expense.groupId || null, amount: split.amount, reason },
       }).catch((e) => console.error('Notification error:', e.message));
 
       return res.json({
         message: 'Payment proof rejected. Roommate has been notified to re-submit.',
         expense,
+        split,
         status: 'Rejected',
       });
-    } else {
+    } else if (action === 'REQUEST_INFO') {
       if (!split.proof) split.proof = {};
       split.proof.rejectionReason = reason || 'Please provide clear transaction ID or full slip.';
       await expense.save();
@@ -1024,12 +1070,13 @@ export const verifyPaymentProof = async (req, res) => {
         title: 'Information Requested',
         message: `${req.user.name} requested updated details for "${expense.title}": "${reason}".`,
         type: 'warning',
-        metadata: { expenseId: expense._id, amount: split.amount, reason },
+        metadata: { expenseId: expense._id, splitExpenseId: expense._id, groupId: expense.groupId || null, amount: split.amount, reason },
       }).catch((e) => console.error('Notification error:', e.message));
 
       return res.json({
         message: 'Information requested from roommate.',
         expense,
+        split,
       });
     }
   } catch (error) {
@@ -1104,26 +1151,139 @@ export const createSettlement = async (req, res) => {
       toUserId,
       groupId,
       amount,
-      coveredExpenseIds = [],
-      method = 'Easypaisa',
-      transactionId = '',
-      imageUrl = '',
+      method: rawMethod,
+      paymentMethod,
+      transactionId: rawTid,
+      proofTid,
+      imageUrl: rawImg,
       senderNote = '',
       paymentDate = '',
     } = req.body;
+
+    const method = rawMethod || paymentMethod || 'Easypaisa';
+    const transactionId = (rawTid || proofTid || '').trim();
+    const imageUrl = (rawImg || '').trim();
 
     if (!toUserId) {
       return res.status(400).json({ error: 'Recipient user ID is required.' });
     }
 
-    const numAmount = Number(amount);
-    if (!numAmount || numAmount <= 0) {
-      return res.status(400).json({ error: 'Valid settlement amount is required.' });
-    }
-
     const recipient = await User.findById(toUserId);
     if (!recipient) {
       return res.status(404).json({ error: 'Recipient user not found.' });
+    }
+
+    // Validate: transactionId non-empty OR imageUrl present (400 otherwise)
+    if (!transactionId && !imageUrl) {
+      return res.status(400).json({ error: 'Either transactionId or imageUrl is required.' });
+    }
+
+    // Validate imageUrl if present (base64 data URL, max 1.5 MB decoded)
+    if (imageUrl) {
+      const match = imageUrl.match(/^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/i);
+      if (!match) {
+        return res.status(400).json({ error: 'Image must be a valid base64 data URL (JPEG, PNG, or WEBP).' });
+      }
+      const base64Data = match[2];
+      const decodedLength = Math.floor((base64Data.length * 3) / 4);
+      if (decodedLength > 1.5 * 1024 * 1024) {
+        return res.status(400).json({ error: 'Receipt image size must not exceed 1.5 MB.' });
+      }
+    }
+
+    // Reject (409) if a settlement for same pair and scope is already UnderReview
+    const existingPendingQuery = {
+      fromUser: req.user._id,
+      toUser: toUserId,
+      status: 'UnderReview',
+    };
+    if (groupId) {
+      existingPendingQuery.groupId = groupId;
+    }
+    const existingPending = await Settlement.findOne(existingPendingQuery);
+    if (existingPending) {
+      return res.status(409).json({ error: 'A settlement for this balance is already under review.' });
+    }
+
+    // Recompute forward and reverse splits on the server
+    const expenseQuery = {
+      $or: [
+        { paidBy: toUserId, 'splits.user': req.user._id },
+        { paidBy: req.user._id, 'splits.user': toUserId },
+      ],
+    };
+    if (groupId) {
+      expenseQuery.groupId = groupId;
+    }
+
+    const matchingExpenses = await SplitExpense.find(expenseQuery);
+
+    const forwardSplits = [];
+    const reverseSplits = [];
+
+    matchingExpenses.forEach((exp) => {
+      if (Array.isArray(exp.splits)) {
+        exp.splits.forEach((s) => {
+          if (s.status === 'Verified') return;
+
+          // Forward split: debtor (req.user) owes creditor (toUserId) for expense paid by creditor
+          if (
+            exp.paidBy?.toString() === toUserId.toString() &&
+            s.user?.toString() === req.user._id.toString()
+          ) {
+            forwardSplits.push({
+              expense: exp,
+              split: s,
+              expenseId: exp._id,
+              splitUserId: s.user,
+              direction: 'forward',
+              title: exp.title,
+              amount: Number(s.amount) || 0,
+            });
+          }
+
+          // Reverse split: creditor (toUserId) owes debtor (req.user) for expense paid by debtor
+          if (
+            exp.paidBy?.toString() === req.user._id.toString() &&
+            s.user?.toString() === toUserId.toString()
+          ) {
+            reverseSplits.push({
+              expense: exp,
+              split: s,
+              expenseId: exp._id,
+              splitUserId: s.user,
+              direction: 'reverse',
+              title: exp.title,
+              amount: Number(s.amount) || 0,
+            });
+          }
+        });
+      }
+    });
+
+    const forwardPaisa = forwardSplits.reduce(
+      (sum, item) => sum + Math.round(item.amount * 100),
+      0
+    );
+    const reversePaisa = reverseSplits.reduce(
+      (sum, item) => sum + Math.round(item.amount * 100),
+      0
+    );
+    const netPaisa = forwardPaisa - reversePaisa;
+    const currentNet = Math.round(netPaisa) / 100;
+
+    if (netPaisa <= 0) {
+      return res.status(409).json({ error: 'Nothing to settle' });
+    }
+
+    if (amount !== undefined && amount !== null) {
+      const clientAmount = Number(amount);
+      if (Math.abs(clientAmount - currentNet) > 0.01) {
+        return res.status(409).json({
+          error: 'Balance changed',
+          currentNet,
+        });
+      }
     }
 
     let groupName = '';
@@ -1132,36 +1292,45 @@ export const createSettlement = async (req, res) => {
       if (grp) groupName = grp.name;
     }
 
-    // Find and prepare covered expenses
-    let coveredExpenses = [];
-    if (Array.isArray(coveredExpenseIds) && coveredExpenseIds.length > 0) {
-      const expenses = await SplitExpense.find({
-        _id: { $in: coveredExpenseIds },
+    // Store in coveredExpenses every forward and reverse split
+    const coveredExpenses = [];
+    forwardSplits.forEach((item) => {
+      coveredExpenses.push({
+        expenseId: item.expenseId,
+        splitUserId: item.splitUserId,
+        direction: 'forward',
+        title: item.title,
+        amount: item.amount,
+        shareAmount: item.amount,
       });
+    });
+    reverseSplits.forEach((item) => {
+      coveredExpenses.push({
+        expenseId: item.expenseId,
+        splitUserId: item.splitUserId,
+        direction: 'reverse',
+        title: item.title,
+        amount: item.amount,
+        shareAmount: item.amount,
+      });
+    });
 
-      for (const exp of expenses) {
-        const split = exp.splits.find(
-          (s) => s.user?.toString() === req.user._id.toString() && s.status !== 'Verified'
-        );
-        if (split) {
-          coveredExpenses.push({
-            expenseId: exp._id,
-            title: exp.title,
-            shareAmount: split.amount,
-          });
+    // Mark forward splits UnderReview with proof; leave reverse splits unchanged
+    const touchedExpensesMap = new Map();
+    for (const item of forwardSplits) {
+      item.split.status = 'UnderReview';
+      if (!item.split.proof) item.split.proof = {};
+      item.split.proof.method = method;
+      item.split.proof.transactionId = transactionId;
+      item.split.proof.imageUrl = imageUrl;
+      item.split.proof.senderNote = senderNote;
+      item.split.proof.paymentDate = paymentDate || new Date().toLocaleString();
+      item.split.proof.submittedAt = new Date();
+      touchedExpensesMap.set(item.expense._id.toString(), item.expense);
+    }
 
-          // Mark individual split as UnderReview with settlement proof details
-          split.status = 'UnderReview';
-          if (!split.proof) split.proof = {};
-          split.proof.method = method;
-          split.proof.transactionId = transactionId;
-          split.proof.imageUrl = imageUrl;
-          split.proof.senderNote = senderNote;
-          split.proof.paymentDate = paymentDate || new Date().toLocaleString();
-          split.proof.submittedAt = new Date();
-          await exp.save();
-        }
-      }
+    for (const exp of touchedExpensesMap.values()) {
+      await exp.save();
     }
 
     const settlement = await Settlement.create({
@@ -1171,7 +1340,7 @@ export const createSettlement = async (req, res) => {
       toUserName: recipient.name,
       groupId: groupId || null,
       groupName,
-      amount: numAmount,
+      amount: currentNet,
       coveredExpenses,
       proof: {
         method,
@@ -1188,18 +1357,26 @@ export const createSettlement = async (req, res) => {
     await Notification.create({
       userId: toUserId,
       title: 'Net Settlement Proof Submitted',
-      message: `${req.user.name} submitted a one-shot payment proof of Rs ${numAmount} to settle ${coveredExpenses.length} shared expense(s). Please review and approve.`,
+      message: `${req.user.name} submitted a one-shot payment proof of Rs ${currentNet} to settle ${coveredExpenses.length} shared expense(s). Please review and approve.`,
       type: 'info',
-      metadata: { settlementId: settlement._id, amount: numAmount },
+      metadata: {
+        settlementId: settlement._id,
+        groupId: groupId || null,
+        amount: currentNet,
+      },
     }).catch((e) => console.error('Notification error:', e.message));
 
     // Notify Debtor
     await Notification.create({
       userId: req.user._id,
       title: 'Settlement Submitted',
-      message: `Your payment proof of Rs ${numAmount} to ${recipient.name} is now pending approval.`,
+      message: `Your payment proof of Rs ${currentNet} to ${recipient.name} is now pending approval.`,
       type: 'info',
-      metadata: { settlementId: settlement._id, amount: numAmount },
+      metadata: {
+        settlementId: settlement._id,
+        groupId: groupId || null,
+        amount: currentNet,
+      },
     }).catch((e) => console.error('Notification error:', e.message));
 
     res.status(201).json({
@@ -1219,7 +1396,18 @@ export const createSettlement = async (req, res) => {
 export const verifySettlement = async (req, res) => {
   try {
     const { settlementId } = req.params;
-    const { action, reason = '' } = req.body;
+    const { action: rawAction, approve, approved, reason = '' } = req.body;
+    let action = rawAction ? String(rawAction).toUpperCase() : undefined;
+    if (!action) {
+      if (approve === true || approved === true) action = 'APPROVE';
+      else if (approve === false || approved === false) action = 'REJECT';
+    }
+
+    if (action !== 'APPROVE' && action !== 'REJECT') {
+      return res.status(400).json({
+        error: 'Valid action (APPROVE or REJECT) is required.',
+      });
+    }
 
     const settlement = await Settlement.findById(settlementId);
     if (!settlement) {
@@ -1233,80 +1421,150 @@ export const verifySettlement = async (req, res) => {
       });
     }
 
+    // Idempotent: approving an already Verified settlement returns 200 without duplicating anything
+    if (settlement.status === 'Verified') {
+      return res.status(200).json({
+        message: 'Settlement is already verified.',
+        settlement,
+        status: 'Verified',
+      });
+    }
+
     if (action === 'APPROVE') {
       settlement.status = 'Verified';
       if (!settlement.proof) settlement.proof = {};
       settlement.proof.verifiedAt = new Date();
       settlement.proof.verifiedBy = req.user._id;
 
-      // Mark all covered splits across SplitExpense documents as Verified
+      // In one operation, mark every split in coveredExpenses (forward and reverse) Verified
+      const touchedExpensesMap = new Map();
+      const newlyVerifiedSplits = [];
+
       if (Array.isArray(settlement.coveredExpenses)) {
         for (const item of settlement.coveredExpenses) {
-          const exp = await SplitExpense.findById(item.expenseId);
+          let exp = touchedExpensesMap.get(item.expenseId.toString());
+          if (!exp) {
+            exp = await SplitExpense.findById(item.expenseId);
+            if (exp) touchedExpensesMap.set(exp._id.toString(), exp);
+          }
+
           if (exp) {
             const split = exp.splits.find(
-              (s) => s.user?.toString() === settlement.fromUser.toString()
+              (s) =>
+                (item.splitUserId && s.user?.toString() === item.splitUserId.toString()) ||
+                (item.direction === 'forward' && s.user?.toString() === settlement.fromUser.toString()) ||
+                (item.direction === 'reverse' && s.user?.toString() === settlement.toUser.toString())
             );
+
             if (split) {
               split.status = 'Verified';
               if (!split.proof) split.proof = {};
               split.proof.verifiedAt = new Date();
               split.proof.verifiedBy = req.user._id;
+
+              newlyVerifiedSplits.push({
+                splitOwnerId: split.user,
+                amount: Number(split.amount),
+                expense: exp,
+              });
             }
-            exp.isFullySettled = exp.splits.every((s) => s.status === 'Verified');
-            await exp.save();
           }
         }
       }
 
-      await settlement.save();
-
-      // Automatically log Personal Expense for the Debtor as a Repayment
-      try {
-        await Expense.create({
-          title: `Settlement Paid to ${req.user.name}`,
-          amount: Number(settlement.amount),
-          category: 'Bills',
-          paymentMethod: mapPaymentMethod(settlement.proof?.method),
-          date: settlement.proof?.paymentDate ? new Date(settlement.proof.paymentDate) : new Date(),
-          notes: `SplitVault one-shot settlement for ${settlement.coveredExpenses.length} shared expense(s). Ref TID: ${settlement.proof?.transactionId || 'Verified Proof'}`,
-          status: 'Completed',
-          userId: settlement.fromUser,
-        });
-      } catch (err) {
-        console.error('Error logging auto personal expense for debtor:', err.message);
+      for (const exp of touchedExpensesMap.values()) {
+        exp.isFullySettled = exp.splits.every((s) => s.status === 'Verified');
+        await exp.save();
       }
 
-      // Notify Debtor of 1-tap clearance
+      await settlement.save();
+
+      // Task 3: Create personal expense records per the 1250 rule:
+      // one personal expense per newly verified split owner:
+      // userId = split owner, amount = split amount, title = "<expense title> (My Share)",
+      // groupId, splitExpenseId, status: 'Completed'.
+      // Idempotency: Before creating, check there is no existing personal expense with same userId + splitExpenseId.
+      for (const item of newlyVerifiedSplits) {
+        try {
+          if (!item.splitOwnerId) continue;
+          const ownerId = item.splitOwnerId.toString();
+
+          const existing = await Expense.findOne({
+            userId: ownerId,
+            splitExpenseId: item.expense._id,
+          });
+
+          if (!existing) {
+            await Expense.create({
+              title: `${item.expense.title} (My Share)`,
+              amount: item.amount,
+              category: mapCategory(item.expense.category),
+              paymentMethod: mapPaymentMethod(settlement.proof?.method),
+              date: item.expense.date || new Date(),
+              notes: `SplitVault settlement for "${item.expense.title}" (${item.expense.groupName || 'Direct'}). Ref TID: ${settlement.proof?.transactionId || 'Verified Proof'}`,
+              status: 'Completed',
+              userId: ownerId,
+              groupId: item.expense.groupId || null,
+              splitExpenseId: item.expense._id,
+            });
+          }
+        } catch (err) {
+          console.error('Error logging share expense in verifySettlement:', err.message);
+        }
+      }
+
+      // Notify Debtor
       await Notification.create({
         userId: settlement.fromUser,
         title: 'Settlement Approved & Cleared',
         message: `Your payment of Rs ${settlement.amount} to ${req.user.name} was approved! All ${settlement.coveredExpenses.length} shared expenses are now settled.`,
         type: 'success',
-        metadata: { settlementId: settlement._id, amount: settlement.amount },
+        metadata: {
+          settlementId: settlement._id,
+          groupId: settlement.groupId || null,
+          amount: settlement.amount,
+        },
+      }).catch((e) => console.error('Notification error:', e.message));
+
+      // Notify Creditor
+      await Notification.create({
+        userId: req.user._id,
+        title: 'Settlement Cleared',
+        message: `You verified and approved ${settlement.fromUserName}'s settlement of Rs ${settlement.amount}.`,
+        type: 'success',
+        metadata: {
+          settlementId: settlement._id,
+          groupId: settlement.groupId || null,
+          amount: settlement.amount,
+        },
       }).catch((e) => console.error('Notification error:', e.message));
 
       return res.json({
         message: 'Settlement approved! All covered shared expenses have been marked as settled.',
         settlement,
+        status: 'Verified',
       });
     } else if (action === 'REJECT') {
       settlement.status = 'Rejected';
       if (!settlement.proof) settlement.proof = {};
       settlement.proof.rejectionReason = reason || 'Payment slip not recognized or transaction not received.';
 
-      // Revert covered splits back to Unpaid
+      // Revert forward splits back to Unpaid; reverse splits untouched
       if (Array.isArray(settlement.coveredExpenses)) {
         for (const item of settlement.coveredExpenses) {
-          const exp = await SplitExpense.findById(item.expenseId);
-          if (exp) {
-            const split = exp.splits.find(
-              (s) => s.user?.toString() === settlement.fromUser.toString()
-            );
-            if (split && split.status === 'UnderReview') {
-              split.status = 'Unpaid';
+          if (item.direction === 'forward') {
+            const exp = await SplitExpense.findById(item.expenseId);
+            if (exp) {
+              const split = exp.splits.find(
+                (s) =>
+                  (item.splitUserId && s.user?.toString() === item.splitUserId.toString()) ||
+                  s.user?.toString() === settlement.fromUser.toString()
+              );
+              if (split && split.status === 'UnderReview') {
+                split.status = 'Unpaid';
+              }
+              await exp.save();
             }
-            await exp.save();
           }
         }
       }
@@ -1319,15 +1577,19 @@ export const verifySettlement = async (req, res) => {
         title: 'Settlement Proof Rejected',
         message: `Your payment proof of Rs ${settlement.amount} was rejected by ${req.user.name}. Reason: "${reason || 'Invalid TID/screenshot'}". Please re-submit.`,
         type: 'danger',
-        metadata: { settlementId: settlement._id, amount: settlement.amount, reason },
+        metadata: {
+          settlementId: settlement._id,
+          groupId: settlement.groupId || null,
+          amount: settlement.amount,
+          reason,
+        },
       }).catch((e) => console.error('Notification error:', e.message));
 
       return res.json({
-        message: 'Settlement rejected. Debtor has been notified to re-submit.',
+        message: 'Settlement proof rejected. Debtor has been notified to re-submit.',
         settlement,
+        status: 'Rejected',
       });
-    } else {
-      return res.status(400).json({ error: 'Valid action (APPROVE or REJECT) is required.' });
     }
   } catch (error) {
     console.error('verifySettlement error:', error);
