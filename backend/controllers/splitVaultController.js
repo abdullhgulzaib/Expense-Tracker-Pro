@@ -173,12 +173,14 @@ export const getSplitVaultSummary = async (req, res) => {
 
     // 1. Get groups user is a member of
     const groups = await Group.find({ 'members.user': user._id }).sort({ updatedAt: -1 });
+    const groupIds = groups.map((g) => g._id);
 
-    // 2. Get all split expenses involving the user (either paidBy or in splits)
+    // 2. Get all split expenses involving the user (either paidBy, in splits, or in groups user belongs to)
     const allExpenses = await SplitExpense.find({
       $or: [
         { paidBy: user._id },
         { 'splits.user': user._id },
+        { groupId: { $in: groupIds } },
       ],
     }).sort({ date: -1 });
 
@@ -376,6 +378,7 @@ export const getSplitVaultSummary = async (req, res) => {
       recentActivity,
       pendingVerifications,
       allExpenses,
+      expenses: allExpenses, // Dual key compatibility
       netSettlements,
       settlements: allSettlements,
       pendingSettlementsToVerify,
