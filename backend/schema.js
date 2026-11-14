@@ -208,6 +208,18 @@ const ExpenseSchema = new mongoose.Schema(
       required: false, // Optional for backwards compatibility, required for user-scoped data
       index: true,
     },
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+      index: true,
+    },
+    splitExpenseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SplitExpense",
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true }
 );

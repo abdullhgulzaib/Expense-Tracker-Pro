@@ -525,10 +525,32 @@ export const deleteGroup = async (req, res) => {
       return res.status(403).json({ error: 'Only the group creator has permission to delete this group.' });
     }
 
-    await Group.findByIdAndDelete(groupId);
-    await SplitExpense.deleteMany({ groupId });
+    // 1. Find all shared expenses belonging to this group
+    const groupSplitExpenses = await SplitExpense.find({ groupId });
+    const splitExpenseIds = groupSplitExpenses.map((e) => e._id);
 
-    res.json({ message: 'Group and all associated shared expenses deleted successfully.' });
+    // 2. Cascade delete all auto-logged personal expenses (by groupId, splitExpenseId, or group name reference in notes)
+    await Expense.deleteMany({
+      $or: [
+        { groupId: group._id },
+        { splitExpenseId: { $in: splitExpenseIds } },
+        { notes: { $regex: new RegExp(`"${group.name}"`, 'i') } },
+      ],
+    }).catch((e) => console.error('Error cascading personal expenses on group delete:', e.message));
+
+    // 3. Delete group notifications
+    await Notification.deleteMany({
+      $or: [
+        { 'metadata.groupId': group._id },
+        { 'metadata.splitExpenseId': { $in: splitExpenseIds } },
+      ],
+    }).catch((e) => console.error('Error deleting notifications on group delete:', e.message));
+
+    // 4. Delete all shared group expenses and the group itself
+    await SplitExpense.deleteMany({ groupId });
+    await Group.findByIdAndDelete(groupId);
+
+    res.json({ message: 'Group, shared expenses, and personal split records deleted successfully.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -772,6 +794,8 @@ export const createSplitExpense = async (req, res) => {
           notes: `SplitVault share in "${expense.groupName || 'Direct Split'}". Total bill: Rs ${expense.totalAmount}.`,
           status: 'Completed',
           userId: req.user._id,
+          groupId: expense.groupId || null,
+          splitExpenseId: expense._id,
         });
       } catch (err) {
         console.error('Failed to log payer personal expense share:', err.message);
@@ -934,6 +958,8 @@ export const verifyPaymentProof = async (req, res) => {
             notes: `SplitVault settlement for "${expense.title}" (${expense.groupName || 'Direct'}). Reference TID: ${split.proof?.transactionId || 'Verified Proof'}`,
             status: 'Completed',
             userId: debtorUser._id,
+            groupId: expense.groupId || null,
+            splitExpenseId: expense._id,
           });
           console.log(`Auto-created personal expense ${autoExpense._id} for debtor ${debtorUser.name}`);
         } else {
@@ -1032,12 +1058,17 @@ export const deleteSplitExpense = async (req, res) => {
       });
     }
 
-    // Remove associated auto-logged personal expense for the payer if it exists
+    // Remove associated auto-logged personal expenses (both payer share and debtor payments)
     await Expense.deleteMany({
-      userId: req.user._id,
-      notes: { $regex: new RegExp(`Total bill: Rs ${expense.totalAmount}`, 'i') },
-      title: `${expense.title} (My Share)`,
-    }).catch((e) => console.error('Error removing payer personal expense share:', e.message));
+      $or: [
+        { splitExpenseId: expense._id },
+        {
+          userId: req.user._id,
+          title: `${expense.title} (My Share)`,
+          notes: { $regex: new RegExp(`Total bill: Rs ${expense.totalAmount}`, 'i') },
+        },
+      ],
+    }).catch((e) => console.error('Error removing personal expense shares:', e.message));
 
     // Notify other participants that this shared expense was removed
     if (Array.isArray(expense.splits)) {
